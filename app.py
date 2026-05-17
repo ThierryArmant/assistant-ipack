@@ -4,7 +4,7 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
-# 1. CONFIGURATION DE LA PAGE - VERSION COMPACTE SANS SCROLL
+# 1. CONFIGURATION DE LA PAGE
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -13,7 +13,7 @@ st.markdown("""
     .stApp { background-color: #F3F4F6 !important; }
     header[data-testid="stHeader"] { display: none !important; }
     
-    /* Bandeau Supérieur Slim */
+    /* Bandeau Supérieur */
     .hub-header {
         background-color: #002060;
         display: flex;
@@ -28,22 +28,27 @@ st.markdown("""
     .hub-title h1 { color: white !important; margin: 0; font-size: 18px; font-weight: bold; }
     .hub-title p { color: #cbd5e0 !important; margin: 0; font-size: 10px; }
     
-    /* Titres des colonnes */
+    /* Titres des colonnes strictement égalisés */
     .column-title {
         color: #002060;
         font-size: 13px;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 6px;
-        height: 18px;
+        margin-top: 0px !important;
+        margin-bottom: 8px !important;
+        height: 20px !important;
+        line-height: 20px !important;
     }
     
-    /* Hauteur réduite à 280px pour garantir que tout entre sur un seul écran */
+    /* Hauteur réduite à 260px pour faire remonter parfaitement les deux zones "Message..." */
     .scroll-chat {
-        height: 280px;
+        height: 260px;
         overflow-y: auto;
         padding-right: 5px;
     }
+    
+    /* Forcer les conteneurs Streamlit à avoir exactement la même structure */
+    [data-testid="stContainer"] { margin-top: 0px !important; padding-top: 0px !important; }
     </style>
 """, unsafe_allow_html=True)
 
