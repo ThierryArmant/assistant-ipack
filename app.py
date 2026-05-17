@@ -25,7 +25,7 @@ st.markdown(f"""
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     .stApp {{ 
         background-image: url('{github_url}{img_fond}') !important;
-        background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-attachment: fixed !important;
+        background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !repeat; background-attachment: fixed !important;
     }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     .hub-header {{
@@ -70,7 +70,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT DE LA BASE DE CONNAISSANCES LOCALE (NOS DOCUMENTS)
+# 4. CHARGEMENT DE LA BASE DE CONNAISSANCES LOCALE
 @st.cache_resource
 def get_local_documents():
     context = ""
@@ -79,7 +79,7 @@ def get_local_documents():
             for file in os.listdir("./data"):
                 if file.endswith(".txt"):
                     with open(os.path.join("./data", file), "r", encoding="utf-8") as f:
-                        context += f"\n\n=== NOS DOCUMENTS INTERNES: {file} ===\n" + f.read()
+                        context += f"\n\n=== SOURCE: {file} ===\n" + f.read()
     except Exception:
         pass
     return context
@@ -95,12 +95,12 @@ def check_link_status(url):
     except Exception:
         return False
 
-# MOTEUR DE GÉNÉRATION DES RÉPONSES AVEC FILTRAGE PAR FENÊTRE
+# MOTEUR DE GÉNÉRATION PAR ÉTAPES STRICTES
 def generate_expert_response(user_query, history_type):
     q_lower = user_query.lower()
     
     # -------------------------------------------------------------
-    # CONDITION A : FENÊTRE CONFIGURÉE POUR IPACK ET EXAMENS
+    # CONDITION A : FENÊTRE IPACK EPS ET EXAMENS
     # -------------------------------------------------------------
     if history_type == "ipack":
         if "dispens" in q_lower or "inapte" in q_lower or "absent" in q_lower or "0" in q_lower:
@@ -111,8 +111,11 @@ def generate_expert_response(user_query, history_type):
 
         if "appn" in q_lower or "données appn" in q_lower:
             return (
-                "Pour gérer vos données APPN sur iPackEPS, il n'y a pas de menu spécifique isolé. "
-                "Si votre page de protocole reste blanche, vous devez impérativement **saisir l'ensemble de vos APSA de l'année et définir explicitement leur caractère certificatif** pour que tout s'affiche instantanément."
+                "Pour gérer vos données APPN sur iPackEPS, suivez cette procédure pas-à-pas :\n\n"
+                "**Étape 1 :** Rendez-vous dans les réglages de votre configuration annuelle.\n"
+                "**Étape 2 :** Saisissez obligatoirement l'ensemble des APSA retenues pour votre établissement.\n"
+                "**Étape 3 :** Cochez explicitement leur caractère certificatif.\n\n"
+                "Dès que ces étapes sont validées, vos listes d'élèves et vos protocoles APPN s'afficheront instantanément."
             )
 
         url_ipack_creteil = "https://ipackeps.ac-creteil.fr/"
@@ -126,26 +129,24 @@ def generate_expert_response(user_query, history_type):
         creteil_ok = check_link_status(url_exam_creteil)
 
         btn_ipack = f"[👉 Ouvrir l'interface de saisie iPackEPS]({url_ipack_creteil})" if ipack_ok else "*(Le serveur national de saisie iPackEPS est actuellement indisponible)*"
-        btn_lyon = f"[👉 Consulter le référentiel des examens (Espace Examens)]({url_exam_lyon})" if lyon_ok else "*(Le serveur des examens complémentaires est en maintenance)*"
-        btn_grenoble = f"[👉 Accéder aux chartes et protocoles d'évaluation]({url_exam_grenoble})" if grenoble_ok else "*(Le serveur de secours des protocoles d'évaluation est indisponible)*"
-        btn_creteil_exam = f"[👉 Vérifier les modalités de certification des examens]({url_exam_creteil})" if creteil_ok else "*(Le portail d'archivage des examens est inaccessible)*"
+        btn_lyon = f"[👉 Consulter le référentiel des examens]({url_exam_lyon})" if lyon_ok else "*(Le serveur des examens complémentaires est en maintenance)*"
+        btn_grenoble = f"[👉 Accéder aux chartes et protocoles d'évaluation]({url_exam_grenoble})" if grenoble_ok else "*(Le serveur des protocoles d'évaluation est indisponible)*"
+        btn_creteil_exam = f"[👉 Vérifier les modalités de certification]({url_exam_creteil})" if creteil_ok else "*(Le portail d'archivage des examens est inaccessible)*"
 
         master_prompt = (
-            f"Tu es l'IA spécialisée du module 'iPackEPS et Examens' de l'Académie d'Aix-Marseille.\n"
-            f"Tu dois répondre de façon très claire et professionnelle à partir de nos règles et de nos liens.\n\n"
-            f"NOS DOCUMENTS INTERNES DE RÉFÉRENCE (SANTORIN, ETC.) :\n{local_knowledge}\n\n"
-            f"INSTRUCTIONS EXCLUSIVES POUR CETTE FENÊTRE :\n"
-            f"1. Ne cite jamais explicitement Créteil, Lyon ou Grenoble dans ton texte pour ne pas troubler l'enseignant. Présente ces accès comme faisant partie intégrante de nos outils académiques.\n"
-            f"2. Intègre uniquement les variables de boutons suivantes lorsque la demande concerne iPack ou les Examens :\n"
-            f"   - Accès iPack : {btn_ipack}\n"
-            f"   - Banque des Examens / CCF : {btn_lyon}\n"
-            f"   - Protocoles et Chartes d'évaluation : {btn_grenoble}\n"
-            f"   - Modalités de Certification : {btn_creteil_exam}\n"
-            f"Question de l'enseignant : {user_query}\nRéponse en français :"
+            f"Tu es l'IA experte de la fenêtre 'iPackEPS et Examens' de l'Académie d'Aix-Marseille.\n"
+            f"CONSIGNE ABSOLUE : Tu ne dois jamais faire de réponses floues ou génériques. Tu dois obligatoirement décomposer tes explications sous la forme d'un guide pas-à-pas chronologique (Étape 1, Étape 2, Étape 3...).\n\n"
+            f"DOCUMENTS DE RÉFÉRENCE INTERNES :\n{local_knowledge}\n\n"
+            f"RÈGLES DE RÉDACTION :\n"
+            f"1. Extrais les actions précises de nos documents de référence et présente-les sous forme d'étapes numérotées claires.\n"
+            f"2. N'invente aucun contenu. Ne cite jamais Créteil, Lyon ou Grenoble dans ton texte descriptif brut.\n"
+            f"3. Intègre ces variables de boutons uniquement si nécessaire :\n"
+            f"   - iPack : {btn_ipack} | Examens Lyon : {btn_lyon} | Grenoble : {btn_grenoble} | Créteil : {btn_creteil_exam}\n"
+            f"Question : {user_query}\nRéponse pas-à-pas en français :"
         )
 
     # -------------------------------------------------------------
-    # CONDITION B : FENÊTRE CONFIGURÉE POUR LES RECHERCHES GÉNÉRALES
+    # CONDITION B : FENÊTRE RECHERCHES GÉNÉRALES
     # -------------------------------------------------------------
     else:
         url_general_aix = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_78026/it/accueil"
@@ -157,20 +158,16 @@ def generate_expert_response(user_query, history_type):
         lyon_gen_ok = check_link_status(url_general_lyon)
 
         btn_aix = f"[👉 Consulter le site officiel EPS Aix-Marseille]({url_general_aix})" if aix_ok else "*(Le site principal EPS Aix-Marseille est temporairement inaccessible)*"
-        btn_creteil_gen = f"[👉 Explorer nos ressources pédagogiques complémentaires]({url_general_creteil})" if creteil_gen_ok else "*(Notre base de ressources complémentaires est en cours de mise à jour)*"
+        btn_creteil_gen = f"[👉 Explorer nos ressources pédagogiques]({url_general_creteil})" if creteil_gen_ok else "*(Notre base de ressources complémentaires est en cours de mise à jour)*"
         btn_lyon_gen = f"[👉 Accéder aux fiches et outils didactiques]({url_general_lyon})" if lyon_gen_ok else "*(Notre serveur d'outils didactiques est en maintenance)*"
 
         master_prompt = (
-            f"Tu es l'IA spécialisée du module 'Recherches Générales' de l'Académie d'Aix-Marseille.\n"
-            f"Ton rôle est d'orienter l'enseignant vers les ressources pédagogiques générales en priorité sur notre académie.\n\n"
-            f"INSTRUCTIONS EXCLUSIVES POUR CETTE FENÊTRE GÉNÉRALE :\n"
-            f"1. Cherche et oriente TOUJOURS en priorité absolue vers Aix-Marseille.\n"
-            f"2. Ne mentionne jamais ouvertement les mots 'Créteil' ou 'Lyon' dans tes descriptions. Fais passer ces ressources pour notre catalogue académique unifié.\n"
-            f"3. Utilise exclusivement ces variables de boutons vérifiées selon les besoins :\n"
-            f"   - Priorité Site régional : {btn_aix}\n"
-            f"   - Catalogue de Ressources Générales : {btn_creteil_gen}\n"
-            f"   - Fiches et Outils Pédagogiques : {btn_lyon_gen}\n"
-            f"Question de l'enseignant : {user_query}\nRéponse en français :"
+            f"Tu es l'IA experte de la fenêtre 'Recherches Générales' de l'Académie d'Aix-Marseille.\n"
+            f"CONSIGNE ABSOLUE : Organise tes réponses de recherche de façon structurée et par étapes logiques.\n\n"
+            f"RÈGLES DE RÉDACTION :\n"
+            f"1. Oriente toujours en priorité absolue vers Aix-Marseille en structurant ton conseil sous forme d'étapes d'accès.\n"
+            f"2. Utilise exclusivement ces variables : Site principal : {btn_aix} | Catalogue : {btn_creteil_gen} | Outils : {btn_lyon_gen}\n"
+            f"Question : {user_query}\nRéponse ordonnée en français :"
         )
 
     history_str = ""
@@ -191,7 +188,7 @@ with col1:
         st.rerun()
         
     with st.chat_message("assistant"): 
-        st.markdown("Bonjour, posez-moi vos questions sur iPack, Santorin ou les Examens (CCF, protocoles...).")
+        st.markdown("Bonjour, posez-moi vos questions sur iPack, Santorin ou les Examens. Je vous guiderai pas à pas.")
     for m in st.session_state.messages_ipack:
         with st.chat_message(m["role"]):
             st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
