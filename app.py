@@ -10,7 +10,7 @@ if "messages_ipack" not in st.session_state:
 if "messages_aix" not in st.session_state:
     st.session_state.messages_aix = []
 
-# 2. CONFIGURATION DE LA PAGE ET DU STYLE
+# 2. CONFIGURATION DE LA PAGE
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 img_gauche = "image_7.png"  
@@ -21,7 +21,7 @@ github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAM
 
 st.markdown(f"""
     <style>
-    .block-container {{ padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
+    .block-container {{ padding-top: 0.5rem !important; padding-bottom: 5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     .stApp {{ 
         background-image: url('{github_url}{img_fond}') !important;
         background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-attachment: fixed !important;
@@ -29,38 +29,24 @@ st.markdown(f"""
     header[data-testid="stHeader"] {{ display: none !important; }}
     .hub-header {{
         background-color: #1E293B; display: flex; justify-content: space-between; align-items: center;
-        padding: 10px 25px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        padding: 10px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
     .column-title {{
-        color: #FFFFFF; font-size: 14px; font-weight: 700; text-align: center;
-        margin-bottom: 10px; height: 24px; background-color: #1E293B; border-radius: 4px; padding: 4px 0;
+        color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center;
+        margin-bottom: 15px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
     }}
-    /* Zone de texte interne fixe */
-    .scroll-chat {{
-        height: 400px !important; overflow-y: auto !important; padding: 15px;
-        background-color: rgba(255, 255, 255, 0.45) !important; backdrop-filter: blur(4px); border-radius: 8px 8px 0px 0px;
-    }}
-    /* Encadré global transparent qui contient aussi la zone d'écriture */
-    .custom-box {{
-        background-color: rgba(255, 255, 255, 0.2) !important;
-        backdrop-filter: blur(6px);
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.3);
-    }}
-    div[data-testid="stChatMessage"] {{ border: none !important; padding: 8px 12px !important; margin-bottom: 10px !important; }}
+    /* Bulles de chat épurées et sans conteneur bloquant */
+    div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
-        background-color: rgba(255, 255, 255, 0.6) !important; border-radius: 12px !important; margin-left: 8% !important;
+        background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15 % !important;
     }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
-        background-color: #E9ECEF !important; color: #212529 !important; border-radius: 12px !important; margin-right: 8% !important;
+        background-color: rgba(233, 236, 239, 0.9) !important; color: #212529 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 15 % !important;
     }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
-    
-    /* Bouton envoyer personnalisé pour rentrer dans le cadre */
-    div[data-testid="stForm"] {{ border: none !important; padding: 0 !important; background: transparent !important; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -104,58 +90,39 @@ def load_local_index():
 
 index_ia = load_local_index()
 
-# 5. SPLIT ÉCRAN EN 2 COLONNES
+# 5. SPLIT ÉCRAN EN 2 COLONNES TOTALEMENT LIBRES
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
     
-    # On force l'inclusion dans une boîte et un formulaire localisé
-    st.markdown('<div class="custom-box">', unsafe_allow_html=True)
-    st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
+    # Affichage libre des messages
     with st.chat_message("assistant"): 
         st.markdown("Bonjour, que puis-je faire pour vous concernant iPack et les examens ?")
     for m in st.session_state.messages_ipack:
         with st.chat_message(m["role"]):
             st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Le formulaire force la zone de texte à rester soudée à la boîte transparente
-    with st.form(key="form_ipack", clear_on_submit=True):
-        user_input_ipack = st.text_input("Posez votre question iPack ici, puis appuyez sur Entrée :", key="txt_ipack")
-        submit_ipack = st.form_submit_button("Envoyer à l'assistant")
-        
-        if submit_ipack and user_input_ipack:
-            st.session_state.messages_ipack.append({"role": "user", "content": user_input_ipack})
-            if index_ia:
-                response = index_ia.as_chat_engine().chat(user_input_ipack).response
-                st.session_state.messages_ipack.append({"role": "assistant", "content": response})
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+            
+    if prompt_ipack := st.chat_input("Votre question iPack...", key="input_ipack_final"):
+        st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
+        if index_ia:
+            response = index_ia.as_chat_engine().chat(prompt_ipack).response
+            st.session_state.messages_ipack.append({"role": "assistant", "content": response})
+        st.rerun()
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="custom-box">', unsafe_allow_html=True)
-    st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
+    # Affichage libre des messages
     with st.chat_message("assistant"): 
         st.markdown("Bonjour, que cherchez-vous comme document sur notre site ?")
     for m in st.session_state.messages_aix:
         with st.chat_message(m["role"]):
             st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Le formulaire force la zone de texte à rester soudée à la boîte transparente
-    with st.form(key="form_aix", clear_on_submit=True):
-        user_input_aix = st.text_input("Posez votre question site EPS ici, puis appuyez sur Entrée :", key="txt_aix")
-        submit_aix = st.form_submit_button("Envoyer à l'assistant")
-        
-        if submit_aix and user_input_aix:
-            st.session_state.messages_aix.append({"role": "user", "content": user_input_aix})
-            if index_ia:
-                response_aix = index_ia.as_chat_engine().chat(user_input_aix).response
-                st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown("<p style='text-align: center; color: #FFFFFF; font-size: 10px; margin-top: 15px; background-color: rgba(30, 41, 59, 0.8); padding: 5px; border-radius: 4px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
+            
+    if prompt_aix := st.chat_input("Votre question site EPS...", key="input_aix_final"):
+        st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
+        if index_ia:
+            response_aix = index_ia.as_chat_engine().chat(prompt_aix).response
+            st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
+        st.rerun()
