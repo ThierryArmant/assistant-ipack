@@ -10,7 +10,7 @@ st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", la
 # Identification des images à la racine de ton GitHub
 img_acad = "image_5.png"  # Logo iPack EPS (Gauche)
 img_eps = "image_6.png"   # Logo EPS (Droite)
-img_fond = "image_8.png"  # Ton image de fond personnalisée avec les vignettes
+img_fond = "image_8.png"  # Ton image de fond personnalisée épurée
 
 # Construction de l'URL GitHub pour les images
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -66,14 +66,14 @@ st.markdown(f"""
         overflow-y: auto !important;
         padding: 15px;
         position: relative;
-        background-color: rgba(255, 255, 255, 0.45) !important; /* Transparence pour laisser voir la salle */
-        backdrop-filter: blur(4px); /* Léger floutage pour l'effet premium */
+        background-color: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(4px);
         border-radius: 8px 8px 0px 0px;
         z-index: 100 !important;
         box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     }}
     
-    /* STYLE DES MESSAGES ET DES BULLES REPRIS DE LA MAQUETTE */
+    /* STYLE DES MESSAGES SANS AVATAR */
     div[data-testid="stChatMessage"] {{
         border: none !important;
         padding: 8px 12px !important;
@@ -81,23 +81,23 @@ st.markdown(f"""
         box-shadow: none !important;
     }}
     
-    /* Message Utilisateur (Vous) : Transparent ou très discret */
+    /* Message Utilisateur (Vous) */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
         background-color: rgba(255, 255, 255, 0.6) !important;
         border-radius: 12px !important;
         margin-left: 8% !important;
     }}
     
-    /* Message de l'IA (Assistant Numérique) : Gris/Bleuté doux opaque pour ressortir */
+    /* Message de l'IA (Assistant Numérique) : Grisé opaque de la maquette */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
-        background-color: #E9ECEF !important; /* Zone grisée de ta maquette */
+        background-color: #E9ECEF !important;
         color: #212529 !important;
         border-radius: 12px !important;
         margin-right: 8% !important;
         box-shadow: 0px 2px 6px rgba(0,0,0,0.05) !important;
     }}
     
-    /* Masquer les avatars par défaut */
+    /* Nettoyage absolu des conteneurs d'avatars de Streamlit */
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{
         display: none !important;
     }}
@@ -162,9 +162,9 @@ with col1:
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
-            st.markdown("👨‍🏫 **Assistant Ipackeps**\n\nBonjour, que puis-je faire pour vous ?")
+            st.markdown("**Assistant iPack EPS** : Bonjour, que puis-je faire pour vous ?")
         for m in st.session_state.get("messages_ipack", []):
-            prefix = "👤 **Vous** :\n\n" if m["role"] == "user" else "🤖 **Assistant iPack** :\n\n"
+            prefix = "**Vous** :\n\n" if m["role"] == "user" else "**Assistant iPack** :\n\n"
             with st.chat_message(m["role"]): st.markdown(prefix + m["content"])
         st.markdown('</div>', unsafe_allow_html=True)
         prompt = st.chat_input("Votre question iPack...", key="input_ipack")
@@ -174,9 +174,9 @@ with col2:
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
-            st.markdown("💬 **Assistant Site EPS**\n\nBonjour, que cherchez-vous sur le site ?")
+            st.markdown("**Assistant Site EPS** : Bonjour, que cherchez-vous sur le site ?")
         for m in st.session_state.get("messages_aix", []):
-            prefix = "👤 **Vous** :\n\n" if m["role"] == "user" else "🔍 **Assistant Site** :\n\n"
+            prefix = "**Vous** :\n\n" if m["role"] == "user" else "**Assistant Site** :\n\n"
             with st.chat_message(m["role"]): st.markdown(prefix + m["content"])
         st.markdown('</div>', unsafe_allow_html=True)
         prompt_aix = st.chat_input("Votre question site EPS...", key="input_aix")
