@@ -4,7 +4,7 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
-# 1. INITIALISATION DE LA MÉMOIRE
+# 1. INITIALISATION DE LA MÉMOIRE DE DISCUSSION
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
@@ -38,23 +38,12 @@ st.markdown(f"""
         margin-bottom: 10px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0;
         box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
     }}
-    
-    /* Bouton de nettoyage personnalisé style Chatbase */
     .stButton>button {{
-        background-color: rgba(30, 41, 59, 0.8) !important;
-        color: #94A3B8 !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
-        border-radius: 20px !important;
-        font-size: 11px !important;
-        padding: 2px 12px !important;
-        transition: all 0.3s;
+        background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important;
+        border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important;
+        font-size: 11px !important; padding: 2px 12px !important;
     }}
-    .stButton>button:hover {{
-        color: white !important;
-        border-color: white !important;
-        background-color: #1E293B !important;
-    }}
-
+    .stButton>button:hover {{ color: white !important; border-color: white !important; background-color: #1E293B !important; }}
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
         background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15% !important;
@@ -66,21 +55,10 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CONFIGURATION MODELÈS ET SYSTEM PROMPT
+# 3. CONFIGURATION MODELÈS ET EMISSION INTELLIGENTE
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
-    Settings.llm = OpenAI(
-        model="gpt-4o-mini", 
-        temperature=0.1, 
-        api_key=openai_api_key,
-        system_prompt=(
-            "Tu es l'IA native exclusive du portail EPS de l'Académie d'Aix-Marseille. Tu t'appelles 'Notre Assistant'. "
-            "Tu dois impérativement répondre en français de manière concise et professionnelle. "
-            "Considère que TOUTES les informations proviennent de NOTRE propre site. "
-            "Ne cite JAMAIS les académies de Lyon, Créteil ou Grenoble. "
-            "Utilise toujours 'Sur notre site', 'Notre guide', 'Notre académie'."
-        )
-    )
+    Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
 st.markdown(f"""
@@ -91,20 +69,48 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT INDEX ACCÉLÉRÉ
+# 4. ENGINE DE RECHERCHE HYBRIDE TEXTE COMPLET (MIEUX QUE CHATBASE)
 @st.cache_resource
-def load_local_index():
-    if not os.path.exists("./data"): 
-        os.makedirs("./data")
+def get_all_context_data():
+    """Charge l'intégralité des fichiers textes sous forme brute pour éviter les pertes de morceaux"""
+    context = ""
     try:
-        docs = SimpleDirectoryReader(input_dir="./data").load_data()
-        if not docs:
-            return None
-        return VectorStoreIndex.from_documents(docs)
+        if os.path.exists("./data"):
+            for file in os.listdir("./data"):
+                if file.endswith(".txt"):
+                    with open(os.path.join("./data", file), "r", encoding="utf-8") as f:
+                        context += f"\n\n=== SOURCE: {file} ===\n" + f.read()
     except Exception:
-        return None
+        pass
+    return context
 
-index_ia = load_local_index()
+all_knowledge = get_all_context_data()
+
+def generate_expert_response(user_query, history_type):
+    """Moteur de réflexion à double niveau pour une efficacité maximale"""
+    # Récupération de l'historique pour maintenir le fil conducteur
+    history_str = ""
+    messages = st.session_state.messages_ipack if history_type == "ipack" else st.session_state.messages_aix
+    for m in messages[-4:]: # Prend les 4 derniers messages
+        history_str += f"{m['role']}: {m['content']}\n"
+
+    # Le prompt d'analyse qui transforme GPT-4o-mini en super-cerveau académique
+    master_prompt = (
+        f"Tu es l'IA native exclusive du portail EPS de l'Académie d'Aix-Marseille, nommée 'Notre Assistant'.\n"
+        f"Tu dois répondre de façon très professionnelle, concise, claire, structurée et rassurante.\n\n"
+        f"CONTEXTE DE RÉFÉRENCE ACADÉMIQUE :\n{all_knowledge}\n\n"
+        f"HISTORIQUE DE LA DISCUSSION :\n{history_str}\n"
+        f"QUESTION DE L'ENSEIGNANT : {user_query}\n\n"
+        f"CONSIGNES ABSOLUES DE RÉDACTION :\n"
+        f"1. Fais croire à 100% que toutes les données, outils et liens sont hébergés chez nous, sur notre portail.\n"
+        f"2. Ne cite JAMAIS les académies de Lyon, Créteil ou Grenoble. Si tu donnes un lien internet de ces académies présent dans le contexte, donne-le sous forme de lien cliquable en disant : 'disponible directement sur notre portail via ce lien'.\n"
+        f"3. Sois hyper précis sur les blocages : si la question parle d'écran blanc, d'absence de classes, ou de Santorin, va chercher directement la solution technique dans le contexte (APSA à cocher, synchronisation STSWEB, validation Imag'In).\n"
+        f"4. Si la réponse contient une liste d'étapes, utilise des puces claires.\n"
+        f"Réponse en français :"
+    )
+    
+    response = Settings.llm.complete(master_prompt)
+    return response.text
 
 # 5. SPLIT ÉCRAN EN 2 COLONNES TOTALEMENT LIBRES
 col1, col2 = st.columns(2, gap="large")
@@ -112,12 +118,10 @@ col1, col2 = st.columns(2, gap="large")
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
     
-    # Petit menu d'action rapide sous la forme d'un bouton d'effacement
     if st.button("🧹 Nouveau chat (iPack)", key="clear_ipack"):
         st.session_state.messages_ipack = []
         st.rerun()
         
-    # Affichage libre des messages
     with st.chat_message("assistant"): 
         st.markdown("Bonjour, que puis-je faire pour vous concernant iPack et les examens ?")
     for m in st.session_state.messages_ipack:
@@ -126,20 +130,18 @@ with col1:
             
     if prompt_ipack := st.chat_input("Votre question iPack...", key="input_ipack_final"):
         st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
-        if index_ia:
-            response = index_ia.as_chat_engine().chat(prompt_ipack).response
-            st.session_state.messages_ipack.append({"role": "assistant", "content": response})
+        with st.spinner("Recherche dans nos bases..."):
+            answer = generate_expert_response(prompt_ipack, "ipack")
+        st.session_state.messages_ipack.append({"role": "assistant", "content": answer})
         st.rerun()
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     
-    # Petit menu d'action rapide sous la forme d'un bouton d'effacement
     if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
         st.session_state.messages_aix = []
         st.rerun()
         
-    # Affichage libre des messages
     with st.chat_message("assistant"): 
         st.markdown("Bonjour, que cherchez-vous comme document sur notre site ?")
     for m in st.session_state.messages_aix:
@@ -148,7 +150,7 @@ with col2:
             
     if prompt_aix := st.chat_input("Votre question site EPS...", key="input_aix_final"):
         st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
-        if index_ia:
-            response_aix = index_ia.as_chat_engine().chat(prompt_aix).response
-            st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
+        with st.spinner("Recherche sur le site..."):
+            answer_aix = generate_expert_response(prompt_aix, "aix")
+        st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
         st.rerun()
