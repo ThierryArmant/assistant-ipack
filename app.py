@@ -60,58 +60,58 @@ st.markdown(f"""
         box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
     }}
     
-    /* FENÊTRES DE CHAT : BLANC PUR COMPLET ET PRIORITÉ D'AFFICHAGE */
+    /* FENÊTRES DE CHAT EN TRANSPARENCE (EFFET VERRE POLI) */
     .scroll-chat {{
         height: 340px !important;
         overflow-y: auto !important;
         padding: 15px;
         position: relative;
-        background-color: #FFFFFF !important; /* Blanc pur opaque à 100% */
+        background-color: rgba(255, 255, 255, 0.45) !important; /* Transparence pour laisser voir la salle */
+        backdrop-filter: blur(4px); /* Léger floutage pour l'effet premium */
         border-radius: 8px 8px 0px 0px;
         z-index: 100 !important;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     }}
     
-    /* --- STYLE DES DIALOGUES ASSURANT LA LISIBILITÉ --- */
-    /* Style général des lignes de message */
+    /* STYLE DES MESSAGES ET DES BULLES REPRIS DE LA MAQUETTE */
     div[data-testid="stChatMessage"] {{
         border: none !important;
         padding: 8px 12px !important;
         margin-bottom: 10px !important;
-        box-shadow: 0px 2px 4px rgba(0,0,0,0.05) !important;
+        box-shadow: none !important;
     }}
     
-    /* Messages de l'Utilisateur (Vous) : Fond Bleu/Gris très clair discret */
+    /* Message Utilisateur (Vous) : Transparent ou très discret */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
-        background-color: #F1F5F9 !important;
-        border-radius: 12px 12px 0px 12px !important;
-        margin-left: 10% !important;
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        border-radius: 12px !important;
+        margin-left: 8% !important;
     }}
     
-    /* Messages de l'Assistant (IA) : Fond Blanc Pur avec petite bordure pour se détacher */
+    /* Message de l'IA (Assistant Numérique) : Gris/Bleuté doux opaque pour ressortir */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 12px 12px 12px 0px !important;
-        margin-right: 10% !important;
+        background-color: #E9ECEF !important; /* Zone grisée de ta maquette */
+        color: #212529 !important;
+        border-radius: 12px !important;
+        margin-right: 8% !important;
+        box-shadow: 0px 2px 6px rgba(0,0,0,0.05) !important;
     }}
     
-    /* Masquer les icônes d'avatar de Streamlit */
+    /* Masquer les avatars par défaut */
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{
         display: none !important;
     }}
     
     /* ZONE DE REDACTION EN BLANC PUR OPAQUE */
     .stChatInputContainer {{ 
-        border: 2px solid #E2E8F0 !important; 
+        border: 1px solid rgba(0,0,0,0.1) !important; 
         background-color: #FFFFFF !important;
         border-radius: 0px 0px 8px 8px !important;
         position: relative;
         z-index: 101 !important;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     }}
     
-    /* Forcer le champ texte interne en blanc */
     .stChatInputContainer textarea {{
         background-color: #FFFFFF !important;
         color: #1E293B !important;
@@ -151,7 +151,7 @@ def load_all_indexes_safe():
 try:
     ipack_index, aix_index = load_all_indexes_safe()
 except Exception as e:
-    st.error("⚠️ Clé OpenAI invalide ou problème de configuration. Veuillez vérifier vos Secrets.")
+    st.error("⚠️ Problème de configuration des services d'IA. Veuillez vérifier vos Secrets.")
     st.stop()
 
 # 5. SPLIT ÉCRAN À DEUX COLONNES
@@ -162,9 +162,9 @@ with col1:
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
-            st.markdown("👨‍🏫 **Assistant Ipackeps Aix-Marseille** : Bonjour, que puis-je faire pour vous ?")
+            st.markdown("👨‍🏫 **Assistant Ipackeps**\n\nBonjour, que puis-je faire pour vous ?")
         for m in st.session_state.get("messages_ipack", []):
-            prefix = "👤 **Vous** : " if m["role"] == "user" else "🤖 **Assistant** : "
+            prefix = "👤 **Vous** :\n\n" if m["role"] == "user" else "🤖 **Assistant iPack** :\n\n"
             with st.chat_message(m["role"]): st.markdown(prefix + m["content"])
         st.markdown('</div>', unsafe_allow_html=True)
         prompt = st.chat_input("Votre question iPack...", key="input_ipack")
@@ -174,9 +174,9 @@ with col2:
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
-            st.markdown("💬 **Assistant Site EPS** : Bonjour, que cherchez-vous sur le site ?")
+            st.markdown("💬 **Assistant Site EPS**\n\nBonjour, que cherchez-vous sur le site ?")
         for m in st.session_state.get("messages_aix", []):
-            prefix = "👤 **Vous** : " if m["role"] == "user" else "🔍 **Assistant** : "
+            prefix = "👤 **Vous** :\n\n" if m["role"] == "user" else "🔍 **Assistant Site** :\n\n"
             with st.chat_message(m["role"]): st.markdown(prefix + m["content"])
         st.markdown('</div>', unsafe_allow_html=True)
         prompt_aix = st.chat_input("Votre question site EPS...", key="input_aix")
