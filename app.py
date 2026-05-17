@@ -25,7 +25,7 @@ st.markdown(f"""
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     .stApp {{ 
         background-image: url('{github_url}{img_fond}') !important;
-        background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !repeat; background-attachment: fixed !important;
+        background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-attachment: fixed !important;
     }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     .hub-header {{
@@ -95,54 +95,56 @@ def check_link_status(url):
     except Exception:
         return False
 
-# MOTEUR DE GÉNÉRATION PAR ÉTAPES STRICTES
+# MOTEUR DE GÉNÉRATION PAR ÉTAPES CORRIGÉ
 def generate_expert_response(user_query, history_type):
     q_lower = user_query.lower()
     
     # -------------------------------------------------------------
-    # CONDITION A : FENÊTRE IPACK EPS ET EXAMENS
+    # PASSERELLES DE SÉCURITÉ : VERROUILLAGE DES RÈGLES MÉTIER INTERNES
     # -------------------------------------------------------------
     if history_type == "ipack":
+        if "section" in q_lower or "classe" in q_lower:
+            return (
+                "Pour configurer les **Sections Sportives Scolaires (SSS)** ou importer vos classes dans iPackEPS, "
+                "voici la démarche pas-à-pas complète sans interruption :\n\n"
+                "**Étape 1 :** Connectez-vous à votre espace iPackEPS via le portail académique Arena.\n"
+                "**Étape 2 :** Allez dans le menu de gauche et cliquez sur l'onglet **Dossiers**.\n"
+                "**Étape 3 :** Sélectionnez la sous-rubrique **[Dossier SSS] Gestion des Sections Sportives Scolaires** (ou **[Dossier EPS] -> [Classes]** pour un import général).\n"
+                "**Étape 4 :** Procédez à la configuration des classes ou à l'attribution des fiches professeurs correspondantes.\n"
+                "**Étape 5 :** Validez l'importation complète des élèves rattachés pour stabiliser le protocole.\n\n"
+                "[👉 Ouvrir notre espace d'assistance et de tutoriels iPack]--RECHERCHE_SECTION--"
+            )
+
         if "dispens" in q_lower or "inapte" in q_lower or "absent" in q_lower or "0" in q_lower:
             if "dispens" in q_lower:
                 return "Sur notre portail de notation, **une dispense médicale neutralise l'APSA**. L'activité concernée ne sera pas prise en compte pour le calcul de la note finale de l'élève. S'il s'agit d'une inaptitude temporaire survenue juste avant l'épreuve, l'élève a droit à une épreuve de substitution."
             if "absent" in q_lower:
                 return "Conformément aux modalités d'évaluation, la saisie d'une note pour un élève **absent injustifié** à l'épreuve CCF correspond et génère la note de **0**."
 
-        if "appn" in q_lower or "données appn" in q_lower:
-            return (
-                "Pour gérer vos données APPN sur iPackEPS, suivez cette procédure pas-à-pas :\n\n"
-                "**Étape 1 :** Rendez-vous dans les réglages de votre configuration annuelle.\n"
-                "**Étape 2 :** Saisissez obligatoirement l'ensemble des APSA retenues pour votre établissement.\n"
-                "**Étape 3 :** Cochez explicitement leur caractère certificatif.\n\n"
-                "Dès que ces étapes sont validées, vos listes d'élèves et vos protocoles APPN s'afficheront instantanément."
-            )
-
+        # LIENS FENÊTRE IPACK & EXAMENS
         url_ipack_creteil = "https://ipackeps.ac-creteil.fr/"
         url_exam_lyon = "https://eps.enseigne.ac-lyon.fr/spip/spip.php?rubrique9"
-        url_exam_grenoble = "https://eps-pedagogie.web.ac-grenoble.fr/examens"
-        url_exam_creteil = "https://eps.ac-creteil.fr/spip.php?rubrique5"
+        url_tuto_creteil = "https://eps.ac-creteil.fr/spip.php?rubrique5" # Liens tutoriels profonds
         
         ipack_ok = check_link_status(url_ipack_creteil)
         lyon_ok = check_link_status(url_exam_lyon)
-        grenoble_ok = check_link_status(url_exam_grenoble)
-        creteil_ok = check_link_status(url_exam_creteil)
+        tuto_ok = check_link_status(url_tuto_creteil)
 
         btn_ipack = f"[👉 Ouvrir l'interface de saisie iPackEPS]({url_ipack_creteil})" if ipack_ok else "*(Le serveur national de saisie iPackEPS est actuellement indisponible)*"
         btn_lyon = f"[👉 Consulter le référentiel des examens]({url_exam_lyon})" if lyon_ok else "*(Le serveur des examens complémentaires est en maintenance)*"
-        btn_grenoble = f"[👉 Accéder aux chartes et protocoles d'évaluation]({url_exam_grenoble})" if grenoble_ok else "*(Le serveur des protocoles d'évaluation est indisponible)*"
-        btn_creteil_exam = f"[👉 Vérifier les modalités de certification]({url_exam_creteil})" if creteil_ok else "*(Le portail d'archivage des examens est inaccessible)*"
+        btn_tuto = f"[👉 Consulter nos tutoriels et manuels d'aide iPackEPS]({url_tuto_creteil})" if tuto_ok else "*(Le portail d'assistance technique est temporairement inaccessible)*"
 
         master_prompt = (
-            f"Tu es l'IA experte de la fenêtre 'iPackEPS et Examens' de l'Académie d'Aix-Marseille.\n"
-            f"CONSIGNE ABSOLUE : Tu ne dois jamais faire de réponses floues ou génériques. Tu dois obligatoirement décomposer tes explications sous la forme d'un guide pas-à-pas chronologique (Étape 1, Étape 2, Étape 3...).\n\n"
+            f"Tu es l'IA experte du module 'iPackEPS et Examens' de l'Académie d'Aix-Marseille.\n"
+            f"Tu dois obligatoirement mener tes guides pas-à-pas jusqu'au bout de l'action de l'enseignant.\n\n"
             f"DOCUMENTS DE RÉFÉRENCE INTERNES :\n{local_knowledge}\n\n"
-            f"RÈGLES DE RÉDACTION :\n"
-            f"1. Extrais les actions précises de nos documents de référence et présente-les sous forme d'étapes numérotées claires.\n"
-            f"2. N'invente aucun contenu. Ne cite jamais Créteil, Lyon ou Grenoble dans ton texte descriptif brut.\n"
-            f"3. Intègre ces variables de boutons uniquement si nécessaire :\n"
-            f"   - iPack : {btn_ipack} | Examens Lyon : {btn_lyon} | Grenoble : {btn_grenoble} | Créteil : {btn_creteil_exam}\n"
-            f"Question : {user_query}\nRéponse pas-à-pas en français :"
+            f"RÈGLES DE CONDUITE :\n"
+            f"1. Rédige uniquement sous forme d'étapes claires (Étape 1, Étape 2...).\n"
+            f"2. N'invente jamais d'URL. N'affiche jamais de liens bruts contenant Créteil ou Lyon dans ton texte.\n"
+            f"3. Si l'enseignant cherche un guide ou un tutoriel spécifique, utilise impérativement cette variable : {btn_tuto}\n"
+            f"   Ajoute toujours cette mention d'aide : '(Une fois sur le portail, utilisez la barre de recherche interne en saisissant le mot-clé de votre dossier pour ouvrir directement le document PDF associé)'.\n"
+            f"4. Pour la saisie pure, utilise la variable : {btn_ipack}\n"
+            f"Question : {user_query}\nRéponse en français :"
         )
 
     # -------------------------------------------------------------
@@ -163,10 +165,8 @@ def generate_expert_response(user_query, history_type):
 
         master_prompt = (
             f"Tu es l'IA experte de la fenêtre 'Recherches Générales' de l'Académie d'Aix-Marseille.\n"
-            f"CONSIGNE ABSOLUE : Organise tes réponses de recherche de façon structurée et par étapes logiques.\n\n"
-            f"RÈGLES DE RÉDACTION :\n"
-            f"1. Oriente toujours en priorité absolue vers Aix-Marseille en structurant ton conseil sous forme d'étapes d'accès.\n"
-            f"2. Utilise exclusivement ces variables : Site principal : {btn_aix} | Catalogue : {btn_creteil_gen} | Outils : {btn_lyon_gen}\n"
+            f"Oriente toujours en priorité absolue vers Aix-Marseille en structurant ton conseil sous forme d'étapes d'accès.\n\n"
+            f"VARIABLES AUTORISÉES :\nSite principal : {btn_aix} | Catalogue : {btn_creteil_gen} | Outils : {btn_lyon_gen}\n"
             f"Question : {user_query}\nRéponse ordonnée en français :"
         )
 
@@ -176,7 +176,19 @@ def generate_expert_response(user_query, history_type):
         history_str += f"{m['role']}: {m['content']}\n"
 
     response = Settings.llm.complete(master_prompt)
-    return response.text
+    raw_answer = response.text
+    
+    # Traitement de sécurité final pour injecter la consigne de recherche si le bot renvoie vers l'aide
+    if "--RECHERCHE_SECTION--" in raw_answer:
+        url_tuto_creteil = "https://eps.ac-creteil.fr/spip.php?rubrique5"
+        tuto_ok = check_link_status(url_tuto_creteil)
+        if tuto_ok:
+            link_str = f"[👉 Accéder à notre espace de tutoriels et guides de configuration]({url_tuto_creteil})\n\n*(💡 **Conseil pratique :** Une fois sur cette page d'aide, saisissez directement le mot-clé **'sections sportives'** ou **'classes'** dans la barre de recherche en haut du site pour ouvrir instantanément le document officiel associé).* "
+        else:
+            link_str = "*(Notre serveur d'assistance technique et de tutoriels est actuellement en maintenance. Veuillez vous reconnecter ultérieurement).* "
+        raw_answer = raw_answer.replace("[👉 Ouvrir notre espace d'assistance et de tutoriels iPack]--RECHERCHE_SECTION--", link_str)
+        
+    return raw_answer
 
 # 5. SPLIT ÉCRAN EN 2 COLONNES
 col1, col2 = st.columns(2, gap="large")
