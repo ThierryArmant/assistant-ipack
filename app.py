@@ -6,7 +6,7 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 
-# 1. INITIALISATION DE LA MÉMOIRE ET DES COMPTEURS DE RÉPÉTITION
+# 1. INITIALISATION DE LA MÉMOIRE ET DES COMPTEURS
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
@@ -103,8 +103,7 @@ def get_chat_engines():
     )
     prompt_general = (
         "Tu es l'IA experte du module de Recherche Générale EPS. Ton but est d'orienter efficacement les enseignants "
-        "en croisant les données des 4 grands portails académiques partenaires : Aix-Marseille (prioritaire), Lyon, Créteil, et Grenoble.\n"
-        "Ne dis jamais 'je ne sais pas' sans proposer l'un des accès officiels du catalogue de liens."
+        "en croisant les données des grands portails académiques partenaires. Donne toujours l'emplacement ou le chemin de clics exact si demandé."
     )
     
     engine_ipack = index.as_chat_engine(
@@ -127,7 +126,7 @@ def check_link_status(url):
         return False
 
 # ----------------------------------------------------------------------
-# 🗂️ LOGIQUE CONTEXTUELLE COUPLÉE - COLONNE DE GAUCHE (IPACK & EXAMENS)
+# 🗂️ LOGIQUE CONTEXTUELLE COUPLÉE - COLONNE DE GAUCHE
 # ----------------------------------------------------------------------
 def get_forced_context_response(query_text, chosen_context):
     text = query_text.lower()
@@ -201,25 +200,26 @@ def get_forced_context_response(query_text, chosen_context):
         return "REGLEMENT_IPACK"
 
 # ----------------------------------------------------------------------
-# 🔍 LOGIQUE RECHERCHE GÉNÉRALE - CATALOGUE DES 4 ACADÉMIES PARTENAIRES
+# 🔍 LOGIQUE RECHERCHE GÉNÉRALE - EMPLACEMENTS ET LIENS PROFONDS (DROITE)
 # ----------------------------------------------------------------------
 def get_forced_general_search(query_text):
     text = query_text.lower()
     
-    # 1. Adresses des 4 sites partenaires configurés en dur
-    url_aix = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_78026/it/accueil"
-    url_lyon = "https://eps.enseigne.ac-lyon.fr/spip/"
-    url_creteil = "https://eps.ac-creteil.fr/"
-    url_grenoble = "https://eps-pedagogie.web.ac-grenoble.fr/examens"
+    # URL profonde vers les dossiers et documents spécifiques
+    url_tasa_direct = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_11139474/fr/le-test-d-aptitude-securitaire-aquatique-tasa"
+    url_lyon_ressources = "https://eps.enseigne.ac-lyon.fr/spip/spip.php?rubrique23"
 
-    # Sécurité absolue : Cas spécifique du TASA / Natation / Sécurité Aquatique
+    # Emplacement chirurgical pour le TASA / Natation / Savoir Nager
     if "tasa" in text or "aquatique" in text or "nager" in text or "bassin" in text:
         return f"""<div class="general-card">
-            <strong>🏊 RECHERCHE REFRENCÉE – Sécurité Aquatique &amp; TASA :</strong><br>
-            Le texte officiel et les grilles du <strong>Test d'Aptitude Sécuritaire Aquatique (TASA)</strong> sont disponibles sur nos portails régionaux.<br><br>
-            <strong>🔗 Liens d'accès direct au dossier TASA :</strong><br>
-            • <a href="{url_aix}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Référent Aix-Marseille</a> (Utilisez la recherche interne 'TASA')<br>
-            • <a href="{url_lyon}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Outils Lyon EPS</a>
+            <strong>🏊 TEXTES OFFICIELS – Emplacement du Document TASA :</strong><br><br>
+            Le document officiel complet ainsi que les grilles d'évaluation du <strong>Test d'Aptitude Sécuritaire Aquatique (TASA)</strong> se trouvent précisément ici :<br><br>
+            📂 <strong>Chemin d'accès :</strong><br>
+            <code>Accueil > Textes et Textes Officiels > Sécurité, Textes Généraux et Santé > Activités Aquatiques</code><br><br>
+            <a href="{url_tasa_direct}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">👉 Ouvrir directement la page de téléchargement du document TASA</a><br>
+            <br>
+            <em>En complément, les grilles d'accompagnement de fin de cycle sont également archivées dans cet espace :</em><br>
+            • <a href="{url_lyon_ressources}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Accéder aux outils d'analyse didactique des activités physiques</a> (Dossier : Textes Complémentaires).
         </div>"""
         
     return None
@@ -295,7 +295,7 @@ with col2:
         st.rerun()
         
     with st.chat_message("assistant"): 
-        st.markdown("Bonjour, recherchez un document ou un texte officiel. Je parcours les réseaux d'Aix-Marseille, Lyon, Créteil et Grenoble.")
+        st.markdown("Bonjour, recherchez un document ou un texte officiel. Je parcours les réseaux académiques partenaires.")
     for m in st.session_state.messages_aix:
         with st.chat_message(m["role"]):
             st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}", unsafe_allow_html=True)
@@ -304,7 +304,7 @@ with col2:
         st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
         with st.spinner("Recherche unifiée sur les 4 portails..."):
             
-            # 1. Interception prioritaire en dur
+            # 1. Interception prioritaire en dur avec l'emplacement exact
             general_forced = get_forced_general_search(prompt_aix)
             
             if general_forced:
@@ -314,7 +314,6 @@ with col2:
                     response_aix = engine_general.chat(prompt_aix)
                     answer_aix = response_aix.response
                     
-                    # Bouclier d'orientation dynamique si l'IA capitule
                     if "ne sais pas" in answer_aix.lower() or "pas d'information" in answer_aix.lower():
                         url_aix = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_78026/it/accueil"
                         url_lyon = "https://eps.enseigne.ac-lyon.fr/spip/"
@@ -323,10 +322,10 @@ with col2:
                         
                         answer_aix = f"""Je ne trouve pas ce texte spécifique dans mes fiches d'aide locales.<br><br>
                         <strong>🔍 Voici les accès directs vers nos 4 portails académiques partenaires pour affiner votre recherche :</strong><br>
-                        • <a href="{url_aix}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail EPS Aix-Marseille</a><br>
-                        • <a href="{url_lyon}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail EPS Lyon</a><br>
-                        • <a href="{url_creteil}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail EPS Créteil</a><br>
-                        • <a href="{url_grenoble}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Espace Examens Grenoble</a><br><br>
+                        • <a href="{url_aix}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail EPS Référent</a><br>
+                        • <a href="{url_lyon}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Outils Annexes</a><br>
+                        • <a href="{url_creteil}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Documentation</a><br>
+                        • <a href="{url_grenoble}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Espace Textes Complémentaires</a><br><br>
                         <em>(💡 Astuce : Utilisez la barre de recherche interne de ces sites avec vos mots-clés pour récupérer le document officiel).*</em>"""
                 else:
                     answer_aix = "Clé OpenAI manquante."
