@@ -47,13 +47,14 @@ st.markdown(f"""
     }}
     .stButton>button:hover {{ color: white !important; border-color: white !important; background-color: #1E293B !important; }}
     
-    /* Style encadré type Carte Mentale / Capsule Vidéo */
+    /* Style encadré type Carte Mentale / Capsule Vidéo en haut de réponse */
     .video-card {{
-        background-color: rgba(79, 70, 229, 0.15) !important;
-        border-left: 5px solid #4F46E5 !important;
-        padding: 15px;
+        background-color: rgba(79, 70, 229, 0.12) !important;
+        border-left: 6px solid #4F46E5 !important;
+        padding: 16px;
         border-radius: 4px 8px 8px 4px;
-        margin-top: 15px;
+        margin-bottom: 18px;
+        font-family: 'Source Sans Pro', sans-serif;
     }}
     
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
@@ -81,7 +82,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT ET CONFIGURATION DE LA MÉMOIRE CHAT ENGINE (TYPE CHATBASE)
+# 4. CHARGEMENT ET CONFIGURATION DE LA MÉMOIRE CHAT ENGINE
 @st.cache_resource
 def get_chat_engines():
     context = ""
@@ -90,7 +91,7 @@ def get_chat_engines():
             for file in os.listdir("./data"):
                 if file.endswith(".txt"):
                     with open(os.path.join("./data", file), "r", encoding="utf-8") as f:
-                        context += f"\n\n=== TEXTE OFFICIEL: {file} ===\n" + f.read()
+                        context += f"\n\n=== GUIDE DE CONFIGURATION: {file} ===\n" + f.read()
     except Exception:
         pass
         
@@ -98,10 +99,10 @@ def get_chat_engines():
     index = VectorStoreIndex.from_documents(docs)
     
     prompt_ipack = (
-        "Tu es l'IA experte exclusive du module 'iPackEPS et Examens' de l'Académie d'Aix-Marseille. Tu dois obligatoirement mener tes guides "
-        "pas-à-pas de façon très précise. Reste soudé à l'historique de la discussion pour comprendre "
-        "les questions de suivi (comme 'par quoi faut-il commencer ?').\n\n"
-        f"CONTEXTE DOCUMENTAIRE DE RÉFÉRENCE :\n{context}"
+        "Tu es l'IA experte du module 'iPackEPS' d'Aix-Marseille. Quand on te parle de configurer des sections sportives ou des classes, "
+        "ne parle JAMAIS d'évaluation, de notation ou de certification. Reste strictement concentré sur l'arborescence des structures "
+        "et décris les étapes d'organisation de façon épurée et chronologique. Reste synchronisé avec l'historique.\n\n"
+        f"CONTEXTE D'ACCÈS :\n{context}"
     )
     
     prompt_aix = (
@@ -126,7 +127,6 @@ def get_chat_engines():
 if openai_api_key:
     engine_ipack, engine_aix = get_chat_engines()
 
-# FONCTION DE VÉRIFICATION DE LIEN EN DIRECT
 def check_link_status(url):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -136,49 +136,50 @@ def check_link_status(url):
         return False
 
 # ----------------------------------------------------------------------
-# 🗂️ BASE DE DONNÉES DE TA CARTE MENTALE (THEMES -> LIENS / VIDEOS)
+# 🗂️ CARTOGRAPHIE DES CAPSULES D'AIDE ET REMÉDIATION DES LIENS EN HAUT
 # ----------------------------------------------------------------------
 def get_map_video_support(query_text):
     text = query_text.lower()
+    fallback_url = "https://eps.ac-creteil.fr/spip.php?rubrique5"
     
-    # Bloc A : Thème Connexion / Établissement
-    if "connexion" in text or "commenc" in text or "arena" in text or "esterel" in text:
+    # Étape 1 : Connexion / Accès initial
+    if "connexion" in text or "commenc" in text or "arena" in text:
         url = "https://dai.ly/x6tzq0a"
-        if check_link_status(url):
-            return f"""<div class="video-card"><strong>📍 Étape 1.0 de notre Carte Mentale :</strong><br>Pour bien démarrer votre saisie d'établissement, visionnez notre capsule d'aide :<br><a href="{url}" target="_blank" style="color:#4F46E5; font-weight:bold;">🎬 Cliquez ici pour ouvrir le Tutoriel Vidéo de Connexion</a></div>"""
+        active_url = url if check_link_status(url) else fallback_url
+        note = "Tutoriel Vidéo de Connexion" if active_url == url else "Portail d'aide et Guides Techniques officiels"
+        return f"""<div class="video-card"><strong>📍 Étape 1.0 (Démarrage) :</strong><br>Accédez directement à la ressource d'aide :<br><a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le lien : {note}</a></div>"""
             
-    # Bloc B : Thème Fiche Professeur
-    if "fiche prof" in text or "mon profil" in text or "voeux" in text or "jury" in text:
+    # Étape 2 : Fiche Professeur
+    if "fiche prof" in text or "mon profil" in text or "voeux" in text:
         url = "https://dai.ly/x6va900"
-        if check_link_status(url):
-            return f"""<div class="video-card"><strong>📍 Étape 2.0 de notre Carte Mentale :</strong><br>Pour configurer vos spécialités et vos vœux de jury examens :<br><a href="{url}" target="_blank" style="color:#4F46E5; font-weight:bold;">🎬 Cliquez ici pour ouvrir le Tutoriel Fiche Professeur</a></div>"""
+        active_url = url if check_link_status(url) else fallback_url
+        note = "Tutoriel Vidéo Fiche Professeur" if active_url == url else "Portail d'aide et Guides Techniques officiels"
+        return f"""<div class="video-card"><strong>📍 Étape 2.0 (Mon Espace) :</strong><br>Configurez vos options individuelles sans attendre :<br><a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le lien : {note}</a></div>"""
 
-    # Bloc C : Thème Configuration Classes / Import Élèves
+    # Étape 3.1 : Configuration Classes et Groupes
     if "classe" in text or "import" in text or "eleve" in text or "groupe" in text:
         url = "https://www.youtube.com/watch?v=tu8J1RBUTwk"
-        if check_link_status(url):
-            return f"""<div class="video-card"><strong>📍 Étape 3.1 de notre Carte Mentale :</strong><br>L'importation et la synchronisation STSWEB des classes se gèrent en vidéo ici :<br><a href="{url}" target="_blank" style="color:#4F46E5; font-weight:bold;">🎬 Cliquez ici pour ouvrir le Tutoriel Classes &amp; Groupes</a></div>"""
+        active_url = url if check_link_status(url) else fallback_url
+        note = "Tutoriel Vidéo : Configurer les Classes et Groupes" if active_url == url else "Portail d'aide et Guides Techniques officiels"
+        return f"""<div class="video-card"><strong>📍 Étape 3.1 (Structures) :</strong><br>Lancez l'importation ou la mise à jour de vos classes :<br><a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le lien : {note}</a><br><small>💡 <em>Rappel de clic :</em> Menu de gauche -> Onglet <strong>Dossiers</strong> -> <strong>[Dossier EPS]</strong> -> <strong>Classes</strong>.</small></div>"""
 
-    # Bloc D : Thème Programmation APSA / Cases à cocher
-    if "apsa" in text or "cocher" in text or "certificatif" in text or "ccf" in text:
-        url = "https://www.youtube.com/watch?v=YtRkV7gmlpQ"
-        if check_link_status(url):
-            return f"""<div class="video-card"><strong>📍 Étape 3.1 (APSA) de notre Carte Mentale :</strong><br>Pour lier vos périodes et activer le caractère certificatif de vos activités :<br><a href="{url}" target="_blank" style="color:#4F46E5; font-weight:bold;">🎬 Cliquez ici pour ouvrir le Tutoriel de Programmation APSA</a></div>"""
-
-    # Bloc E : Thème Sections Sportives Scolaires
+    # Étape 3.4 : Sections Sportives Scolaires (SSS)
     if "section" in text or "sss" in text or "sportive" in text:
-        url = "https://eps.ac-creitil.fr/spip.php?rubrique5" # Simulé ou ton adresse profonde
-        return f"""<div class="video-card"><strong>📍 Étape 3.4 de notre Carte Mentale :</strong><br>Le pilotage, l'ouverture et le bilan annuel de votre dossier SSS s'organisent ici :<br><a href="https://www.youtube.com/watch?v=QPhqFI4czhA" target="_blank" style="color:#4F46E5; font-weight:bold;">🎬 Cliquez ici pour ouvrir le Tutoriel de Gestion SSS</a><br><small>💡 Code d'accès rapide : Menu de gauche -> Onglet <strong>Dossiers</strong> -> Sous-rubrique <strong>[Dossier SSS]</strong>.</small></div>"""
+        url = "https://www.youtube.com/watch?v=QPhqFI4czhA"
+        active_url = url if check_link_status(url) else fallback_url
+        note = "Tutoriel Vidéo : Gestion des Sections Sportives" if active_url == url else "Portail d'aide et Guides Techniques officiels"
+        return f"""<div class="video-card"><strong>📍 Étape 3.4 (Sections Sportives) :</strong><br>Consultez la procédure d'ouverture ou de reconduction immédiatement :<br><a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le lien : {note}</a><br><small>💡 <em>Rappel de clic :</em> Menu de gauche -> Onglet <strong>Dossiers</strong> -> Sous-rubrique <strong>[Dossier SSS]</strong>.</small></div>"""
 
-    # Bloc F : Thème Validation finale / Envoi IPR
-    if "envoi" in text or "valid" in text or "soumettre" in text or "ipr" in text:
+    # Étape Finale : Soumission / Validation IPR
+    if "envoi" in text or "valid" in text or "soumettre" in text:
         url = "https://www.youtube.com/watch?v=ToTBgO_nMAI"
-        if check_link_status(url):
-            return f"""<div class="video-card"><strong>📍 Étape Finale de notre Carte Mentale :</strong><br>Une fois le bilan de saisie à 100%, soumettez votre protocole à la commission :<br><a href="{url}" target="_blank" style="color:#4F46E5; font-weight:bold;">🎬 Cliquez ici pour ouvrir le Tutoriel d'Envoi et de Validation</a></div>"""
+        active_url = url if check_link_status(url) else fallback_url
+        note = "Tutoriel Vidéo : Soumission de Dossier" if active_url == url else "Portail d'aide et Guides Techniques officiels"
+        return f"""<div class="video-card"><strong>📍 Étape Finale (Validation) :</strong><br>Transmettez votre saisie terminée aux services d'inspection :<br><a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le lien : {note}</a></div>"""
             
     return ""
 
-# 5. SPLIT ÉCRAN EN 2 COLONNES TOTALEMENT INDÉPENDANTES
+# 5. STRUCTURE DES DEUX COLONNES INTERFACES
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
@@ -196,16 +197,20 @@ with col1:
             
     if prompt_ipack := st.chat_input("Une question sur iPack ou un Examen ?", key="input_ipack_final"):
         st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
-        with st.spinner("Analyse conversationnelle..."):
+        with st.spinner("Analyse..."):
             if openai_api_key:
-                # L'IA génère la réponse logique en s'appuyant sur l'historique complet
-                response = engine_ipack.chat(prompt_ipack)
-                answer = response.response
+                # 1. On intercepte et génère d'abord le bloc média si un mot clé correspond
+                video_block = get_map_video_support(prompt_ipack)
                 
-                # INJECTION DE TA CARTE MENTALE (Le filtre magique)
-                video_support = get_map_video_support(prompt_ipack)
-                if video_support:
-                    answer += f"\n\n{video_support}"
+                # 2. On interroge l'IA pour obtenir le guide textuel épuré
+                response = engine_ipack.chat(prompt_ipack)
+                ai_text = response.response
+                
+                # 3. CONCATÉNATION : On met la vidéo en PREMIER, puis le texte d'explication en dessous
+                if video_block:
+                    answer = f"{video_block}\n\n{ai_text}"
+                else:
+                    answer = ai_text
             else:
                 answer = "Clé OpenAI manquante."
         st.session_state.messages_ipack.append({"role": "assistant", "content": answer})
