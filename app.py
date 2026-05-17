@@ -16,6 +16,36 @@ if "last_query" not in st.session_state:
 if "query_repeat_count" not in st.session_state:
     st.session_state.query_repeat_count = 1
 
+# ----------------------------------------------------------------------
+# 📈 FONCTION DE GESTION DU COMPTEUR DE VISITES (FICHIER LOCAL)
+# ----------------------------------------------------------------------
+def incrementer_et_recuperer_compteur():
+    fichier_compteur = "compteur.txt"
+    # Si le fichier n'existe pas, on l'initialise à 0
+    if not os.path.exists(fichier_compteur):
+        with open(fichier_compteur, "w", encoding="utf-8") as f:
+            f.write("0")
+            
+    # Lecture de la valeur actuelle
+    with open(fichier_compteur, "r", encoding="utf-8") as f:
+        try:
+            total_visites = int(f.read().strip())
+        except ValueError:
+            total_visites = 0
+            
+    # On ajoute la visite actuelle uniquement si la session démarre
+    if "visite_comptabilisee" not in st.session_state:
+        total_visites += 1
+        st.session_state.visite_comptabilisee = True
+        with open(fichier_compteur, "w", encoding="utf-8") as f:
+            f.write(str(total_visites))
+            
+    return total_visites
+
+# Récupération du nombre total de visites
+nb_visites = incrementer_et_recuperer_compteur()
+# ----------------------------------------------------------------------
+
 # 2. CONFIGURATION DE LA PAGE ET DES STYLES VISUELS
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
@@ -33,12 +63,29 @@ st.markdown(f"""
         background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !repeat; background-attachment: fixed !important;
     }}
     header[data-testid="stHeader"] {{ display: none !important; }}
+    
+    /* Style du Bandeau d'en-tête adapté pour inclure le compteur */
     .hub-header {{
         background-color: #1E293B; display: flex; justify-content: space-between; align-items: center;
         padding: 10px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
+    
+    /* Style de la pastille du compteur de visites */
+    .visitor-badge {{
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10B981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: bold;
+        font-family: monospace;
+        display: inline-block;
+        margin-top: 5px;
+    }}
+    
     .column-title {{
         color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center;
         margin-bottom: 10px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0;
@@ -51,7 +98,7 @@ st.markdown(f"""
     }}
     .stButton>button:hover {{ color: white !important; border-color: white !important; background-color: #1E293B !important; }}
     
-    /* Styles des fenêtres d'alertes et cartes */
+    /* Cartes et alertes */
     .video-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #4F46E5 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .video-card-college {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #0EA5E9 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .santorin-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; color: #1E293B !important; }}
@@ -72,11 +119,15 @@ if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
+# EN-TÊTE HARMONISÉ AVEC LOGOS ET COMPTEUR DE VISITES INTEGRÉ A DROITE
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="110"></div>
-        <div class="hub-title"><h1>Hub IA - EPS Aix-Marseille</h1><p>Espace Ressources &amp; Assistance Numérique</p></div>
-        <div style="width: 150px; text-align: right;"><img src="{github_url}{img_droite}" width="75"></div>
+        <div class="hub-title" style="text-align: center;"><h1>Hub IA - EPS Aix-Marseille</h1><p>Espace Ressources &amp; Assistance Numérique</p></div>
+        <div style="width: 170px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+            <img src="{github_url}{img_droite}" width="75">
+            <div class="visitor-badge">👁️ {nb_visites:05d} visites</div>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -96,7 +147,6 @@ def get_chat_engines():
     docs = SimpleDirectoryReader(input_dir="./data").load_data()
     index = VectorStoreIndex.from_documents(docs)
     
-    # VERROUILLAGE SÉMANTIQUE : TU PARLES À UN ENSEIGNANT D'EPS
     prompt_ipack = (
         "Tu es l'IA experte du module 'iPackEPS et Saisie' de l'Académie d'Aix-Marseille. "
         "CONSIGNE ABSOLUE DE POSTURE : Sache que tes interlocuteurs sont exclusivement des enseignants d'EPS. "
@@ -325,7 +375,7 @@ with col2:
                         url_creteil = "https://eps.ac-creitil.fr/"
                         url_grenoble = "https://eps-pedagogie.web.ac-grenoble.fr/examens"
                         
-                        answer_aix = f"""Je ne trouve pas ce document spécifique dans nos fichiers d'aide locaux.<br><br>
+                        answer_aix = f"""Je ne trouve pas ce document spécifique dans nos fichiers d'aide locales.<br><br>
                         <strong>🔍 Voici les accès directs vers nos 4 portails de référence pour télécharger la circulaire :</strong><br>
                         • <a href="{url_aix}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail EPS Référent</a><br>
                         • <a href="{url_lyon}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Outils Annexes</a><br>
