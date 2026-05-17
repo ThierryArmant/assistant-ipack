@@ -6,13 +6,13 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 
-# 1. INITIALISATION DE LA MÉMOIRE CONVERSATIONNELLE STABLE
+# 1. INITIALISATION DE LA MÉMOIRE CONVERSATIONNELLE
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
     st.session_state.messages_aix = []
 
-# 2. CONFIGURATION DE LA PAGE ET DES STYLES VISUELS
+# 2. CONFIGURATION DE LA PAGE
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 img_gauche = "image_7.png"  
@@ -47,22 +47,13 @@ st.markdown(f"""
     }}
     .stButton>button:hover {{ color: white !important; border-color: white !important; background-color: #1E293B !important; }}
     
-    /* Style encadré type Carte Mentale / Capsule Vidéo en haut de réponse */
-    .video-card {{
-        background-color: rgba(79, 70, 229, 0.12) !important;
-        border-left: 6px solid #4F46E5 !important;
-        padding: 16px;
-        border-radius: 4px 8px 8px 4px;
-        margin-bottom: 18px;
-    }}
+    .video-card {{ background-color: rgba(79, 70, 229, 0.12) !important; border-left: 6px solid #4F46E5 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; }}
+    .video-card-college {{ background-color: rgba(14, 165, 233, 0.1) !important; border-left: 6px solid #0EA5E9 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; }}
+    .santorin-card {{ background-color: rgba(239, 68, 68, 0.1) !important; border-left: 6px solid #EF4444 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; }}
     
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
-        background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15% !important;
-    }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
-        background-color: rgba(233, 236, 239, 0.9) !important; color: #212529 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 15% !important;
-    }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15% !important; }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{ background-color: rgba(233, 236, 239, 0.9) !important; color: #212529 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 15% !important; }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -90,7 +81,7 @@ def get_chat_engines():
             for file in os.listdir("./data"):
                 if file.endswith(".txt"):
                     with open(os.path.join("./data", file), "r", encoding="utf-8") as f:
-                        context += f"\n\n=== CONTEXTE: {file} ===\n" + f.read()
+                        context += f"\n\n=== SOURCE: {file} ===\n" + f.read()
     except Exception:
         pass
         
@@ -98,29 +89,18 @@ def get_chat_engines():
     index = VectorStoreIndex.from_documents(docs)
     
     prompt_ipack = (
-        "Tu es l'IA experte du module 'iPackEPS' d'Aix-Marseille. Quand on te parle de configurer des sections sportives ou des classes, "
-        "ne parle JAMAIS d'évaluation, de notation ou de certification. Reste strictement concentré sur l'arborescence des structures "
-        "et décris les étapes d'organisation de façon épurée et chronologique. Reste synchronisé avec l'historique.\n\n"
-        f"CONTEXTE D'ACCÈS :\n{context}"
+        "Tu es l'IA experte du module 'iPackEPS et Saisie'. Traite uniquement de la configuration, des classes, "
+        "des listes d'élèves et des dossiers sportifs (APPN, SSS). Ne confonds jamais cela avec Santorin ou les examens.\n\n"
+        f"CONTEXTE :\n{context}"
     )
-    
-    prompt_aix = (
-        "Tu es l'IA experte du module 'Recherches Générales' de l'Académie d'Aix-Marseille. Tu devez orienter en priorité absolue "
-        "vers les ressources de notre académie d'Aix-Marseille."
-    )
+    prompt_aix = "Tu es l'IA experte du module 'Recherches Générales' de l'Académie d'Aix-Marseille."
     
     engine_ipack = index.as_chat_engine(
-        chat_mode="condense_plus_context",
-        memory=ChatMemoryBuffer.from_defaults(token_limit=3500),
-        system_prompt=prompt_ipack
+        chat_mode="condense_plus_context", memory=ChatMemoryBuffer.from_defaults(token_limit=3500), system_prompt=prompt_ipack
     )
-    
     engine_aix = index.as_chat_engine(
-        chat_mode="condense_plus_context",
-        memory=ChatMemoryBuffer.from_defaults(token_limit=3500),
-        system_prompt=prompt_aix
+        chat_mode="condense_plus_context", memory=ChatMemoryBuffer.from_defaults(token_limit=3500), system_prompt=prompt_aix
     )
-    
     return engine_ipack, engine_aix
 
 if openai_api_key:
@@ -135,83 +115,96 @@ def check_link_status(url):
         return False
 
 # ----------------------------------------------------------------------
-# 🗂️ CARTOGRAPHIE MULTI-NIVEAUX : DISTINCTION COLLÈGE / LYCÉE
+# 🗂️ LOGIQUE MÉTIER STRICTE : SÉPARATION IPACK / SANTORIN / EXAMENS
 # ----------------------------------------------------------------------
 def get_map_video_support(query_text):
     text = query_text.lower()
     fallback_url = "https://eps.ac-creteil.fr/spip.php?rubrique5"
     
-    is_lycee = any(w in text for w in ["lycée", "lycee", "2de", "seconde", "1ere", "premiere", "terminale", "lycéen"])
+    # SUB-MODULE 1 : LOGIQUE RECHERCHE RÈGLES DE NOTATION EXAMENS (SANTORIN)
+    if any(w in text for w in ["inapte", "dispens", "absent", "note", " 0 ", "santorin"]):
+        if "inapte" in text:
+            return """<div class="santorin-card">
+                <strong>📊 MODULE SANTORIN &amp; EXAMENS – Élève Inapte :</strong><br>
+                <strong>Règle stricte : On ne met pas 0.</strong><br>
+                L'inaptitude médicale (temporaire ou partielle) donne obligatoirement accès à une <strong>épreuve de substitution</strong> ou à une adaptation pédagogique lors de la session de certification.
+            </div>"""
+        if "dispens" in text:
+            return """<div class="santorin-card" style="background-color: rgba(245, 158, 11, 0.1) !important; border-left: 6px solid #F59E0B !important;">
+                <strong>📊 MODULE SANTORIN &amp; EXAMENS – Élève Dispensé :</strong><br>
+                <strong>Règle stricte : On ne met pas 0.</strong><br>
+                Une dispense médicale validée entraîne la <strong>neutralisation de l'APSA</strong>. L'activité n'entre pas en compte dans le calcul de la moyenne de l'examen.
+            </div>"""
+        if "absent" in text:
+            return """<div class="santorin-card" style="background-color: rgba(16, 185, 129, 0.1) !important; border-left: 6px solid #10B981 !important;">
+                <strong>📊 MODULE SANTORIN &amp; EXAMENS – Élève Absent :</strong><br>
+                <strong>Règle stricte : L'absence injustifiée vaut 0.</strong><br>
+                Si l'élève est absent sans justificatif officiel à l'épreuve CCF, la note à saisir sur le serveur d'examen est un <strong>0</strong>.
+            </div>"""
+
+    # SUB-MODULE 2 : LOGIQUE CONFIGURATION STRUCTURES (IPACK EPS)
+    is_lycee = any(w in text for w in ["lycée", "lycee", "2de", "seconde", "1ere", "premiere", "terminale"])
     is_college = any(w in text for w in ["collège", "college", "6eme", "5eme", "4eme", "3eme", "brevet"])
     
-    # Cas neutre : pas de précision collège/lycée
-    if ("section" in text or "classe" in text or "import" in text) and not (is_lycee or is_college):
+    if ("section" in text or "classe" in text or "import" in text or "commenc" in text) and not (is_lycee or is_college):
         return """<div class="video-card" style="background-color: rgba(234, 179, 8, 0.1) !important; border-left: 6px solid #EAB308 !important;">
-            <strong>🔍 Précision requise (Collège ou Lycée ?) :</strong><br>
-            Pour vous donner le bon parcours fléché de notre carte mentale, précisez votre niveau dans votre question (ex: <em>"importer mes classes au lycée"</em> ou <em>"les SSS en collège"</em>).
+            <strong>🔍 STRUCTURE DIRECTE REQUISE (iPackEPS) :</strong><br>
+            S'agit-il d'un dossier pour le <strong>Collège</strong> ou pour le <strong>Lycée</strong> ? Précisez-le dans votre question pour ouvrir le bon volet d'aide.
         </div>"""
 
-    # --- PARCOURS LYCÉE ---
     if is_lycee:
         if "section" in text or "sss" in text or "sportive" in text:
             url = "https://www.youtube.com/watch?v=QPhqFI4czhA"
             active_url = url if check_link_status(url) else fallback_url
-            return f"""<div class="video-card"><strong>📍 CARTE MENTALE LYCÉE – Étape 3.4 (Sections Sportives) :</strong><br>
-                Suivez la procédure spécifique aux structures de Lycée :<br>
-                <a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Tutoriel Vidéo SSS Lycée</a><br>
-                <small>💡 <em>Rappel Clic :</em> Onglet <strong>Dossiers</strong> -> <strong>[Dossier SSS] Gestion des Sections Sportives</strong>.</small></div>"""
-        
-        if "classe" in text or "import" in text or "eleve" in text or "groupe" in text:
+            return f"""<div class="video-card"><strong>🛠️ MODULE IPACK LYCÉE – Onglet Dossiers SSS (3.4) :</strong><br>
+                <a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Tutoriel Vidéo de Configuration SSS Lycée</a></div>"""
+        if "classe" in text or "import" in text:
             url = "https://www.youtube.com/watch?v=tu8J1RBUTwk"
             active_url = url if check_link_status(url) else fallback_url
-            return f"""<div class="video-card"><strong>📍 CARTE MENTALE LYCÉE – Étape 3.1 (Classes &amp; Divisions) :</strong><br>
-                Synchronisation STSWEB pour les élèves de Lycée :<br>
-                <a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Tutoriel Classes Lycée</a></div>"""
+            return f"""<div class="video-card"><strong>🛠️ MODULE IPACK LYCÉE – Importation Classes (3.1) :</strong><br>
+                <a href="{active_url}" target="_blank" style="color:#4F46E5; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Tutoriel d'importation STSWEB Lycée</a></div>"""
 
-    # --- PARCOURS COLLÈGE ---
     if is_college:
         if "section" in text or "sss" in text or "sportive" in text:
-            return f"""<div class="video-card" style="background-color: rgba(14, 165, 233, 0.1) !important; border-left: 6px solid #0EA5E9 !important;">
-                <strong>📍 CARTE MENTALE COLLÈGE – Étape 3.4 (Sections Sportives) :</strong><br>
-                Reconduction et bilans SSS pour les Collèges :<br>
-                <a href="{fallback_url}" target="_blank" style="color:#0EA5E9; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Guide d'aide SSS Collège</a></div>"""
-                
-        if "classe" in text or "import" in text or "eleve" in text or "groupe" in text:
-            return f"""<div class="video-card" style="background-color: rgba(14, 165, 233, 0.1) !important; border-left: 6px solid #0EA5E9 !important;">
-                <strong>📍 CARTE MENTALE COLLÈGE – Étape 3.1 (Classes &amp; Cycles) :</strong><br>
-                Importation des élèves et socle commun (Collège) :<br>
-                <a href="{fallback_url}" target="_blank" style="color:#0EA5E9; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Tutoriel Classes Collège</a></div>"""
+            return f"""<div class="video-card-college"><strong>🛠️ MODULE IPACK COLLÈGE – Onglet Dossiers SSS (3.4) :</strong><br>
+                <a href="{fallback_url}" target="_blank" style="color:#0EA5E9; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Manuel de Reconduction SSS Collège</a></div>"""
+        if "classe" in text or "import" in text:
+            return f"""<div class="video-card-college"><strong>🛠️ MODULE IPACK COLLÈGE – Importation Classes (3.1) :</strong><br>
+                <a href="{fallback_url}" target="_blank" style="color:#0EA5E9; font-weight:bold; text-decoration:underline;">🎬 Ouvrir le Guide d'importation des Groupes Socle Commun</a></div>"""
 
     return ""
 
-# 5. STRUCTURE DES DEUX COLONNES INTERFACES
+# 5. SPLIT ÉCRAN
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
-    st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
-    if st.button("🧹 Nouveau chat (iPack)", key="clear_ipack"):
+    st.markdown('<div class="column-title">🤖 Assistant iPack EPS, Santorin &amp; Examens</div>', unsafe_allow_html=True)
+    if st.button("🧹 Nouveau chat (iPack/Exam)", key="clear_ipack"):
         st.session_state.messages_ipack = []
         if openai_api_key: engine_ipack.reset()
         st.rerun()
         
     with st.chat_message("assistant"): 
-        st.markdown("Bonjour, posez-moi vos questions sur iPack, Santorin ou les Examens. Je vous guiderai pas à pas.")
+        st.markdown("Bonjour. Posez votre question sur **iPackEPS** (Configuration, classes, SSS) ou sur **Santorin / Examens** (Notes, absences, dispenses).")
     for m in st.session_state.messages_ipack:
         with st.chat_message(m["role"]):
             st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}", unsafe_allow_html=True)
             
-    if prompt_ipack := st.chat_input("Une question sur iPack ou un Examen ?", key="input_ipack_final"):
+    if prompt_ipack := st.chat_input("Votre question (iPack, Santorin ou Examen) ?", key="input_ipack_final"):
         st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
         with st.spinner("Analyse..."):
-            if openai_api_key:
-                # Placement stratégique de la carte mentale/vidéo en PREMIER
-                video_block = get_map_video_support(prompt_ipack)
-                response = engine_ipack.chat(prompt_ipack)
-                ai_text = response.response
-                
-                answer = f"{video_block}\n\n{ai_text}" if video_block else ai_text
+            video_block = get_map_video_support(prompt_ipack)
+            
+            # Si c'est du réglementaire pur (Santorin), on bloque direct pour éliminer toute hallucination
+            if video_block and any(w in prompt_ipack.lower() for w in ["inapte", "dispens", "absent"]):
+                answer = video_block
             else:
-                answer = "Clé OpenAI manquante."
+                if openai_api_key:
+                    response = engine_ipack.chat(prompt_ipack)
+                    answer = f"{video_block}\n\n{response.response}" if video_block else response.response
+                else:
+                    answer = "Clé OpenAI manquante."
+                    
         st.session_state.messages_ipack.append({"role": "assistant", "content": answer})
         st.rerun()
 
