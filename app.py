@@ -10,7 +10,7 @@ st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", la
 # Identification des images à la racine de ton GitHub
 img_acad = "image_5.png"  # Logo iPack EPS (Gauche)
 img_eps = "image_6.png"   # Logo EPS (Droite)
-img_fond = "image_8.jpg"  # Ton image de fond personnalisée avec les vignettes
+img_fond = "image_8.png"  # Ton image de fond personnalisée avec les vignettes
 
 # Construction de l'URL GitHub pour les images
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
