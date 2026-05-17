@@ -103,7 +103,6 @@ def generate_expert_response(user_query, history_type):
     # CONDITION A : FENÊTRE CONFIGURÉE POUR IPACK ET EXAMENS
     # -------------------------------------------------------------
     if history_type == "ipack":
-        # Sécurités directes
         if "dispens" in q_lower or "inapte" in q_lower or "absent" in q_lower or "0" in q_lower:
             if "dispens" in q_lower:
                 return "Sur notre portail de notation, **une dispense médicale neutralise l'APSA**. L'activité concernée ne sera pas prise en compte pour le calcul de la note finale de l'élève. S'il s'agit d'une inaptitude temporaire survenue juste avant l'épreuve, l'élève a droit à une épreuve de substitution."
@@ -116,13 +115,11 @@ def generate_expert_response(user_query, history_type):
                 "Si votre page de protocole reste blanche, vous devez impérativement **saisir l'ensemble de vos APSA de l'année et définir explicitement leur caractère certificatif** pour que tout s'affiche instantanément."
             )
 
-        # Définition des URLs de la fenêtre Examen & iPack
         url_ipack_creteil = "https://ipackeps.ac-creteil.fr/"
         url_exam_lyon = "https://eps.enseigne.ac-lyon.fr/spip/spip.php?rubrique9"
         url_exam_grenoble = "https://eps-pedagogie.web.ac-grenoble.fr/examens"
         url_exam_creteil = "https://eps.ac-creteil.fr/spip.php?rubrique5"
         
-        # Tests des serveurs de la fenêtre
         ipack_ok = check_link_status(url_ipack_creteil)
         lyon_ok = check_link_status(url_exam_lyon)
         grenoble_ok = check_link_status(url_exam_grenoble)
@@ -151,12 +148,10 @@ def generate_expert_response(user_query, history_type):
     # CONDITION B : FENÊTRE CONFIGURÉE POUR LES RECHERCHES GÉNÉRALES
     # -------------------------------------------------------------
     else:
-        # Définition des URLs de la fenêtre Recherches Générales
         url_general_aix = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_78026/it/accueil"
         url_general_creteil = "https://eps.ac-creteil.fr/"
         url_general_lyon = "https://eps.enseigne.ac-lyon.fr/spip/"
         
-        # Tests des serveurs de la fenêtre
         aix_ok = check_link_status(url_general_aix)
         creteil_gen_ok = check_link_status(url_general_creteil)
         lyon_gen_ok = check_link_status(url_general_lyon)
@@ -222,7 +217,7 @@ with col2:
             
     if prompt_aix := st.chat_input("Votre recherche générale (Ressources, textes...) ?", key="input_aix_final"):
         st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
-        with th st.spinner("Recherche prioritaire sur Aix-Marseille..."):
+        with st.spinner("Recherche prioritaire sur Aix-Marseille..."):
             answer_aix = generate_expert_response(prompt_aix, "aix")
         st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
         st.rerun()
