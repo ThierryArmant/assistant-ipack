@@ -35,16 +35,32 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
     .column-title {{
         color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center;
-        margin-bottom: 15px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0;
+        margin-bottom: 10px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0;
         box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
     }}
-    /* Bulles de chat épurées et sans conteneur bloquant */
+    
+    /* Bouton de nettoyage personnalisé style Chatbase */
+    .stButton>button {{
+        background-color: rgba(30, 41, 59, 0.8) !important;
+        color: #94A3B8 !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        border-radius: 20px !important;
+        font-size: 11px !important;
+        padding: 2px 12px !important;
+        transition: all 0.3s;
+    }}
+    .stButton>button:hover {{
+        color: white !important;
+        border-color: white !important;
+        background-color: #1E293B !important;
+    }}
+
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
-        background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15 % !important;
+        background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15% !important;
     }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
-        background-color: rgba(233, 236, 239, 0.9) !important; color: #212529 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 15 % !important;
+        background-color: rgba(233, 236, 239, 0.9) !important; color: #212529 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 15% !important;
     }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
@@ -96,6 +112,11 @@ col1, col2 = st.columns(2, gap="large")
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
     
+    # Petit menu d'action rapide sous la forme d'un bouton d'effacement
+    if st.button("🧹 Nouveau chat (iPack)", key="clear_ipack"):
+        st.session_state.messages_ipack = []
+        st.rerun()
+        
     # Affichage libre des messages
     with st.chat_message("assistant"): 
         st.markdown("Bonjour, que puis-je faire pour vous concernant iPack et les examens ?")
@@ -113,6 +134,11 @@ with col1:
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     
+    # Petit menu d'action rapide sous la forme d'un bouton d'effacement
+    if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
+        st.session_state.messages_aix = []
+        st.rerun()
+        
     # Affichage libre des messages
     with st.chat_message("assistant"): 
         st.markdown("Bonjour, que cherchez-vous comme document sur notre site ?")
