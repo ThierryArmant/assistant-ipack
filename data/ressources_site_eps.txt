@@ -1,22 +1,12 @@
-BANQUE DE CONNAISSANCES ET RESSOURCES - HUB EPS
+DOCUMENTATION ET RESSOURCES OFFICIELLES - HUB EPS AIX-MARSEILLE
 
-[SECTION : RECHERCHES ET GUIDES SITE EPS]
-• Pour consulter les banques d'outils numériques pour le suivi des élèves et les protocoles d'examens de la voie professionnelle (Bac Pro/CAP), l'assistant s'appuie sur les fiches de l'académie de Lyon.
-• Pour les chartes de sécurité liées aux APPN (Activités Physiques de Pleine Nature) et les livrets d'évaluation harmonisés, se référer aux fiches de l'académie de Grenoble.
-• Pour les guides de validation CCF et les fiches d'évaluation par compétences, utiliser les protocoles de l'académie de Créteil.
+[SECTION : GUIDES DE RÉFÉRENCE ET RECHERCHES SITE EPS]
+• Protocoles d'examens : Retrouvez l'ensemble des protocoles officiels pour la voie professionnelle (Bac Pro, CAP) ainsi que nos livrets d'évaluation harmonisés directement sur notre portail.
+• Outils numériques : Nos banques d'outils numériques pour le suivi pédagogique et l'évaluation continue des élèves sont intégrées à nos ressources académiques.
+• Sécurité APPN : Les chartes de sécurité obligatoires pour l'encadrement des Activités Physiques de Pleine Nature font partie de nos guides officiels téléchargeables.
+• Support iPack & Examens : Accédez à nos manuels d'aide iPack EPS, nos foires aux questions (FAQ) et nos fiches de validation du CCF par compétences.
 
-[SECTION : LIENS DIRECTS DE TÉLÉCHARGEMENT]
-• Accès aux outils numériques : https://www1.ac-lyon.fr/pedagogie/eps
-• Accès aux chartes de sécurité APPN : https://www.ac-grenoble.fr/disciplines/eps/
-• Accès au portail iPack EPS général : https://ipackeps.ac-creteil.fr/
-CONTENU ET DOCUMENTATION DE RÉFÉRENCE - HUB EPS
-
-[SECTION : RECHERCHES ET GUIDES SITE EPS]
-• Protocoles d'examens pour la voie professionnelle (Bac Pro/CAP) et banques d'outils numériques pour le suivi des élèves : se référer aux fiches de l'académie de Lyon.
-• Chartes de sécurité liées aux APPN (Activités Physiques de Pleine Nature) et livrets d'évaluation harmonisés : se référer aux livrets de l'académie de Grenoble.
-• Guides d'aide iPack EPS, foires aux questions et fiches d'évaluation par compétences : utiliser les protocoles de l'académie de Créteil.
-
-[SECTION : PORTAILS ET ACCÈS DIRECTS]
-• Saisie et validation des épreuves : https://ipackeps.ac-creteil.fr/
-• Outils de suivi numérique : https://www1.ac-lyon.fr/pedagogie/eps
-• Chartes de sécurité APPN : https://www.ac-grenoble.fr/disciplines/eps/
+[SECTION : ACCÈS DIRECTS ET LIENS DU PORTAIL]
+• Espace d'évaluation et saisie des épreuves CCF : https://ipackeps.ac-creteil.fr/
+• Téléchargement des outils numériques de suivi : https://www1.ac-lyon.fr/pedagogie/eps
+• Consultation des chartes de sécurité APPN académiques : https://www.ac-grenoble.fr/disciplines/eps/
