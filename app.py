@@ -7,27 +7,38 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 # 1. CONFIGURATION DE LA PAGE
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
-# Identification des images (doivent être à la racine de ton GitHub)
+# Identification des images à la racine de ton GitHub
 img_acad = "image_5.png"  # Logo iPack EPS (Gauche)
 img_eps = "image_6.png"   # Logo EPS (Droite)
-img_consensus = "image_7.png" # Image de filigrane consensus
+img_fond = "image_8.jpg"  # Ton image de fond personnalisée avec les vignettes
+
+# Construction de l'URL GitHub pour les images
+github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
 st.markdown(f"""
     <style>
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
-    .stApp {{ background-color: #F1F5F9 !important; }} /* Fond général gris perle */
+    
+    /* INTEGRATION DE IMAGE_8 EN FOND D'ECRAN GLOBAL */
+    .stApp {{ 
+        background-image: url('{github_url}{img_fond}') !important;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+    }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* BANDEAU SUPÉRIEUR - COULEUR BLEU ARDOISE PROFOND (CONSENSUS) */
+    /* BANDEAU SUPÉRIEUR - BLEU ARDOISE INSTITUTIONNEL */
     .hub-header {{
-        background-color: #1E293B; /* Slate 800 - Moderne et Institutionnel */
+        background-color: #1E293B;
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 10px 25px;
         margin-bottom: 15px;
         border-radius: 8px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
     .hub-title {{ text-align: center; color: white; }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; letter-spacing: 0.5px; }}
@@ -35,50 +46,51 @@ st.markdown(f"""
     
     /* TITRES DES COLONNES */
     .column-title {{
-        color: #334155;
+        color: #FFFFFF;
         font-size: 14px;
         font-weight: 700;
         text-align: center;
         margin-bottom: 10px;
-        height: 22px;
+        height: 24px;
+        background-color: #1E293B;
+        border-radius: 4px;
+        padding: 4px 0;
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
     }}
     
-    /* CONTENEUR DE CHAT AVEC FILIGRANE */
+    /* LES DEUX FENÊTRES DE CHAT EN FOND BLANC SEMI-TRANSPARENT (COMME SUR L'IMAGE) */
     .scroll-chat {{
-        height: 320px !important;
+        height: 340px !important;
         overflow-y: auto !important;
         padding: 15px;
         position: relative;
-        background-color: rgba(255, 255, 255, 0.7); /* Fond blanc semi-transparent */
+        background-color: rgba(255, 255, 255, 0.90) !important; /* Fond blanc opaque pour isoler le texte */
+        border-radius: 8px;
+        box-shadow: inset 0px 0px 10px rgba(0,0,0,0.05);
     }}
     
-    /* STYLE DES BULLES DE CHAT (STYLE PREMIUM) */
-    /* Utilisateur : Blanc pur, ombre portée douce */
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
-        background-color: #FFFFFF !important;
-        border-radius: 18px 18px 0px 18px !important;
-        border: 1px solid #E2E8F0 !important;
-        box-shadow: 0px 2px 5px rgba(0,0,0,0.05) !important;
-        margin-left: 15% !important;
-        margin-bottom: 10px !important;
-    }}
-    
-    /* Assistant : Gris très clair bleuté */
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
-        background-color: #F8FAFC !important;
-        border-radius: 18px 18px 18px 0px !important;
+    /* REFORMATAGE DES BULLES EN TEXTE CONTINU SUR FOND BLANC */
+    div[data-testid="stChatMessage"] {{
+        background-color: transparent !important;
         border: none !important;
-        margin-right: 15% !important;
-        margin-bottom: 10px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        margin-left: 0px !important;
+        margin-right: 0px !important;
+        box-shadow: none !important;
     }}
     
-    /* Masquer les avatars par défaut */
+    /* Suppression des avatars Streamlit pour garder la pureté de la liste de texte */
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{
         display: none !important;
     }}
     
-    /* Bordure du champ de saisie */
-    .stChatInputContainer {{ border-color: #1E293B !important; }}
+    /* Barre de saisie alignée et propre */
+    .stChatInputContainer {{ 
+        border-color: #1E293B !important; 
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        border-radius: 8px !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -88,9 +100,7 @@ if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# 3. BANDEAU LOGOS ET TITRE
-github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
-
+# 3. BANDEAU DE NAVIGATION SUPÉRIEUR
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;">
@@ -116,36 +126,37 @@ def load_all_indexes_safe():
 try:
     ipack_index, aix_index = load_all_indexes_safe()
 except Exception as e:
-    st.error("⚠️ Clé OpenAI invalide. Veuillez vérifier vos Secrets.")
+    st.error("⚠️ Clé OpenAI invalide ou problème de configuration. Veuillez vérifier vos Secrets.")
     st.stop()
 
-# 5. LAYOUT 2 COLONNES
+# 5. SPLIT ÉCRAN À DEUX COLONNES
 col1, col2 = st.columns(2, gap="large")
-
-# Préparation du filigrane de consensus (image_7)
-watermark = f"""<img src="{github_url}{img_consensus}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; opacity: 0.07; pointer-events: none; z-index: 0;">"""
 
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
     with st.container(border=True):
-        st.markdown(f'<div class="scroll-chat">{watermark}', unsafe_allow_html=True)
-        with st.chat_message("assistant"): st.markdown("💬 **Assistant Ipackeps** : Bonjour, comment puis-je vous aider ?")
+        st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
+        with st.chat_message("assistant"): 
+            st.markdown("👨‍🏫 **Assistant Ipackeps Aix-Marseille** : Bonjour, que puis-je faire pour vous ?")
         for m in st.session_state.get("messages_ipack", []):
-            with st.chat_message(m["role"]): st.markdown(m["content"])
+            prefix = "👤 **Vous** : " if m["role"] == "user" else "🤖 **Assistant** : "
+            with st.chat_message(m["role"]): st.markdown(prefix + m["content"])
         st.markdown('</div>', unsafe_allow_html=True)
         prompt = st.chat_input("Votre question iPack...", key="input_ipack")
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     with st.container(border=True):
-        st.markdown(f'<div class="scroll-chat">{watermark}', unsafe_allow_html=True)
-        with st.chat_message("assistant"): st.markdown("💬 **Assistant Site EPS** : Bonjour, que cherchez-vous sur le site ?")
+        st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
+        with st.chat_message("assistant"): 
+            st.markdown("💬 **Assistant Site EPS** : Bonjour, que cherchez-vous sur le site ?")
         for m in st.session_state.get("messages_aix", []):
-            with st.chat_message(m["role"]): st.markdown(m["content"])
+            prefix = "👤 **Vous** : " if m["role"] == "user" else "🔍 **Assistant** : "
+            with st.chat_message(m["role"]): st.markdown(prefix + m["content"])
         st.markdown('</div>', unsafe_allow_html=True)
         prompt_aix = st.chat_input("Votre question site EPS...", key="input_aix")
 
-# 6. GESTION DES MESSAGES
+# 6. ENVOI ET TRAITEMENT DES MESSAGES
 if prompt:
     if "messages_ipack" not in st.session_state: st.session_state.messages_ipack = []
     st.session_state.messages_ipack.append({"role": "user", "content": prompt})
@@ -160,4 +171,4 @@ if prompt_aix:
     st.session_state.messages_aix.append({"role": "assistant", "content": resp_a})
     st.rerun()
 
-st.markdown("<p style='text-align: center; color: #94A3B8; font-size: 10px; margin-top: 15px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #FFFFFF; font-size: 10px; margin-top: 15px; background-color: rgba(30, 41, 59, 0.8); padding: 5px; border-radius: 4px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
