@@ -3,14 +3,15 @@ import os
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.readers.web import SimpleWebPageReader
 
 # 1. CONFIGURATION DE LA PAGE
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
-# Identification des images à la racine de ton GitHub (Inversion demandée)
-img_gauche = "image_7.png"  # Nouveau placement : Image 7 à gauche
-img_droite = "image_5.png"  # Nouveau placement : Image 5 à droite
-img_fond = "image_8.png"    # Ton fond lumineux (vérifie bien l'extension .png ou .jpg)
+# Identification des images à la racine de ton GitHub
+img_gauche = "image_7.png"  # Logo circulaire EPS Aix-Marseille (sans le "s")
+img_droite = "image_5.png"  # Logo iPack EPS (la boîte bleue et orange)
+img_fond = "image_8.png"    # Ton nouveau fond d'écran épuré et lumineux
 
 # Construction de l'URL GitHub pour les images
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -88,7 +89,7 @@ st.markdown(f"""
         margin-left: 8% !important;
     }}
     
-    /* Message de l'IA (Assistant Numérique) : Grisé opaque */
+    /* Message de l'IA (Assistant Numérique) : Grisé opaque de la maquette */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
         background-color: #E9ECEF !important;
         color: #212529 !important;
@@ -97,7 +98,7 @@ st.markdown(f"""
         box-shadow: 0px 2px 6px rgba(0,0,0,0.05) !important;
     }}
     
-    /* Nettoyage avatars */
+    /* Nettoyage des conteneurs d'avatars de Streamlit */
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{
         display: none !important;
     }}
@@ -125,31 +126,46 @@ if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# 3. BANDEAU DE NAVIGATION SUPÉRIEUR (LOGOS INVERSÉS)
+# 3. BANDEAU DE NAVIGATION SUPÉRIEUR (AVEC LOGOS REPOSITIONNÉS)
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;">
-            <img src="{github_url}{img_gauche}" width="110"> </div>
+            <img src="{github_url}{img_gauche}" width="110">
+        </div>
         <div class="hub-title">
             <h1>Hub IA - EPS Aix-Marseille</h1>
             <p>Espace Ressources &amp; Assistance Numérique</p>
         </div>
         <div style="width: 150px; text-align: right;">
-            <img src="{github_url}{img_droite}" width="75"> </div>
+            <img src="{github_url}{img_droite}" width="75">
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT IA
+# 4. CHARGEMENT IA (FUSION DOSSIER DATA + SITE WEB CRÉTEIL)
 def load_all_indexes_safe():
-    if not os.path.exists("./data"): os.makedirs("./data")
+    # A. Lecture des fichiers locaux (PDF, TXT, etc.)
+    if not os.path.exists("./data"): 
+        os.makedirs("./data")
     pdf_docs = SimpleDirectoryReader(input_dir="./data").load_data()
-    index = VectorStoreIndex.from_documents(pdf_docs) if pdf_docs else None
+    
+    # B. Lecture du site d'aide iPack de Créteil
+    urls_creteil = ["https://ipackeps.ac-creteil.fr/"]
+    try:
+        web_docs = SimpleWebPageReader(html_to_text=True).load_data(urls_creteil)
+    except Exception:
+        web_docs = []
+        
+    # C. Regroupement complet des connaissances
+    tous_les_documents = pdf_docs + web_docs
+    
+    index = VectorStoreIndex.from_documents(tous_les_documents) if tous_les_documents else None
     return index, index
 
 try:
     ipack_index, aix_index = load_all_indexes_safe()
 except Exception as e:
-    st.error("⚠️ Problème de configuration. Vérifiez les Secrets.")
+    st.error("⚠️ Problème de configuration des services d'IA. Veuillez vérifier vos Secrets.")
     st.stop()
 
 # 5. SPLIT ÉCRAN À DEUX COLONNES
