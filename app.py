@@ -6,7 +6,9 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 
+# ======================================================================
 # 1. INITIALISATION DE LA MÉMOIRE ET DES COMPTEURS DE RÉPÉTITION
+# ======================================================================
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
@@ -16,24 +18,21 @@ if "last_query" not in st.session_state:
 if "query_repeat_count" not in st.session_state:
     st.session_state.query_repeat_count = 1
 
-# ----------------------------------------------------------------------
-# 📈 FONCTION DE GESTION DU COMPTEUR DE VISITES (FICHIER LOCAL)
-# ----------------------------------------------------------------------
+# ======================================================================
+# 2. 📈 GESTION TECHNIQUE DU COMPTEUR DE VISITES (FICHIER LOCAL)
+# ======================================================================
 def incrementer_et_recuperer_compteur():
     fichier_compteur = "compteur.txt"
-    # Si le fichier n'existe pas, on l'initialise à 0
     if not os.path.exists(fichier_compteur):
         with open(fichier_compteur, "w", encoding="utf-8") as f:
             f.write("0")
             
-    # Lecture de la valeur actuelle
     with open(fichier_compteur, "r", encoding="utf-8") as f:
         try:
             total_visites = int(f.read().strip())
         except ValueError:
             total_visites = 0
             
-    # On ajoute la visite actuelle uniquement si la session démarre
     if "visite_comptabilisee" not in st.session_state:
         total_visites += 1
         st.session_state.visite_comptabilisee = True
@@ -42,11 +41,11 @@ def incrementer_et_recuperer_compteur():
             
     return total_visites
 
-# Récupération du nombre total de visites
 nb_visites = incrementer_et_recuperer_compteur()
-# ----------------------------------------------------------------------
 
-# 2. CONFIGURATION DE LA PAGE ET DES STYLES VISUELS
+# ======================================================================
+# 3. CONFIGURATION DE LA PAGE ET DES FEUILLES DE STYLE (CSS)
+# ======================================================================
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 img_gauche = "image_7.png"  
@@ -64,26 +63,26 @@ st.markdown(f"""
     }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* Style du Bandeau d'en-tête adapté pour inclure le compteur */
+    /* Style du Bandeau de l'en-tête principal */
     .hub-header {{
         background-color: #1E293B; display: flex; justify-content: space-between; align-items: center;
-        padding: 10px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        padding: 12px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
-    .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
+    .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }}
     
-    /* Style de la pastille du compteur de visites */
+    /* Pastille du compteur de visites au centre */
     .visitor-badge {{
         background-color: rgba(16, 185, 129, 0.15);
         color: #10B981;
         border: 1px solid rgba(16, 185, 129, 0.3);
-        padding: 4px 12px;
+        padding: 3px 14px;
         border-radius: 20px;
         font-size: 11px;
         font-weight: bold;
         font-family: monospace;
+        margin-top: 8px;
         display: inline-block;
-        margin-top: 5px;
     }}
     
     .column-title {{
@@ -98,14 +97,14 @@ st.markdown(f"""
     }}
     .stButton>button:hover {{ color: white !important; border-color: white !important; background-color: #1E293B !important; }}
     
-    /* Cartes et alertes */
+    /* Cartes graphiques d'aide isolées en blanc */
     .video-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #4F46E5 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .video-card-college {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #0EA5E9 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .santorin-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .sos-card {{ background-color: rgba(255, 255, 255, 0.95) !important; border: 2px solid #DC2626 !important; padding: 20px; border-radius: 8px; margin-bottom: 18px; color: #1E293B !important; }}
     .general-card {{ background-color: rgba(255, 255, 255, 0.95) !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 18px; color: #1E293B !important; }}
     
-    /* Chat bulles */
+    /* Formatage des bulles de discussion */
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15% !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{ background-color: rgba(243, 244, 246, 0.95) !important; color: #1F2937 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 15% !important; }}
@@ -113,25 +112,27 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CONFIGURATION DES MODÈLES D'IA
+# ======================================================================
+# 4. CONFIGURATION ET POSTURE EXCLUSIVE DES MOTEURS D'IA (LLM)
+# ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# EN-TÊTE HARMONISÉ AVEC LOGOS ET COMPTEUR DE VISITES INTEGRÉ A DROITE
+# Affichage du bandeau centré
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="110"></div>
-        <div class="hub-title" style="text-align: center;"><h1>Hub IA - EPS Aix-Marseille</h1><p>Espace Ressources &amp; Assistance Numérique</p></div>
-        <div style="width: 170px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
-            <img src="{github_url}{img_droite}" width="75">
+        <div class="hub-title" style="text-align: center; flex-grow: 1;">
+            <h1>Hub IA - EPS Aix-Marseille</h1>
+            <p>Espace Ressources &amp; Assistance Numérique</p>
             <div class="visitor-badge">👁️ {nb_visites:05d} visites</div>
         </div>
+        <div style="width: 150px; text-align: right;"><img src="{github_url}{img_droite}" width="75"></div>
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT ET CONFIGURATION DE LA MÉMOIRE CHAT ENGINE
 @st.cache_resource
 def get_chat_engines():
     context = ""
@@ -147,6 +148,7 @@ def get_chat_engines():
     docs = SimpleDirectoryReader(input_dir="./data").load_data()
     index = VectorStoreIndex.from_documents(docs)
     
+    # Configuration en mode "Collègue à Collègue"
     prompt_ipack = (
         "Tu es l'IA experte du module 'iPackEPS et Saisie' de l'Académie d'Aix-Marseille. "
         "CONSIGNE ABSOLUE DE POSTURE : Sache que tes interlocuteurs sont exclusivement des enseignants d'EPS. "
@@ -157,7 +159,7 @@ def get_chat_engines():
     )
     
     prompt_general = (
-        "Tu es l'IA experte de la Recherche Générale du portail EPS. "
+        "Tu es l'IA experte du module de Recherche Générale du portail EPS. "
         "CONSIGNE ABSOLUE DE POSTURE : Tes interlocuteurs sont exclusivement des professeurs d'EPS. "
         "Ne donne jamais d'explications scolaires ou infantiles. Reste centré sur les textes réglementaires, la sécurité "
         "et la didactique des activités physiques (ex: TASA, Natation, Sauvetage, etc.). "
@@ -183,9 +185,9 @@ def check_link_status(url):
     except Exception:
         return False
 
-# ----------------------------------------------------------------------
-# 🗂️ LOGIQUE CONTEXTUELLE COUPLÉE - COLONNE DE GAUCHE
-# ----------------------------------------------------------------------
+# ======================================================================
+# 5. 🗂️ LOGIQUE CONTEXTUELLE COUPLÉE - COLONNE DE GAUCHE (IPACK & EXAMS)
+# ======================================================================
 def get_forced_context_response(query_text, chosen_context):
     text = query_text.lower()
     fallback_url = "https://eps.ac-creteil.fr/spip.php?rubrique5"
@@ -257,12 +259,13 @@ def get_forced_context_response(query_text, chosen_context):
 
         return "REGLEMENT_IPACK"
 
-# ----------------------------------------------------------------------
-# 🔍 LOGIQUE RECHERCHE GÉNÉRALE - EMPLACEMENTS ET LIENS PROFONDS (DROITE)
-# ----------------------------------------------------------------------
+# ======================================================================
+# 6. 🔍 INTERCEPTION RECHERCHE GÉNÉRALE - CATALOGUE ET LIENS PROFONDS (DROITE)
+# ======================================================================
 def get_forced_general_search(query_text):
-    text = query_text.lower()
+    text = query_text.lower().strip()
     
+    # URL validée menant pile sur l'accès du document d'accueil
     url_tasa_aix_exact = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_11195547/it/tasa?hlText=tasa"
     url_lyon_ressources = "https://eps.enseigne.ac-lyon.fr/spip/spip.php?rubrique23"
 
@@ -280,9 +283,14 @@ def get_forced_general_search(query_text):
         
     return None
 
-# 5. SPLIT ÉCRAN EN 2 COLONNES
+# ======================================================================
+# 7. 🖥️ BRANCHEMENT ET RENDU DES DEUX COLONNES INTERFACES
+# ======================================================================
 col1, col2 = st.columns(2, gap="large")
 
+# ----------------------------------------------------------------------
+# ➡️ COLONNE GAUCHE : ASSISTANT MÉTIER EPS (IPACK, SANTORIN, EXAMS)
+# ----------------------------------------------------------------------
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
     if st.button("🧹 Nouveau chat (iPack/Exam)", key="clear_ipack"):
@@ -302,6 +310,7 @@ with col1:
         key="context_selector"
     )
 
+    # Rendu dynamique de la couleur de fond de col1 selon l'onglet coché
     if "examens" in context_choice.lower():
         st.markdown("""<style>div[data-testid="stVerticalBlock"] > div:has(div.column-title) { background-color: rgba(239, 68, 68, 0.06) !important; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 15px; transition: background-color 0.4s ease; }</style>""", unsafe_allow_html=True)
     else:
@@ -314,6 +323,7 @@ with col1:
     if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack_final"):
         st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
         
+        # Filtre anti-bouclage de sécurité
         cleaned_query = prompt_ipack.strip().lower()
         if cleaned_query == st.session_state.last_query:
             st.session_state.query_repeat_count += 1
@@ -325,6 +335,8 @@ with col1:
             if st.session_state.query_repeat_count >= 3:
                 answer = """<div class="sos-card" style="background-color: rgba(255, 255, 255, 0.95) !important;">
                     <h3 style="color:#DC2626; margin:0 0 10px 0;">📬 Besoin d'une assistance humaine</h3>
+                    Il semble que notre assistant virtuel ne parvienne pas à vous apporter la réponse exacte ou que votre situation nécessite une intervention technique sur les fiches de l'établissement.<br><br>
+                    N'hésitez pas à contacter directement notre cellule d'assistance par courriel à l'adresse officielle dédiée :<br>
                     📧 <a href="mailto:ipackeps@ac-aix-marseille.fr" style="font-weight:bold; color:#DC2626; text-decoration:underline;">ipackeps@ac-aix-marseille.fr</a>
                 </div>"""
             else:
@@ -332,7 +344,7 @@ with col1:
                 if forced_block not in ["REGLEMENT_EXAM", "REGLEMENT_IPACK", "CHOIX_STRUCTURE"]:
                     answer = forced_block
                 elif forced_block == "CHOIX_STRUCTURE":
-                    answer = """<div class="video-card" style="background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #EAB308 !important;"><strong>🔍 Structure non détectée :</strong><br>Précisez s'il s'agit du <strong>Collège</strong> ou du <strong>Lycée</strong> directement dans votre question.</div>"""
+                    answer = """<div class="video-card" style="background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #EAB308 !important;"><strong>🔍 Structure non détectée :</strong><br>Précisez s'il s'agit du <strong>Collège</strong> ou du <strong>Lycée</strong> directement dans votre question pour flécher le bon parcours.</div>"""
                 else:
                     if openai_api_key:
                         response = engine_ipack.chat(f"CONTEXTE SÉLECTIONNÉ : {context_choice}. QUESTION : {prompt_ipack}")
@@ -343,6 +355,9 @@ with col1:
         st.session_state.messages_ipack.append({"role": "assistant", "content": answer})
         st.rerun()
 
+# ----------------------------------------------------------------------
+# ➡️ COLONNE DROITE : RECHERCHE GÉNÉRALE (SCAN UNI-PORTAILS 4 ACADÉMIES)
+# ----------------------------------------------------------------------
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (4 Académies)</div>', unsafe_allow_html=True)
     if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
@@ -369,19 +384,20 @@ with col2:
                     response_aix = engine_general.chat(prompt_aix)
                     answer_aix = response_aix.response
                     
+                    # Interception intelligente du message de panne du LLM pour en faire une aiguilleur
                     if "ne sais pas" in answer_aix.lower() or "pas d'information" in answer_aix.lower():
                         url_aix = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_78026/it/accueil"
                         url_lyon = "https://eps.enseigne.ac-lyon.fr/spip/"
                         url_creteil = "https://eps.ac-creitil.fr/"
                         url_grenoble = "https://eps-pedagogie.web.ac-grenoble.fr/examens"
                         
-                        answer_aix = f"""Je ne trouve pas ce document spécifique dans nos fichiers d'aide locales.<br><br>
+                        answer_aix = f"""Je ne trouve pas ce document spécifique dans nos fichiers d'aide locaux.<br><br>
                         <strong>🔍 Voici les accès directs vers nos 4 portails de référence pour télécharger la circulaire :</strong><br>
                         • <a href="{url_aix}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail EPS Référent</a><br>
                         • <a href="{url_lyon}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Outils Annexes</a><br>
                         • <a href="{url_creteil}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Documentation</a><br>
                         • <a href="{url_grenoble}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Espace Textes Complémentaires</a><br><br>
-                        <em>(💡 Utilisez la recherche interne de ces sites pour récupérer la circulaire).*</em>"""
+                        <em>(💡 Astuce : Utilisez la recherche interne de ces sites pour récupérer la circulaire officielle).*</em>"""
                 else:
                     answer_aix = "Clé OpenAI manquante."
                     
