@@ -60,30 +60,43 @@ st.markdown(f"""
         box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
     }}
     
-    /* FENÊTRES DE CHAT : BLANC PUR COMPLET ET PRIORITÉ D'AFFICHAGE (Z-INDEX) */
+    /* FENÊTRES DE CHAT : BLANC PUR COMPLET ET PRIORITÉ D'AFFICHAGE */
     .scroll-chat {{
         height: 340px !important;
         overflow-y: auto !important;
         padding: 15px;
         position: relative;
         background-color: #FFFFFF !important; /* Blanc pur opaque à 100% */
-        border-radius: 8px 8px 0px 0px; /* Arrondi seulement en haut pour fusionner avec l'input */
-        z-index: 100 !important; /* Passe devant absolument tout */
+        border-radius: 8px 8px 0px 0px;
+        z-index: 100 !important;
         box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
     }}
     
-    /* STYLE DES MESSAGES EN TEXTE CONTINU */
+    /* --- STYLE DES DIALOGUES ASSURANT LA LISIBILITÉ --- */
+    /* Style général des lignes de message */
     div[data-testid="stChatMessage"] {{
-        background-color: transparent !important;
         border: none !important;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
-        margin-left: 0px !important;
-        margin-right: 0px !important;
-        box-shadow: none !important;
+        padding: 8px 12px !important;
+        margin-bottom: 10px !important;
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.05) !important;
     }}
     
-    /* Suppression des avatars Streamlit */
+    /* Messages de l'Utilisateur (Vous) : Fond Bleu/Gris très clair discret */
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{
+        background-color: #F1F5F9 !important;
+        border-radius: 12px 12px 0px 12px !important;
+        margin-left: 10% !important;
+    }}
+    
+    /* Messages de l'Assistant (IA) : Fond Blanc Pur avec petite bordure pour se détacher */
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px 12px 12px 0px !important;
+        margin-right: 10% !important;
+    }}
+    
+    /* Masquer les icônes d'avatar de Streamlit */
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{
         display: none !important;
     }}
@@ -91,10 +104,10 @@ st.markdown(f"""
     /* ZONE DE REDACTION EN BLANC PUR OPAQUE */
     .stChatInputContainer {{ 
         border: 2px solid #E2E8F0 !important; 
-        background-color: #FFFFFF !important; /* Blanc opaque à 100% */
-        border-radius: 0px 0px 8px 8px !important; /* Arrondi seulement en bas */
+        background-color: #FFFFFF !important;
+        border-radius: 0px 0px 8px 8px !important;
         position: relative;
-        z-index: 101 !important; /* Légèrement supérieur pour rester accessible */
+        z-index: 101 !important;
         box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
     }}
     
@@ -102,6 +115,7 @@ st.markdown(f"""
     .stChatInputContainer textarea {{
         background-color: #FFFFFF !important;
         color: #1E293B !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
