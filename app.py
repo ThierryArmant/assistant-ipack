@@ -28,7 +28,7 @@ st.markdown("""
     .hub-title h1 { color: white !important; margin: 0; font-size: 18px; font-weight: bold; }
     .hub-title p { color: #cbd5e0 !important; margin: 0; font-size: 10px; }
     
-    /* Titres des colonnes strictement égalisés */
+    /* Titres des colonnes strictement alignés */
     .column-title {
         color: #002060;
         font-size: 13px;
@@ -40,15 +40,17 @@ st.markdown("""
         line-height: 20px !important;
     }
     
-    /* Hauteur réduite à 260px pour faire remonter parfaitement les deux zones "Message..." */
+    /* Zone interne des messages fixée */
     .scroll-chat {
-        height: 260px;
-        overflow-y: auto;
+        height: 250px !important;
+        overflow-y: auto !important;
         padding-right: 5px;
     }
     
-    /* Forcer les conteneurs Streamlit à avoir exactement la même structure */
-    [data-testid="stContainer"] { margin-top: 0px !important; padding-top: 0px !important; }
+    .stChatInputContainer {
+        margin-top: 4px !important;
+        margin-bottom: 0px !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -102,7 +104,7 @@ with col1:
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
-            st.markdown("💬 **Assistant Ipackeps Aix Marseille**\n\nBonjour, que puis-je faire pour vous ?")
+            st.markdown("💬 **Assistant Ipackeps Aix-Marseille**\n\nBonjour, que puis-je faire pour vous ?")
         for m in st.session_state.messages_ipack:
             with st.chat_message(m["role"]): 
                 st.markdown(m["content"])
@@ -111,7 +113,8 @@ with col1:
         prompt = st.chat_input("Message...", key="input_ipack")
 
 with col2:
-    st.markdown('<div class="column-title">🔍 Assistant de Recherches sur le site EPS</div>', unsafe_allow_html=True)
+    # TITRE ALLÉGÉ POUR ÉVITER LE SAUT DE LIGNE
+    st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     
     chat_aix = aix_index.as_chat_engine(chat_mode="context", system_prompt="Tu es l'Assistant de recherche du site EPS d'Aix-Marseille.")
     if "messages_aix" not in st.session_state: 
@@ -120,7 +123,8 @@ with col2:
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
-            st.markdown("💬 **Assistant de recherche du site EPS**\n\nBonjour, comment puis-je vous aider aujourd'hui ?")
+            # TEXTE ALLÉGÉ SANS "AUJOURD'HUI" POUR RESTER SUR UNE SEULE LIGNE
+            st.markdown("💬 **Assistant de recherche site EPS**\n\nBonjour, comment puis-je vous aider ?")
         for m in st.session_state.messages_aix:
             with st.chat_message(m["role"]): 
                 st.markdown(m["content"])
@@ -142,4 +146,4 @@ if prompt_aix:
     st.rerun()
 
 # Pied de page
-st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 10px; margin-top: 8px; margin-bottom: 0px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 10px; margin-top: 10px; margin-bottom: 0px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
