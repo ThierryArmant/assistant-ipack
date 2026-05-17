@@ -4,52 +4,52 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
-# 1. CONFIGURATION DE LA PAGE & DESIGN COMPACT "ONE-PAGE"
+# 1. CONFIGURATION DE LA PAGE & DESIGN COMPACT MAXIMISÉ
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    /* Mode plein écran ultra-compact sans défilement vertical global */
+    /* Nettoyage des marges globales pour maximiser l'espace vertical */
     .block-container { padding-top: 0rem !important; padding-bottom: 0rem !important; padding-left: 1rem !important; padding-right: 1rem !important; max-width: 100% !important; }
     .stApp { background-color: #F3F4F6 !important; }
     header[data-testid="stHeader"] { display: none !important; }
     
-    /* Bandeau Supérieur Slim / Fin */
+    /* Bandeau Supérieur ultra-fin */
     .hub-header {
         background-color: #002060;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 6px 20px;
-        margin-bottom: 10px;
-        box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+        padding: 4px 20px;
+        margin-bottom: 8px;
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
     }
     .hub-title { text-align: center; color: white; }
-    .hub-title h1 { color: white !important; margin: 0; font-size: 20px; font-weight: bold; }
-    .hub-title p { color: #cbd5e0 !important; margin: 0; font-size: 11px; }
+    .hub-title h1 { color: white !important; margin: 0; font-size: 18px; font-weight: bold; }
+    .hub-title p { color: #cbd5e0 !important; margin: 0; font-size: 10px; }
     
-    /* Conteneurs de Chat ajustés pour tenir sur un écran standard */
+    /* Fenêtres de Chat raccourcies pour laisser voir la zone d'écriture en bas */
     [data-testid="stVerticalBlock"] > div:has(div.stChatMessage) {
         background-color: #FFFFFF !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
-        padding: 12px !important;
-        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05) !important;
-        height: 460px !important; /* Hauteur réduite pour éviter le scroll de page */
-        overflow-y: auto !important; /* Défilement uniquement à l'intérieur du chat si gros texte */
+        padding: 10px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+        height: 380px !important; /* Hauteur réduite pour remonter les zones de saisie */
+        overflow-y: auto !important; /* Barre de défilement interne active */
     }
     
-    /* Titres des colonnes plus discrets */
+    /* Titres des colonnes */
     .column-title {
         color: #002060;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
     }
     
-    /* Ajustement de l'espace des inputs de chat */
-    .stChatInputContainer { border-color: #e2e8f0 !important; }
+    /* Rapprochement de la zone d'écriture */
+    .stChatInputContainer { border-color: #e2e8f0 !important; margin-top: 5px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -58,21 +58,21 @@ openai_api_key = st.secrets.get("OPENAI_API_KEY")
 Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
 Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# 3. AFFICHAGE DU BANDEAU SUPÉRIEUR COMPACT
+# 3. AFFICHAGE DU BANDEAU SUPÉRIEUR
 logo_gauche = "image_5.png" if os.path.exists("image_5.png") else ""
 logo_droite = "image_6.png" if os.path.exists("image_6.png") else ""
 
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 120px; text-align: left;">
-            {"<img src='app/static/" + logo_gauche + "' width='90'>" if logo_gauche else "<span style='color:white; font-size:11px;'>Académie</span>"}
+            {"<img src='app/static/" + logo_gauche + "' width='80'>" if logo_gauche else "<span style='color:white; font-size:10px;'>Académie</span>"}
         </div>
         <div class="hub-title">
             <h1>Hub IA - EPS Aix-Marseille</h1>
             <p>Espace Ressources &amp; Assistance Numérique</p>
         </div>
         <div style="width: 120px; text-align: right;">
-            {"<img src='app/static/" + logo_droite + "' width='45'>" if logo_droite else "<span style='color:white; font-size:11px;'>EPS</span>"}
+            {"<img src='app/static/" + logo_droite + "' width='40'>" if logo_droite else "<span style='color:white; font-size:10px;'>EPS</span>"}
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -132,5 +132,5 @@ if prompt_aix:
             st.markdown(response_aix.response)
     st.rerun()
 
-# Pied de page discret
-st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 10px; margin-top: 5px; margin-bottom: 0px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
+# Pied de page ultra-discret
+st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 9px; margin-top: 2px; margin-bottom: 0px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
