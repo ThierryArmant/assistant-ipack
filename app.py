@@ -3,8 +3,9 @@ import os
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core.node_parser import TokenTextSplitter
 
-# 1. INITIALISATION DE LA MÉMOIRE (Évite le gel et les doublons)
+# 1. INITIALISATION DE LA MÉMOIRE (Obligatoire pour éviter le gel)
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
@@ -38,7 +39,7 @@ st.markdown(f"""
         margin-bottom: 10px; height: 24px; background-color: #1E293B; border-radius: 4px; padding: 4px 0;
     }}
     .scroll-chat {{
-        height: 380px !important; overflow-y: auto !important; padding: 15px;
+        height: 360px !important; overflow-y: auto !important; padding: 15px;
         background-color: rgba(255, 255, 255, 0.45) !important; backdrop-filter: blur(4px); border-radius: 8px 8px 0px 0px;
     }}
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 8px 12px !important; margin-bottom: 10px !important; }}
@@ -54,7 +55,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CONFIGURATION ASSISTANT ET SYSTEM PROMPT (Verrouillage en Français EPS)
+# 3. CONFIGURATION MODELÈS ET SYSTEM PROMPT
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
     Settings.llm = OpenAI(
@@ -62,14 +63,16 @@ if openai_api_key:
         temperature=0.1, 
         api_key=openai_api_key,
         system_prompt=(
-            "Tu es l'Assistant iPack EPS et Examens pour l'Académie d'Aix-Marseille. "
-            "Tu dois répondre exclusivement en français. "
-            "Ne parle jamais de l'île grecque de Santorin. Pour toi, Santorin est uniquement l'application "
-            "institutionnelle française de gestion des lots de correction et de saisie des notes du CCF EPS. "
-            "Aide les enseignants en utilisant uniquement les documents fournis dans ton index."
+            "Tu es l'Assistant IA pour les enseignants d'EPS de l'Académie d'Aix-Marseille. "
+            "Réponds toujours en français de manière précise et professionnelle. "
+            "Utilise exclusivement les documents et fichiers fournis dans ton dossier pour répondre aux questions "
+            "sur le CCF, l'application Santorin ou les outils iPack. Si la réponse n'est pas dans les documents, "
+            "synthétise une réponse logique en restant au service de l'enseignant."
         )
     )
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
+    # Découpeur ultra-rapide pour éviter les chargements infinis
+    Settings.node_parser = TokenTextSplitter(chunk_size=512, chunk_overlap=32)
 
 st.markdown(f"""
     <div class="hub-header">
@@ -79,24 +82,22 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. LECTURE PERFORMANTE DU DOSSIER DATA
+# 4. CHARGEMENT INDEX ACCÉLÉRÉ
 @st.cache_resource
 def load_local_index():
     if not os.path.exists("./data"): 
         os.makedirs("./data")
-    # Utilisation du sélecteur automatique robuste de documents
-    docs = SimpleDirectoryReader(input_dir="./data").load_data()
-    if not docs:
+    try:
+        docs = SimpleDirectoryReader(input_dir="./data").load_data()
+        if not docs:
+            return None
+        return VectorStoreIndex.from_documents(docs)
+    except Exception:
         return None
-    return VectorStoreIndex.from_documents(docs)
 
 index_ia = load_local_index()
 
-# 5. GESTION DES ENVOIS AVANT L'AFFICHAGE POUR ÉVITER LES DOUBLONS OUT-OF-FRAME
-prompt_ipack = st.session_state.get("input_ipack_value", None)
-prompt_aix = st.session_state.get("input_aix_value", None)
-
-# ZONE DE TRAITEMENT IMÉDIAT
+# 5. ZONE DE CAPTURE INTERACTIVE DES SASSIS (Évite les bugs d'envoi hors-cadre)
 if st.session_state.get("input_ipack") and index_ia:
     txt = st.session_state.input_ipack
     st.session_state.messages_ipack.append({"role": "user", "content": txt})
@@ -109,7 +110,7 @@ if st.session_state.get("input_aix") and index_ia:
     response_aix = index_ia.as_chat_engine().chat(txt_a).response
     st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
 
-# 6. AFFICHAGE DES DEUX COLONNES
+# 6. AFFICHAGE DES DEUX COLONNES DE DIALOGUE
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
