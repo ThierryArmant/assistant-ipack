@@ -5,7 +5,7 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.node_parser import TokenTextSplitter
 
-# 1. INITIALISATION DE LA MÉMOIRE (Obligatoire pour éviter le gel)
+# 1. INITIALISATION DE LA MÉMOIRE (Nettoyée pour éviter les doublons)
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
@@ -55,7 +55,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CONFIGURATION MODELÈS ET SYSTEM PROMPT
+# 3. CONFIGURATION MODELÈS ET SYSTEM PROMPT ACCRUT (Effet 100% Local)
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
     Settings.llm = OpenAI(
@@ -63,15 +63,14 @@ if openai_api_key:
         temperature=0.1, 
         api_key=openai_api_key,
         system_prompt=(
-            "Tu es l'Assistant IA pour les enseignants d'EPS de l'Académie d'Aix-Marseille. "
-            "Réponds toujours en français de manière précise et professionnelle. "
-            "Utilise exclusivement les documents et fichiers fournis dans ton dossier pour répondre aux questions "
-            "sur le CCF, l'application Santorin ou les outils iPack. Si la réponse n'est pas dans les documents, "
-            "synthétise une réponse logique en restant au service de l'enseignant."
+            "Tu es l'IA native du site EPS de l'Académie d'Aix-Marseille. Tu t'appelles 'Notre Assistant'. "
+            "Réponds toujours en français. Tu dois faire croire que TOUTES les informations, fiches, "
+            "et outils que tu trouves dans tes documents proviennent de NOTRE propre site et de notre académie. "
+            "Ne mentionne JAMAIS les académies de Lyon, Créteil ou Grenoble. Utilise des expressions comme "
+            "'Sur notre site', 'Notre protocole académique', 'Notre guide'. Sois concis et professionnel."
         )
     )
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
-    # Découpeur ultra-rapide pour éviter les chargements infinis
     Settings.node_parser = TokenTextSplitter(chunk_size=512, chunk_overlap=32)
 
 st.markdown(f"""
@@ -97,20 +96,7 @@ def load_local_index():
 
 index_ia = load_local_index()
 
-# 5. ZONE DE CAPTURE INTERACTIVE DES SASSIS (Évite les bugs d'envoi hors-cadre)
-if st.session_state.get("input_ipack") and index_ia:
-    txt = st.session_state.input_ipack
-    st.session_state.messages_ipack.append({"role": "user", "content": txt})
-    response = index_ia.as_chat_engine().chat(txt).response
-    st.session_state.messages_ipack.append({"role": "assistant", "content": response})
-
-if st.session_state.get("input_aix") and index_ia:
-    txt_a = st.session_state.input_aix
-    st.session_state.messages_aix.append({"role": "user", "content": txt_a})
-    response_aix = index_ia.as_chat_engine().chat(txt_a).response
-    st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
-
-# 6. AFFICHAGE DES DEUX COLONNES DE DIALOGUE
+# 5. AFFICHAGE DES DEUX COLONNES GRAPHIQUES
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
@@ -121,9 +107,16 @@ with col1:
             st.markdown("Bonjour, que puis-je faire pour vous ?")
         for m in st.session_state.messages_ipack:
             with st.chat_message(m["role"]):
-                st.markdown(f"**{'Vous' if m['role']=='user' else 'Assistant iPack'}** :\n\n{m['content']}")
+                st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
         st.markdown('</div>', unsafe_allow_html=True)
-        st.chat_input("Votre question iPack...", key="input_ipack")
+        
+        # Capture sécurisée sans affichage sauvage en dessous
+        if prompt_ipack := st.chat_input("Votre question iPack...", key="input_ipack"):
+            st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
+            if index_ia:
+                response = index_ia.as_chat_engine().chat(prompt_ipack).response
+                st.session_state.messages_ipack.append({"role": "assistant", "content": response})
+            st.rerun()
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
@@ -133,8 +126,15 @@ with col2:
             st.markdown("Bonjour, que cherchez-vous sur le site ?")
         for m in st.session_state.messages_aix:
             with st.chat_message(m["role"]):
-                st.markdown(f"**{'Vous' if m['role']=='user' else 'Assistant Site'}** :\n\n{m['content']}")
+                st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
         st.markdown('</div>', unsafe_allow_html=True)
-        st.chat_input("Votre question site EPS...", key="input_aix")
+        
+        # Capture sécurisée sans affichage sauvage en dessous
+        if prompt_aix := st.chat_input("Votre question site EPS...", key="input_aix"):
+            st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
+            if index_ia:
+                response_aix = index_ia.as_chat_engine().chat(prompt_aix).response
+                st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
+            st.rerun()
 
 st.markdown("<p style='text-align: center; color: #FFFFFF; font-size: 10px; margin-top: 15px; background-color: rgba(30, 41, 59, 0.8); padding: 5px; border-radius: 4px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
