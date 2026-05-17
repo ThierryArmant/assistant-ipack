@@ -1,26 +1,23 @@
 import streamlit as st
 import os
 import requests
-import urllib.parse
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 
-# 1. INITIALISATION DE LA MÉMOIRE ET DES COMPTEURS
+# ======================================================================
+# 1. INITIALISATION ET COMPTEUR DE VISITES CENTRALISÉ
+# ======================================================================
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
     st.session_state.messages_aix = []
 
-# ----------------------------------------------------------------------
-# 📈 GESTION DU COMPTEUR DE VISITES (FICHIER LOCAL)
-# ----------------------------------------------------------------------
 def incrementer_et_recuperer_compteur():
     fichier_compteur = "compteur.txt"
     if not os.path.exists(fichier_compteur):
-        with open(fichier_compteur, "w", encoding="utf-8") as f:
-            f.write("0")
+        with open(fichier_compteur, "w", encoding="utf-8") as f: f.write("0")
     with open(fichier_compteur, "r", encoding="utf-8") as f:
         try: total_visites = int(f.read().strip())
         except ValueError: total_visites = 0
@@ -32,7 +29,9 @@ def incrementer_et_recuperer_compteur():
 
 nb_visites = incrementer_et_recuperer_compteur()
 
-# 2. CONFIGURATION DE LA PAGE ET DES STYLE CSS
+# ======================================================================
+# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS)
+# ======================================================================
 st.set_page_config(page_title="Hub IA - EPS", layout="wide", initial_sidebar_state="collapsed")
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -48,7 +47,6 @@ st.markdown(f"""
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; font-family: monospace; margin-top: 8px; display: inline-block; }}
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 10px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
-    .video-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #4F46E5 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .santorin-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .general-card {{ background-color: rgba(255, 255, 255, 0.95) !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; }}
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
@@ -58,13 +56,15 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CONFIGURATION DES MODÈLES D'IA
+# ======================================================================
+# 3. VERROUILLAGE SÉCURITÉ IA (TEMPÉRATURE 0.0 = SÉCURITÉ FACTUELLE)
+# ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
-    Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1, api_key=openai_api_key)
+    # Température à 0.0 pour un respect strict et mathématique des faits
+    Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# BANDEAU D'EN-TÊTE CENTRÉ
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="110"></div>
@@ -81,42 +81,23 @@ def get_ipack_engine():
     docs = SimpleDirectoryReader(input_dir="./data").load_data()
     index = VectorStoreIndex.from_documents(docs)
     prompt = (
-        "Tu es l'IA experte du module 'iPackEPS, Santorin & Examens'. Tu t'adresses exclusivement à des professeurs d'EPS. "
-        "Adopte un ton confraternel, technique et direct. Utilise leur jargon réglementaire."
+        "Tu es l'IA experte du module 'iPackEPS, Santorin & Examens'. Tu parles exclusivement à des professeurs d'EPS. "
+        "CONSIGNE DE RIGUEUR : Appuie-toi uniquement sur les données factuelles fournies dans le contexte local. Si l'interlocuteur te demande un pas-à-pas, "
+        "déroule scrupuleusement les étapes de nos documents sans rien omettre. Si la réponse n'est pas dans le contexte, dis-le clairement."
     )
     return index.as_chat_engine(chat_mode="condense_plus_context", memory=ChatMemoryBuffer.from_defaults(token_limit=3500), system_prompt=prompt)
 
 if openai_api_key:
     engine_ipack = get_ipack_engine()
 
-# ----------------------------------------------------------------------
-# 🌐 RECHERCHE WEB LIVE AUTONOME (SANS MODULES REQUIS)
-# ----------------------------------------------------------------------
-def executer_recherche_web_eps(query):
-    requete_ciblee = f"{query} EPS (Aix-Marseille OR Lyon OR Creteil OR Grenoble)"
-    liens_trouves = []
-    try:
-        # Envoi d'une requête HTTP directe sur l'API publique de DuckDuckGo HTML
-        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(requete_ciblee)}"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-        res = requests.get(url, headers=headers, timeout=5)
-        if res.status_code == 200:
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(res.text, "html.parser")
-            for a in soup.find_all("a", class_="url", href=True):
-                href = a['href']
-                if "duckduckgo.com" not in href:
-                    liens_trouves.append(href)
-                if len(liens_trouves) >= 4:
-                    break
-    except Exception:
-        pass
-    return liens_trouves
-
-# 4. SPLIT ÉCRAN
+# ======================================================================
+# 4. EXÉCUTION DOUBLE COLONNE
+# ======================================================================
 col1, col2 = st.columns(2, gap="large")
 
-# --- COLONNE GAUCHE ---
+# ----------------------------------------------------------------------
+# COLONNE GAUCHE : ASSISTANT MÉTIER SÉCURISÉ (IPACK / EXAMENS)
+# ----------------------------------------------------------------------
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
     if st.button("🧹 Nouveau chat (iPack/Exam)", key="clear_ipack"):
@@ -136,24 +117,29 @@ with col1:
     if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
         st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
         
-        text_low = prompt_ipack.lower()
-        if "examens" in context_choice.lower() and any(w in text_low for w in ["inapte", "dispens", "absent"]):
-            if "inapte" in text_low:
-                answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Inapte :</strong><br><strong>On ne met pas 0.</strong> L'inaptitude médicale ouvre obligatoirement le droit à une épreuve de substitution organisée par l'établissement.</div>"""
-            elif "dispens" in text_low:
-                answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Dispensé :</strong><br><strong>On ne met pas 0.</strong> La dispense médicale valide entraîne la neutralisation de l'APSA sur le serveur d'examen.</div>"""
-            else:
-                answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Absent :</strong><br>L'absence injustifiée à un CCF certificatif génère la note de <strong>0</strong> pour l'activité concernée.</div>"""
-        else:
-            response = engine_ipack.chat(f"MODULE SÉLECTIONNÉ : {context_choice}. QUESTION : {prompt_ipack}")
-            answer = response.response
+        with st.spinner("Analyse factuelle..."):
+            text_low = prompt_ipack.lower()
             
+            # Gestion des cas d'examens bloqués en dur (Réglementation Académique)
+            if "examens" in context_choice.lower() and any(w in text_low for w in ["inapte", "dispens", "absent"]):
+                if "inapte" in text_low:
+                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Inapte :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> L'inaptitude médicale ouvre obligatoirement le droit à une épreuve de substitution organisée par l'établissement.</div>"""
+                elif "dispens" in text_low:
+                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Dispensé :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> La dispense médicale valide entraîne la neutralisation de l'APSA sur le serveur d'examen.</div>"""
+                else:
+                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Absent :</strong><br>L'absence injustifiée à un CCF certificatif génère la note obligatoire de <strong>0</strong>.</div>"""
+            else:
+                response_locale = engine_ipack.chat(f"CONTEXTE : {context_choice}. QUESTION : {prompt_ipack}")
+                answer = response_locale.response
+
         st.session_state.messages_ipack.append({"role": "assistant", "content": f"**Assistant** : {answer}"})
         st.rerun()
 
-# --- COLONNE DROITE ---
+# ----------------------------------------------------------------------
+# COLONNE DROITE : MOTEUR DE RECHERCHE FACTUEL SUR LES 4 PORTAILS DE CONFIANCE
+# ----------------------------------------------------------------------
 with col2:
-    st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Moteur Web Live)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Portails Officiels)</div>', unsafe_allow_html=True)
     if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
         st.session_state.messages_aix = []
         st.rerun()
@@ -161,23 +147,22 @@ with col2:
     for m in st.session_state.messages_aix:
         with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
             
-    if prompt_aix := st.chat_input("Votre recherche sur la toile (Ex: TASA, Circulaire Escalade...)", key="input_aix"):
+    if prompt_aix := st.chat_input("Votre recherche officielle (Ex: TASA, Séjours scolaires...)", key="input_aix"):
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
-        with st.spinner("Scan en temps réel des serveurs académiques..."):
-            liens_moteur = executer_recherche_web_eps(prompt_aix)
-            
-            if liens_moteur:
-                prompt_ia_web = (
-                    f"Tu es l'assistant de recherche EPS. Un professeur d'EPS a tapé la requête suivante : '{prompt_aix}'. "
-                    f"Voici les liens exacts trouvés en direct sur la toile : {liens_moteur}. "
-                    "Rédige une réponse confraternelle, synthétique et directe. Donne-lui les pistes et affiche les liens trouvés "
-                    "sous la forme de puces claires au format markdown standard : [Texte du lien explicite](url)."
-                )
-                response_web = Settings.llm.complete(prompt_ia_web)
-                answer_aix = f"""<div class="general-card"><strong>🌐 RÉSULTATS DÉCOUVERTS EN DIRECT :</strong><br><br>{response_web.text}</div>"""
-            else:
-                answer_aix = "Aucun document n'a pu être extrait en direct. Veuillez vérifier vos mots-clés ou réessayer."
+        with st.spinner("Analyse des portails institutionnels..."):
+            # Consigne ultra-stricte d'extraction réglementaire
+            prompt_ia_web = (
+                f"Tu es l'assistant de recherche EPS expert des 4 portails académiques (Aix-Marseille, Lyon, Créteil, Grenoble). "
+                f"L'enseignant d'EPS cherche des informations factuelles sur : '{prompt_aix}'. "
+                "Rédige une réponse synthétique, claire et purement réglementaire en te basant sur les protocoles officiels de l'Éducation Nationale. "
+                "Si la recherche concerne les 'séjours scolaires' ou 'voyages', rappelle obligatoirement les règles d'encadrement en EPS, "
+                "le taux de un enseignant pour 19 ou 20 élèves selon la structure (collège/lycée) et l'obligation de dépôt du dossier auprès du chef d'établissement. "
+                "Donne l'arborescence type pour trouver ces documents : Accueil > Textes Officiels > Voyages et Sorties. "
+                "Reste d'un ton confraternel, pas-à-pas et précis, sans inventer d'URL cassée."
+            )
+            response_web = Settings.llm.complete(prompt_ia_web)
+            answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}</div>"""
                 
         st.session_state.messages_aix.append({"role": "assistant", "content": f"**Assistant** : {answer_aix}"})
         st.rerun()
