@@ -39,6 +39,8 @@ st.markdown(f"""
         margin-bottom: 15px;
         border-radius: 8px;
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        position: relative;
+        z-index: 10;
     }}
     .hub-title {{ text-align: center; color: white; }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; letter-spacing: 0.5px; }}
@@ -58,39 +60,48 @@ st.markdown(f"""
         box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
     }}
     
-    /* LES DEUX FENÊTRES DE CHAT EN FOND BLANC SEMI-TRANSPARENT (COMME SUR L'IMAGE) */
+    /* FENÊTRES DE CHAT : BLANC PUR COMPLET ET PRIORITÉ D'AFFICHAGE (Z-INDEX) */
     .scroll-chat {{
         height: 340px !important;
         overflow-y: auto !important;
         padding: 15px;
         position: relative;
-        background-color: rgba(255, 255, 255, 0.90) !important; /* Fond blanc opaque pour isoler le texte */
-        border-radius: 8px;
-        box-shadow: inset 0px 0px 10px rgba(0,0,0,0.05);
+        background-color: #FFFFFF !important; /* Blanc pur opaque à 100% */
+        border-radius: 8px 8px 0px 0px; /* Arrondi seulement en haut pour fusionner avec l'input */
+        z-index: 100 !important; /* Passe devant absolument tout */
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
     }}
     
-    /* REFORMATAGE DES BULLES EN TEXTE CONTINU SUR FOND BLANC */
+    /* STYLE DES MESSAGES EN TEXTE CONTINU */
     div[data-testid="stChatMessage"] {{
         background-color: transparent !important;
         border: none !important;
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
         margin-left: 0px !important;
         margin-right: 0px !important;
         box-shadow: none !important;
     }}
     
-    /* Suppression des avatars Streamlit pour garder la pureté de la liste de texte */
+    /* Suppression des avatars Streamlit */
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{
         display: none !important;
     }}
     
-    /* Barre de saisie alignée et propre */
+    /* ZONE DE REDACTION EN BLANC PUR OPAQUE */
     .stChatInputContainer {{ 
-        border-color: #1E293B !important; 
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        border-radius: 8px !important;
+        border: 2px solid #E2E8F0 !important; 
+        background-color: #FFFFFF !important; /* Blanc opaque à 100% */
+        border-radius: 0px 0px 8px 8px !important; /* Arrondi seulement en bas */
+        position: relative;
+        z-index: 101 !important; /* Légèrement supérieur pour rester accessible */
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
     }}
+    
+    /* Forcer le champ texte interne en blanc */
+    .stChatInputContainer textarea {{
+        background-color: #FFFFFF !important;
+        color: #1E293B !important;
     </style>
 """, unsafe_allow_html=True)
 
