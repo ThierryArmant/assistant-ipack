@@ -86,12 +86,13 @@ def get_all_context_data():
 
 all_knowledge = get_all_context_data()
 
-# FONCTION DE SÉCURITÉ : TEST DE LIEN EN DIRECT (0,1 seconde)
+# FONCTION DE SÉCURITÉ : MICRO-TEST DE LIEN (0,1 seconde)
 def check_link_status(url):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
+        # head permet de tester le serveur instantanément sans charger toute la page
         response = requests.head(url, headers=headers, timeout=1.5)
-        return response.status_code == 200 or response.status_code == 302
+        return response.status_code < 400
     except Exception:
         return False
 
@@ -113,17 +114,20 @@ def generate_expert_response(user_query, history_type):
             "Dès que ces cases seront cochées et enregistrées, vos protocoles et vos listes d'élèves pour les APPN s'afficheront instantanément."
         )
 
-    # VÉRIFICATION EN DIRECT DES LIENS AVANT DE CONSTRUIRE LE PROMPT
+    # ADRESSES DES 3 SERVEURS À TESTER
     url_lyon = "https://ac-lyon.fr/dispositifs-et-outils-numeriques-en-eps-122176"
     url_aix = "https://appli.ac-aix-marseille.fr/imagin/enseignant"
+    url_creteil = "https://ipackeps.ac-creteil.fr/"
     
-    # Test en direct
+    # Exécution des micro-tests en direct
     lyon_functional = check_link_status(url_lyon)
     aix_functional = check_link_status(url_aix)
+    creteil_functional = check_link_status(url_creteil)
     
-    # Création dynamique des boutons selon l'état réel des serveurs
-    btn_suivi = f"[👉 Télécharger nos outils de suivi pédagogique]({url_lyon})" if lyon_functional else "*(Notre serveur d'outils numériques est actuellement indisponible pour maintenance)*"
-    btn_imagin = f"[👉 Accéder au Portail d'accès aux épreuves CCF (Imag'In / Esterel)]({url_aix})" if aix_functional else "*(Le serveur d'accès aux notes Imag'In rencontre des difficultés techniques indépendantes de notre volonté)*"
+    # Configuration des variables d'affichage selon le statut des serveurs
+    btn_suivi = f"[👉 Télécharger nos outils de suivi pédagogique]({url_lyon})" if lyon_functional else "*(Notre serveur de téléchargement d'outils numériques est actuellement en maintenance)*"
+    btn_imagin = f"[👉 Accéder au Portail d'accès aux épreuves CCF (Imag'In / Esterel)]({url_aix})" if aix_functional else "*(Le serveur d'accès local Imag'In rencontre des difficultés techniques indépendantes de notre volonté)*"
+    btn_ipack = f"[👉 Ouvrir directement l'interface de saisie iPackEPS]({url_creteil})" if creteil_functional else "*(Le serveur national de saisie iPackEPS est actuellement fermé ou inaccessible hors période officielle)*"
 
     history_str = ""
     messages = st.session_state.messages_ipack if history_type == "ipack" else st.session_state.messages_aix
@@ -136,13 +140,14 @@ def generate_expert_response(user_query, history_type):
         f"CONTEXTE DOCUMENTAIRE DE RÉFÉRENCE ACADÉMIQUE :\n{all_knowledge}\n\n"
         f"HISTORIQUE DES ÉCHANGES :\n{history_str}\n"
         f"QUESTION DE L'ENSEIGNANT : {user_query}\n\n"
-        f"INSTRUCTIONS DE PERTINENCE SUR LES LIENS :\n"
-        f"1. Si la question est technique (APPN, absence, dispense, protocole vide), donne la solution technique immédiatement.\n"
-        f"2. Ne mentionne JAMAIS Créteil, Lyon ou Grenoble dans tes textes de réponse.\n"
-        f"3. Pour afficher les liens de téléchargement ou d'accès, utilise IMPÉRATIVEMENT et UNIQUEMENT ces variables de boutons pré-vérifiées par le système :\n"
-        f"   - Outils de suivi : {btn_suivi}\n"
-        f"   - Portail CCF / Saisie : {btn_imagin}\n"
-        f"4. Si la variable indique que le serveur est indisponible, explique poliment à l'enseignant que le service académique est en cours de mise à jour.\n"
+        f"INSTRUCTIONS DE PERTINENCE SUR LES LIENS CORRIGÉS :\n"
+        f"1. Si la question est technique, donne la solution réglementaire ou de configuration immédiatement.\n"
+        f"2. Ne mentionne JAMAIS Créteil, Lyon ou Grenoble dans tes textes explicatifs bruts. Présente les liens comme nos propres outils régionaux.\n"
+        f"3. Pour afficher les liens dans tes réponses, utilise EXCLUSIVEMENT les variables système suivantes :\n"
+        f"   - Lien vers les outils : {btn_suivi}\n"
+        f"   - Lien vers Imag'In / Esterel : {btn_imagin}\n"
+        f"   - Lien vers l'application iPack : {btn_ipack}\n"
+        f"4. Si l'une des variables indique une indisponibilité ou fermeture, intègre cette information pour conseiller au collègue de se reconnecter plus tard.\n"
         f"Réponse en français :"
     )
     
