@@ -55,7 +55,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CONFIGURATION MODELÈS ET SYSTEM PROMPT ACCRUT (Effet 100% Local)
+# 3. CONFIGURATION MODELÈS ET SYSTEM PROMPT
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
     Settings.llm = OpenAI(
@@ -96,12 +96,15 @@ def load_local_index():
 
 index_ia = load_local_index()
 
-# 5. AFFICHAGE DES DEUX COLONNES GRAPHIQUES
+# 5. CONFIGURATION ET AFFICHAGE DES DEUX COLONNES DE CHAT
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
-    with st.container(border=True):
+    
+    # Conteneur fixe pour l'historique des bulles
+    chat_container_ipack = st.container()
+    with chat_container_ipack:
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
             st.markdown("Bonjour, que puis-je faire pour vous ?")
@@ -110,17 +113,20 @@ with col1:
                 st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Capture sécurisée sans affichage sauvage en dessous
-        if prompt_ipack := st.chat_input("Votre question iPack...", key="input_ipack"):
-            st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
-            if index_ia:
-                response = index_ia.as_chat_engine().chat(prompt_ipack).response
-                st.session_state.messages_ipack.append({"role": "assistant", "content": response})
-            st.rerun()
+    # La zone d'écriture reste strictement en bas du bloc, sans se dédoubler
+    if prompt_ipack := st.chat_input("Votre question iPack...", key="input_ipack_fixed"):
+        st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
+        if index_ia:
+            response = index_ia.as_chat_engine().chat(prompt_ipack).response
+            st.session_state.messages_ipack.append({"role": "assistant", "content": response})
+        st.rerun()
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
-    with st.container(border=True):
+    
+    # Conteneur fixe pour l'historique des bulles
+    chat_container_aix = st.container()
+    with chat_container_aix:
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
             st.markdown("Bonjour, que cherchez-vous sur le site ?")
@@ -129,12 +135,12 @@ with col2:
                 st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Capture sécurisée sans affichage sauvage en dessous
-        if prompt_aix := st.chat_input("Votre question site EPS...", key="input_aix"):
-            st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
-            if index_ia:
-                response_aix = index_ia.as_chat_engine().chat(prompt_aix).response
-                st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
-            st.rerun()
+    # La zone d'écriture reste strictement en bas du bloc, sans se dédoubler
+    if prompt_aix := st.chat_input("Votre question site EPS...", key="input_aix_fixed"):
+        st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
+        if index_ia:
+            response_aix = index_ia.as_chat_engine().chat(prompt_aix).response
+            st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
+        st.rerun()
 
 st.markdown("<p style='text-align: center; color: #FFFFFF; font-size: 10px; margin-top: 15px; background-color: rgba(30, 41, 59, 0.8); padding: 5px; border-radius: 4px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
