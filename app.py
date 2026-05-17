@@ -160,7 +160,7 @@ with col1:
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
-            st.markdown(Bonjour, que puis-je faire pour vous ?")
+            st.markdown("Bonjour, que puis-je faire pour vous ?")
         for m in st.session_state.get("messages_ipack", []):
             prefix = "**Vous** :\n\n" if m["role"] == "user" else "**Assistant iPack** :\n\n"
             with st.chat_message(m["role"]): st.markdown(prefix + m["content"])
