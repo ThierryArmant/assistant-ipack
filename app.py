@@ -55,7 +55,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CONFIGURATION MODELÈS ET EMISSION INTELLIGENTE
+# 3. CONFIGURATION DES MODÈLES D'IA
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1, api_key=openai_api_key)
@@ -69,10 +69,9 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. ENGINE DE RECHERCHE HYBRIDE TEXTE COMPLET (MIEUX QUE CHATBASE)
+# 4. CHARGEMENT DE LA BASE DE CONNAISSANCES TEXTE
 @st.cache_resource
 def get_all_context_data():
-    """Charge l'intégralité des fichiers textes sous forme brute pour éviter les pertes de morceaux"""
     context = ""
     try:
         if os.path.exists("./data"):
@@ -87,32 +86,33 @@ def get_all_context_data():
 all_knowledge = get_all_context_data()
 
 def generate_expert_response(user_query, history_type):
-    """Moteur de réflexion à double niveau pour une efficacité maximale"""
-    # Récupération de l'historique pour maintenir le fil conducteur
     history_str = ""
     messages = st.session_state.messages_ipack if history_type == "ipack" else st.session_state.messages_aix
-    for m in messages[-4:]: # Prend les 4 derniers messages
+    for m in messages[-4:]:
         history_str += f"{m['role']}: {m['content']}\n"
 
-    # Le prompt d'analyse qui transforme GPT-4o-mini en super-cerveau académique
+    # CONSIGNES DE MODÉLISATION ULTRA-PRÉCISES SANS ENVOYER LES GENS AILLEURS
     master_prompt = (
         f"Tu es l'IA native exclusive du portail EPS de l'Académie d'Aix-Marseille, nommée 'Notre Assistant'.\n"
-        f"Tu dois répondre de façon très professionnelle, concise, claire, structurée et rassurante.\n\n"
-        f"CONTEXTE DE RÉFÉRENCE ACADÉMIQUE :\n{all_knowledge}\n\n"
-        f"HISTORIQUE DE LA DISCUSSION :\n{history_str}\n"
+        f"Tu dois répondre de façon très professionnelle, concise, structurée (en points numérotés) et rassurante.\n\n"
+        f"CONTEXTE DOCUMENTAIRE INTERNE :\n{all_knowledge}\n\n"
+        f"HISTORIQUE :\n{history_str}\n"
         f"QUESTION DE L'ENSEIGNANT : {user_query}\n\n"
-        f"CONSIGNES ABSOLUES DE RÉDACTION :\n"
-        f"1. Fais croire à 100% que toutes les données, outils et liens sont hébergés chez nous, sur notre portail.\n"
-        f"2. Ne cite JAMAIS les académies de Lyon, Créteil ou Grenoble. Si tu donnes un lien internet de ces académies présent dans le contexte, donne-le sous forme de lien cliquable en disant : 'disponible directement sur notre portail via ce lien'.\n"
-        f"3. Sois hyper précis sur les blocages : si la question parle d'écran blanc, d'absence de classes, ou de Santorin, va chercher directement la solution technique dans le contexte (APSA à cocher, synchronisation STSWEB, validation Imag'In).\n"
-        f"4. Si la réponse contient une liste d'étapes, utilise des puces claires.\n"
+        f"DIRECTIVES CRUCIALES DE COMPORTEMENT :\n"
+        f"1. Ne renvoie JAMAIS les enseignants vers des sites externes ou d'autres académies (interdiction de citer Créteil, Lyon, Grenoble).\n"
+        f"2. Pour toute question sur l'inscription des élèves ou la gestion des épreuves CCF / Examens, tu dois structurer ta réponse exactement selon cette logique institutionnelle :\n"
+        f"   - Explique que l'inscription globale se fait via Cyclades / Plan'Éval depuis leur portail Arena.\n"
+        f"   - Pour l'EPS, précise que le suivi s'organise via iPackEPS (gestion des ensembles certificatifs) et la remontée dématérialisée se fait avec Santorin.\n"
+        f"   - Rappelle les étapes indispensables en établissement : validation du calendrier CCF en Conseil d'Administration (CA) et édition des convocations par le chef d'établissement.\n"
+        f"3. Conclus toujours en invitant l'enseignant à se rapprocher du secrétariat des examens de son propre établissement pour l'ouverture des accès sur les serveurs académiques locaux, car c'est là que tout se centralise.\n"
+        f"4. Reste terre-à-terre : pas de liens fictifs, pas de redirections inutiles. Donne la procédure interne à suivre.\n"
         f"Réponse en français :"
     )
     
     response = Settings.llm.complete(master_prompt)
     return response.text
 
-# 5. SPLIT ÉCRAN EN 2 COLONNES TOTALEMENT LIBRES
+# 5. SPLIT ÉCRAN EN 2 COLONNES
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
