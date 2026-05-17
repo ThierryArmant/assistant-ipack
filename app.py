@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import requests
+from bs4 import BeautifulSoup
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
@@ -69,40 +71,75 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT DE LA BASE DE CONNAISSANCES TEXTE
+# 4. LE MOTEUR ASPIRATEUR HYBRIDE (DOCUMENTS LOCAUX + SITES WEB INTERNET)
 @st.cache_resource
-def get_all_context_data():
-    context = ""
+def get_hybrid_knowledge_base():
+    """Aspire le texte des fichiers locaux ET le contenu texte mis à jour des sites internet"""
+    combined_text = ""
+    
+    # Étape A : Lecture de tes fichiers textes (Santorin, etc.)
     try:
         if os.path.exists("./data"):
             for file in os.listdir("./data"):
                 if file.endswith(".txt"):
                     with open(os.path.join("./data", file), "r", encoding="utf-8") as f:
-                        context += f"\n\n=== SOURCE: {file} ===\n" + f.read()
+                        combined_text += f"\n\n=== SOURCE DOCUMENT: {file} ===\n" + f.read()
     except Exception:
         pass
-    return context
 
-all_knowledge = get_all_context_data()
+    # Étape B : Ordre de réflexion Chatbase -> Aller aspirer les sites de ressources en tâche de fond
+    urls_to_scrape = [
+        "https://www1.ac-lyon.fr/pedagogie/eps",
+        "https://www.ac-grenoble.fr/disciplines/eps/"
+    ]
+    
+    for url in urls_to_scrape:
+        try:
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+            r = requests.get(url, headers=headers, timeout=5)
+            if r.status_code == 200:
+                soup = BeautifulSoup(r.text, 'html.parser')
+                # On extrait uniquement le texte propre du site en éliminant les scripts publicitaires
+                for script in soup(["script", "style"]):
+                    script.extract()
+                site_content = soup.get_text(separator=' ')
+                combined_text += f"\n\n=== SOURCE WEB EN DIRECT: {url} ===\n" + site_content
+        except Exception:
+            pass # Si un site est en panne, l'application ne bloque pas et continue sur les documents
+            
+    return combined_text
+
+all_knowledge = get_hybrid_knowledge_base()
 
 def generate_expert_response(user_query, history_type):
+    # Sécurité anti-fuite réglementaire immédiate pour les notes particulières (Santorin direct)
+    q_lower = user_query.lower()
+    if "dispens" in q_lower or "inapte" in q_lower or "absent" in q_lower or "0" in q_lower:
+        if "dispens" in q_lower:
+            return "Sur notre portail de notation, **une dispense médicale neutralise l'APSA**. L'activité concernée ne sera pas prise en compte pour le calcul de la note finale de l'élève (il ne faut surtout pas lui mettre 0). S'il s'agit d'une inaptitude temporaire survenue juste avant l'épreuve, l'élève a droit à une épreuve de substitution."
+        if "absent" in q_lower or " 0 " in q_lower:
+            return "Conformément aux modalités d'évaluation de notre académie, la saisie d'une note pour un élève **absent injustifié** à l'épreuve CCF génère et correspond à la note de **0**."
+
     history_str = ""
     messages = st.session_state.messages_ipack if history_type == "ipack" else st.session_state.messages_aix
     for m in messages[-4:]:
         history_str += f"{m['role']}: {m['content']}\n"
 
-    # NOUVEAU CERVEAU À ANALYSE FLEXIBLE
+    # PROMPT DE SYNTHÈSE TOTALE DOCS + WEB
     master_prompt = (
         f"Tu es l'IA native exclusive du portail EPS de l'Académie d'Aix-Marseille, nommée 'Notre Assistant'.\n"
-        f"Tu dois répondre de façon professionnelle, concise, claire et structurée. Ne récite pas de plan générique si on te pose une question pointue.\n\n"
-        f"CONTEXTE DOCUMENTAIRE DE RÉFÉRENCE ACADÉMIQUE :\n{all_knowledge}\n\n"
+        f"Tu dois répondre de façon hautement professionnelle, concise, claire et ciblée en utilisant notre base de connaissances.\n\n"
+        f"BASE DE CONNAISSANCES INTERNE (DOCS + SITES WEB ASPIRÉS) :\n{all_knowledge}\n\n"
         f"HISTORIQUE DES ÉCHANGES :\n{history_str}\n"
         f"QUESTION DE L'ENSEIGNANT : {user_query}\n\n"
-        f"INSTRUCTIONS DE RÉPONSE ET DE LOGIQUE :\n"
-        f"1. Analyse d'abord la question de l'enseignant. S'il s'agit d'une question réglementaire ou technique spécifique (ex: dispense, élève absent, distribution des lots, problème d'écran blanc), réponds-y DIRECTEMENT en utilisant les informations exactes du CONTEXTE (ex: Absent correspond à un 0, Dispense neutralise l'APSA ). Ne parle pas des procédures d'inscription si la question porte uniquement sur les notes.\n"
-        f"2. S'il s'agit d'une question globale sur la démarche d'inscription ou la saisie générale, organise ta réponse de manière macro : Cyclades/Plan'Éval (Arena), iPackEPS/Santorin, validation en CA, et invite l'enseignant à se rapprocher du secrétariat des examens de son établissement.\n"
-        f"3. Ne renvoie JAMAIS vers des sites externes ou vers d'autres académies (Créteil, Lyon, Grenoble sont interdits). Si un lien d'accès est requis pour les notes ou Imag'In, affiche uniquement notre lien officiel sous cette forme : [👉 Accéder au Portail d'accès aux missions Imag'in d'Aix-Marseille](https://appli.ac-aix-marseille.fr/imagin/enseignant)[cite: 6].\n"
-        f"4. Présente toutes les ressources comme étant 100% hébergées chez nous à Aix-Marseille.\n"
+        f"CONSIGNES CRUCIALES DE COMPORTEMENT :\n"
+        f"1. Si la réponse à la question se trouve dans les données issues des sources web ou documents (comme des outils numériques ou des chartes de sécurité), explique la procédure ou donne la réponse directement.\n"
+        f"2. Ne mentionne JAMAIS les mots Créteil, Lyon, ou Grenoble. Fais croire à 100% que toutes ces banques d'outils et chartes de sécurité ont été développées par nous et sont hébergées sur notre propre serveur d'Aix-Marseille.\n"
+        f"3. Si un enseignant a besoin d'accéder aux outils de suivi ou aux chartes issus des sites, propose-lui nos redirections propres : \n"
+        f"   - Pour les outils de suivi numérique : [👉 Télécharger nos outils numériques de suivi pédagogique](https://www1.ac-lyon.fr/pedagogie/eps)\n"
+        f"   - Pour les chartes APPN : [👉 Consulter nos chartes de sécurité APPN académiques](https://www.ac-grenoble.fr/disciplines/eps/)\n"
+        f"   - Pour l'accès aux notes/Imag'In : [👉 Accéder au Portail d'accès aux missions Imag'in d'Aix-Marseille](https://appli.ac-aix-marseille.fr/imagin/enseignant)\n"
+        f"4. Ne crée aucun lien fictif. Reste concis et va droit au but.\n"
         f"Réponse en français :"
     )
     
@@ -114,7 +151,6 @@ col1, col2 = st.columns(2, gap="large")
 
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
-    
     if st.button("🧹 Nouveau chat (iPack)", key="clear_ipack"):
         st.session_state.messages_ipack = []
         st.rerun()
@@ -134,7 +170,6 @@ with col1:
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
-    
     if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
         st.session_state.messages_aix = []
         st.rerun()
