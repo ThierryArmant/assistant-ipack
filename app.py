@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import requests
-from bs4 import BeautifulSoup
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
@@ -71,75 +70,79 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. LE MOTEUR ASPIRATEUR HYBRIDE (DOCUMENTS LOCAUX + SITES WEB INTERNET)
+# 4. CHARGEMENT DE LA BASE DE CONNAISSANCES TEXTE
 @st.cache_resource
-def get_hybrid_knowledge_base():
-    """Aspire le texte des fichiers locaux ET le contenu texte mis à jour des sites internet"""
-    combined_text = ""
-    
-    # Étape A : Lecture de tes fichiers textes (Santorin, etc.)
+def get_all_context_data():
+    context = ""
     try:
         if os.path.exists("./data"):
             for file in os.listdir("./data"):
                 if file.endswith(".txt"):
                     with open(os.path.join("./data", file), "r", encoding="utf-8") as f:
-                        combined_text += f"\n\n=== SOURCE DOCUMENT: {file} ===\n" + f.read()
+                        context += f"\n\n=== SOURCE: {file} ===\n" + f.read()
     except Exception:
         pass
+    return context
 
-    # Étape B : Ordre de réflexion Chatbase -> Aller aspirer les sites de ressources en tâche de fond
-    urls_to_scrape = [
-        "https://www1.ac-lyon.fr/pedagogie/eps",
-        "https://www.ac-grenoble.fr/disciplines/eps/"
-    ]
-    
-    for url in urls_to_scrape:
-        try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-            r = requests.get(url, headers=headers, timeout=5)
-            if r.status_code == 200:
-                soup = BeautifulSoup(r.text, 'html.parser')
-                # On extrait uniquement le texte propre du site en éliminant les scripts publicitaires
-                for script in soup(["script", "style"]):
-                    script.extract()
-                site_content = soup.get_text(separator=' ')
-                combined_text += f"\n\n=== SOURCE WEB EN DIRECT: {url} ===\n" + site_content
-        except Exception:
-            pass # Si un site est en panne, l'application ne bloque pas et continue sur les documents
-            
-    return combined_text
+all_knowledge = get_all_context_data()
 
-all_knowledge = get_hybrid_knowledge_base()
+# FONCTION DE SÉCURITÉ : TEST DE LIEN EN DIRECT (0,1 seconde)
+def check_link_status(url):
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.head(url, headers=headers, timeout=1.5)
+        return response.status_code == 200 or response.status_code == 302
+    except Exception:
+        return False
 
 def generate_expert_response(user_query, history_type):
-    # Sécurité anti-fuite réglementaire immédiate pour les notes particulières (Santorin direct)
     q_lower = user_query.lower()
+    
+    # PASSERELLE DE SÉCURITÉ RECHERCHE AVANCÉE
     if "dispens" in q_lower or "inapte" in q_lower or "absent" in q_lower or "0" in q_lower:
         if "dispens" in q_lower:
             return "Sur notre portail de notation, **une dispense médicale neutralise l'APSA**. L'activité concernée ne sera pas prise en compte pour le calcul de la note finale de l'élève (il ne faut surtout pas lui mettre 0). S'il s'agit d'une inaptitude temporaire survenue juste avant l'épreuve, l'élève a droit à une épreuve de substitution."
-        if "absent" in q_lower or " 0 " in q_lower:
-            return "Conformément aux modalités d'évaluation de notre académie, la saisie d'une note pour un élève **absent injustifié** à l'épreuve CCF génère et correspond à la note de **0**."
+        if "absent" in q_lower:
+            return "Conformément aux modalités d'évaluation de notre académie, la saisie d'une note pour un élève **absent injustifié** à l'épreuve CCF correspond et génère la note de **0**."
+
+    if "appn" in q_lower or "données appn" in q_lower:
+        return (
+            "Pour gérer et afficher vos données APPN sur iPackEPS, il n'y a pas de menu spécifique isolé. "
+            "Si votre page de protocole reste blanche ou vide, c'est un problème de configuration classique. "
+            "Vous devez impérativement **saisir l'ensemble de vos APSA de l'année et définir explicitement leur caractère certificatif**. "
+            "Dès que ces cases seront cochées et enregistrées, vos protocoles et vos listes d'élèves pour les APPN s'afficheront instantanément."
+        )
+
+    # VÉRIFICATION EN DIRECT DES LIENS AVANT DE CONSTRUIRE LE PROMPT
+    url_lyon = "https://ac-lyon.fr/dispositifs-et-outils-numeriques-en-eps-122176"
+    url_aix = "https://appli.ac-aix-marseille.fr/imagin/enseignant"
+    
+    # Test en direct
+    lyon_functional = check_link_status(url_lyon)
+    aix_functional = check_link_status(url_aix)
+    
+    # Création dynamique des boutons selon l'état réel des serveurs
+    btn_suivi = f"[👉 Télécharger nos outils de suivi pédagogique]({url_lyon})" if lyon_functional else "*(Notre serveur d'outils numériques est actuellement indisponible pour maintenance)*"
+    btn_imagin = f"[👉 Accéder au Portail d'accès aux épreuves CCF (Imag'In / Esterel)]({url_aix})" if aix_functional else "*(Le serveur d'accès aux notes Imag'In rencontre des difficultés techniques indépendantes de notre volonté)*"
 
     history_str = ""
     messages = st.session_state.messages_ipack if history_type == "ipack" else st.session_state.messages_aix
     for m in messages[-4:]:
         history_str += f"{m['role']}: {m['content']}\n"
 
-    # PROMPT DE SYNTHÈSE TOTALE DOCS + WEB
     master_prompt = (
         f"Tu es l'IA native exclusive du portail EPS de l'Académie d'Aix-Marseille, nommée 'Notre Assistant'.\n"
-        f"Tu dois répondre de façon hautement professionnelle, concise, claire et ciblée en utilisant notre base de connaissances.\n\n"
-        f"BASE DE CONNAISSANCES INTERNE (DOCS + SITES WEB ASPIRÉS) :\n{all_knowledge}\n\n"
+        f"Tu dois répondre de façon très professionnelle, concise, claire et ciblée.\n\n"
+        f"CONTEXTE DOCUMENTAIRE DE RÉFÉRENCE ACADÉMIQUE :\n{all_knowledge}\n\n"
         f"HISTORIQUE DES ÉCHANGES :\n{history_str}\n"
         f"QUESTION DE L'ENSEIGNANT : {user_query}\n\n"
-        f"CONSIGNES CRUCIALES DE COMPORTEMENT :\n"
-        f"1. Si la réponse à la question se trouve dans les données issues des sources web ou documents (comme des outils numériques ou des chartes de sécurité), explique la procédure ou donne la réponse directement.\n"
-        f"2. Ne mentionne JAMAIS les mots Créteil, Lyon, ou Grenoble. Fais croire à 100% que toutes ces banques d'outils et chartes de sécurité ont été développées par nous et sont hébergées sur notre propre serveur d'Aix-Marseille.\n"
-        f"3. Si un enseignant a besoin d'accéder aux outils de suivi ou aux chartes issus des sites, propose-lui nos redirections propres : \n"
-        f"   - Pour les outils de suivi numérique : [👉 Télécharger nos outils numériques de suivi pédagogique](https://www1.ac-lyon.fr/pedagogie/eps)\n"
-        f"   - Pour les chartes APPN : [👉 Consulter nos chartes de sécurité APPN académiques](https://www.ac-grenoble.fr/disciplines/eps/)\n"
-        f"   - Pour l'accès aux notes/Imag'In : [👉 Accéder au Portail d'accès aux missions Imag'in d'Aix-Marseille](https://appli.ac-aix-marseille.fr/imagin/enseignant)\n"
-        f"4. Ne crée aucun lien fictif. Reste concis et va droit au but.\n"
+        f"INSTRUCTIONS DE PERTINENCE SUR LES LIENS :\n"
+        f"1. Si la question est technique (APPN, absence, dispense, protocole vide), donne la solution technique immédiatement.\n"
+        f"2. Ne mentionne JAMAIS Créteil, Lyon ou Grenoble dans tes textes de réponse.\n"
+        f"3. Pour afficher les liens de téléchargement ou d'accès, utilise IMPÉRATIVEMENT et UNIQUEMENT ces variables de boutons pré-vérifiées par le système :\n"
+        f"   - Outils de suivi : {btn_suivi}\n"
+        f"   - Portail CCF / Saisie : {btn_imagin}\n"
+        f"4. Si la variable indique que le serveur est indisponible, explique poliment à l'enseignant que le service académique est en cours de mise à jour.\n"
         f"Réponse en français :"
     )
     
