@@ -179,7 +179,7 @@ col1, col2 = st.columns(2, gap="large")
 
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS, Santorin &amp; Examens</div>', unsafe_allow_html=True)
-    if st.button("🧹 Nouveau chat (iPack/Exam)", key="clear_ipack"):
+    if st.button("🧹 Nettoyer la fenêtre", key="clear_ipack"):
         st.session_state.messages_ipack = []
         if openai_api_key: engine_ipack.reset()
         st.rerun()
@@ -210,7 +210,7 @@ with col1:
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
-    if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
+    if st.button("🧹 Nettoyer la fenêtre", key="clear_aix"):
         st.session_state.messages_aix = []
         if openai_api_key: engine_aix.reset()
         st.rerun()
