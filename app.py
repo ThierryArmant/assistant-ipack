@@ -9,7 +9,7 @@ from llama_index.readers.web import SimpleWebPageReader
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 # Identification des images à la racine de ton GitHub
-img_gauche = "image_7.png"  # Logo circulaire EPS Aix-Marseille (sans le "s")
+img_gauche = "image_7.png"  # Logo circulaire EPS Aix-Marseille
 img_droite = "image_5.png"  # Logo iPack EPS (la boîte bleue et orange)
 img_fond = "image_8.png"    # Ton nouveau fond d'écran épuré et lumineux
 
@@ -126,7 +126,7 @@ if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# 3. BANDEAU DE NAVIGATION SUPÉRIEUR (AVEC LOGOS REPOSITIONNÉS)
+# 3. BANDEAU DE NAVIGATION SUPÉRIEUR
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;">
@@ -142,23 +142,26 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT IA (FUSION DOSSIER DATA + SITE WEB CRÉTEIL)
+# 4. CHARGEMENT IA SÉCURISÉ (DATA + CRÉTEIL COMPATIBLE)
 def load_all_indexes_safe():
     # A. Lecture des fichiers locaux (PDF, TXT, etc.)
     if not os.path.exists("./data"): 
         os.makedirs("./data")
     pdf_docs = SimpleDirectoryReader(input_dir="./data").load_data()
     
-    # B. Lecture du site d'aide iPack de Créteil
-    urls_creteil = ["https://ipackeps.ac-creteil.fr/"]
-    try:
-        web_docs = SimpleWebPageReader(html_to_text=True).load_data(urls_creteil)
-    except Exception:
-        web_docs = []
-        
-    # C. Regroupement complet des connaissances
-    tous_les_documents = pdf_docs + web_docs
+    tous_les_documents = pdf_docs
     
+    # B. Lecture sécurisée du site de Créteil
+    try:
+        urls_creteil = ["https://ipackeps.ac-creteil.fr/"]
+        web_docs = SimpleWebPageReader(html_to_text=True).load_data(urls_creteil)
+        if web_docs:
+            tous_les_documents = pdf_docs + web_docs
+    except Exception:
+        # En cas de lenteur ou de blocage du site, on passe sans faire planter le reste
+        pass
+        
+    # C. Création de l'index
     index = VectorStoreIndex.from_documents(tous_les_documents) if tous_les_documents else None
     return index, index
 
