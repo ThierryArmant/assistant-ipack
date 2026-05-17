@@ -6,7 +6,7 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 
-# 1. INITIALISATION DE LA MÉMOIRE ET DES COMPTEURS
+# 1. INITIALISATION DE LA MÉMOIRE ET DES COMPTEURS DE RÉPÉTITION
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
@@ -96,14 +96,22 @@ def get_chat_engines():
     docs = SimpleDirectoryReader(input_dir="./data").load_data()
     index = VectorStoreIndex.from_documents(docs)
     
+    # VERROUILLAGE SÉMANTIQUE : TU PARLES À UN ENSEIGNANT D'EPS
     prompt_ipack = (
-        "Tu es l'IA experte du module 'iPackEPS et Saisie'. Traite uniquement de la configuration, des classes, "
-        "des listes d'élèves et des dossiers sportifs (APPN, SSS). Ne confonds jamais cela avec Santorin ou les examens.\n\n"
-        f"CONTEXTE :\n{context}"
+        "Tu es l'IA experte du module 'iPackEPS et Saisie' de l'Académie d'Aix-Marseille. "
+        "CONSIGNE ABSOLUE DE POSTURE : Sache que tes interlocuteurs sont exclusivement des enseignants d'EPS. "
+        "Adopte un ton confraternel, technique et direct. Maîtrise parfaitement le jargon (APSA, CCF, SSS, APPN). "
+        "Traite uniquement de la configuration, des classes, des listes d'élèves et des dossiers sportifs. "
+        "Ne confonds jamais cela avec Santorin ou les examens.\n\n"
+        f"CONTEXTE D'ACCÈS PROFS D'EPS :\n{context}"
     )
+    
     prompt_general = (
-        "Tu es l'IA experte du module de Recherche Générale EPS. Ton but est d'orienter efficacement les enseignants "
-        "en croisant les données des grands portails académiques partenaires. Donne toujours l'emplacement ou le chemin de clics exact si demandé."
+        "Tu es l'IA experte de la Recherche Générale du portail EPS. "
+        "CONSIGNE ABSOLUE DE POSTURE : Tes interlocuteurs sont exclusivement des professeurs d'EPS. "
+        "Ne donne jamais d'explications scolaires ou infantiles. Reste centré sur les textes réglementaires, la sécurité "
+        "et la didactique des activités physiques (ex: TASA, Natation, Sauvetage, etc.). "
+        "Oriente efficacement vers les emplacements exacts des 4 grands portails académiques partenaires sans fioritures techniques."
     )
     
     engine_ipack = index.as_chat_engine(
@@ -205,21 +213,19 @@ def get_forced_context_response(query_text, chosen_context):
 def get_forced_general_search(query_text):
     text = query_text.lower()
     
-    # URL profonde vers les dossiers et documents spécifiques
-    url_tasa_direct = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_11139474/fr/le-test-d-aptitude-securitaire-aquatique-tasa"
+    url_tasa_aix_exact = "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_11195547/it/tasa?hlText=tasa"
     url_lyon_ressources = "https://eps.enseigne.ac-lyon.fr/spip/spip.php?rubrique23"
 
-    # Emplacement chirurgical pour le TASA / Natation / Savoir Nager
-    if "tasa" in text or "aquatique" in text or "nager" in text or "bassin" in text:
+    if "tasa" in text or "aquatique" in text or "nager" in text or "bassin" in text or "natation" in text:
         return f"""<div class="general-card">
-            <strong>🏊 TEXTES OFFICIELS – Emplacement du Document TASA :</strong><br><br>
-            Le document officiel complet ainsi que les grilles d'évaluation du <strong>Test d'Aptitude Sécuritaire Aquatique (TASA)</strong> se trouvent précisément ici :<br><br>
-            📂 <strong>Chemin d'accès :</strong><br>
-            <code>Accueil > Textes et Textes Officiels > Sécurité, Textes Généraux et Santé > Activités Aquatiques</code><br><br>
-            <a href="{url_tasa_direct}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">👉 Ouvrir directement la page de téléchargement du document TASA</a><br>
+            <strong>🏊 ACTIVITÉS AQUATIQUES – Test d'Aptitude Sécuritaire Aquatique (TASA) :</strong><br><br>
+            <em>Note d'accès : Le moteur d'indexation du site peut parfois générer une mention technique d'archivage ("sciconum"). N'en tenez pas compte, la ressource correspond bien aux référentiels de natation.</em><br><br>
+            📂 <strong>Emplacement et chemin de téléchargement :</strong><br>
+            <code>Accueil > Textes Officiels > Sécurité, Textes Généraux et Santé > Activités Aquatiques > TASA</code><br><br>
+            <a href="{url_tasa_aix_exact}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">👉 Ouvrir la fiche officielle et télécharger le document TASA</a><br>
             <br>
-            <em>En complément, les grilles d'accompagnement de fin de cycle sont également archivées dans cet espace :</em><br>
-            • <a href="{url_lyon_ressources}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Accéder aux outils d'analyse didactique des activités physiques</a> (Dossier : Textes Complémentaires).
+            <em>Pour vos grilles d'évaluation et de cotation de fin de cycle :</em><br>
+            • <a href="{url_lyon_ressources}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Accéder aux fiches didactiques de natation de vitesse et sauvetage</a>.
         </div>"""
         
     return None
@@ -237,7 +243,7 @@ with col1:
         st.rerun()
         
     with st.chat_message("assistant"): 
-        st.markdown("Bonjour. Choisissez votre thématique ci-dessous puis posez votre question.")
+        st.markdown("Bonjour cher collègue. Choisissez votre volet de saisie pour commencer.")
         
     context_choice = st.radio(
         "Sur quel module travaillez-vous actuellement ?",
@@ -255,7 +261,7 @@ with col1:
         with st.chat_message(m["role"]):
             st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}", unsafe_allow_html=True)
             
-    if prompt_ipack := st.chat_input("Posez votre question précise ici...", key="input_ipack_final"):
+    if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack_final"):
         st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
         
         cleaned_query = prompt_ipack.strip().lower()
@@ -265,7 +271,7 @@ with col1:
             st.session_state.last_query = cleaned_query
             st.session_state.query_repeat_count = 1
             
-        with st.spinner("Traitement ciblé..."):
+        with st.spinner("Analyse métier..."):
             if st.session_state.query_repeat_count >= 3:
                 answer = """<div class="sos-card" style="background-color: rgba(255, 255, 255, 0.95) !important;">
                     <h3 style="color:#DC2626; margin:0 0 10px 0;">📬 Besoin d'une assistance humaine</h3>
@@ -276,7 +282,7 @@ with col1:
                 if forced_block not in ["REGLEMENT_EXAM", "REGLEMENT_IPACK", "CHOIX_STRUCTURE"]:
                     answer = forced_block
                 elif forced_block == "CHOIX_STRUCTURE":
-                    answer = """<div class="video-card" style="background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #EAB308 !important;"><strong>🔍 Structure non détectée :</strong><br>Précisez si votre demande d'import concerne le <strong>Collège</strong> ou le <strong>Lycée</strong> directement dans votre texte.</div>"""
+                    answer = """<div class="video-card" style="background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #EAB308 !important;"><strong>🔍 Structure non détectée :</strong><br>Précisez s'il s'agit du <strong>Collège</strong> ou du <strong>Lycée</strong> directement dans votre question.</div>"""
                 else:
                     if openai_api_key:
                         response = engine_ipack.chat(f"CONTEXTE SÉLECTIONNÉ : {context_choice}. QUESTION : {prompt_ipack}")
@@ -295,16 +301,15 @@ with col2:
         st.rerun()
         
     with st.chat_message("assistant"): 
-        st.markdown("Bonjour, recherchez un document ou un texte officiel. Je parcours les réseaux académiques partenaires.")
+        st.markdown("Bonjour cher collègue. Saisissez le texte officiel ou le concept didactique recherché.")
     for m in st.session_state.messages_aix:
         with st.chat_message(m["role"]):
             st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}", unsafe_allow_html=True)
             
-    if prompt_aix := st.chat_input("Votre recherche générale (4 Académies) ?", key="input_aix_final"):
+    if prompt_aix := st.chat_input("Votre recherche de texte officiel ?", key="input_aix_final"):
         st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
-        with st.spinner("Recherche unifiée sur les 4 portails..."):
+        with st.spinner("Recherche croisée..."):
             
-            # 1. Interception prioritaire en dur avec l'emplacement exact
             general_forced = get_forced_general_search(prompt_aix)
             
             if general_forced:
@@ -320,13 +325,13 @@ with col2:
                         url_creteil = "https://eps.ac-creitil.fr/"
                         url_grenoble = "https://eps-pedagogie.web.ac-grenoble.fr/examens"
                         
-                        answer_aix = f"""Je ne trouve pas ce texte spécifique dans mes fiches d'aide locales.<br><br>
-                        <strong>🔍 Voici les accès directs vers nos 4 portails académiques partenaires pour affiner votre recherche :</strong><br>
+                        answer_aix = f"""Je ne trouve pas ce document spécifique dans nos fichiers d'aide locaux.<br><br>
+                        <strong>🔍 Voici les accès directs vers nos 4 portails de référence pour télécharger la circulaire :</strong><br>
                         • <a href="{url_aix}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail EPS Référent</a><br>
                         • <a href="{url_lyon}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Outils Annexes</a><br>
                         • <a href="{url_creteil}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Portail Documentation</a><br>
                         • <a href="{url_grenoble}" target="_blank" style="color:#10B981; font-weight:bold; text-decoration:underline;">Espace Textes Complémentaires</a><br><br>
-                        <em>(💡 Astuce : Utilisez la barre de recherche interne de ces sites avec vos mots-clés pour récupérer le document officiel).*</em>"""
+                        <em>(💡 Utilisez la recherche interne de ces sites pour récupérer la circulaire).*</em>"""
                 else:
                     answer_aix = "Clé OpenAI manquante."
                     
