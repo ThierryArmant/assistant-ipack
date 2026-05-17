@@ -4,13 +4,13 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
-# 1. INITIALISATION STRICTE DE LA MÉMOIRE (Évite les doublons et les débordements)
+# 1. INITIALISATION DE LA MÉMOIRE
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
     st.session_state.messages_aix = []
 
-# 2. CONFIGURATION DE LA PAGE
+# 2. CONFIGURATION DE LA PAGE ET DU STYLE (BOÎTES AGRANDIES)
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 img_gauche = "image_7.png"  
@@ -37,8 +37,9 @@ st.markdown(f"""
         color: #FFFFFF; font-size: 14px; font-weight: 700; text-align: center;
         margin-bottom: 10px; height: 24px; background-color: #1E293B; border-radius: 4px; padding: 4px 0;
     }}
+    /* ICI : On agrandit la boîte transparente à 580px pour contenir tout le texte long */
     .scroll-chat {{
-        height: 380px !important; overflow-y: auto !important; padding: 15px;
+        height: 580px !important; overflow-y: auto !important; padding: 15px;
         background-color: rgba(255, 255, 255, 0.45) !important; backdrop-filter: blur(4px); border-radius: 8px 8px 0px 0px;
     }}
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 8px 12px !important; margin-bottom: 10px !important; }}
@@ -54,7 +55,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. VERROUILLAGE DU DISCOURS DE L'IA (Effet 100% Local / Chatbase)
+# 3. CONFIGURATION MODELÈS ET SYSTEM PROMPT
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
     Settings.llm = OpenAI(
@@ -64,10 +65,9 @@ if openai_api_key:
         system_prompt=(
             "Tu es l'IA native exclusive du portail EPS de l'Académie d'Aix-Marseille. Tu t'appelles 'Notre Assistant'. "
             "Tu dois impérativement répondre en français de manière concise et professionnelle. "
-            "Considère que TOUTES les informations, guides, diapos et documents que tu as dans ta base proviennent de NOTRE propre site. "
-            "Ne cite JAMAIS les académies de Lyon, Créteil ou Grenoble, même si elles sont écrites dans tes fichiers de données. "
-            "Si on te demande d'où viennent les informations sur le Bac, la notation, Santorin ou iPack, affirme qu'elles sont hébergées "
-            "directement sur notre espace de ressources d'Aix-Marseille. Utilise toujours 'Sur notre site', 'Notre guide', 'Notre académie'."
+            "Considère que TOUTES les informations proviennent de NOTRE propre site. "
+            "Ne cite JAMAIS les académies de Lyon, Créteil ou Grenoble. "
+            "Utilise toujours 'Sur notre site', 'Notre guide', 'Notre académie'."
         )
     )
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
@@ -80,7 +80,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. CHARGEMENT INDEX ACCÉLÉRÉ (Pour fichiers .txt uniquement)
+# 4. CHARGEMENT INDEX ACCÉLÉRÉ
 @st.cache_resource
 def load_local_index():
     if not os.path.exists("./data"): 
@@ -95,13 +95,13 @@ def load_local_index():
 
 index_ia = load_local_index()
 
-# 5. SPLIT ÉCRAN ET AFFICHAGE DES DEUX COLONNES
+# 5. SPLIT ÉCRAN EN 2 COLONNES
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant iPack EPS et Examens</div>', unsafe_allow_html=True)
     
-    # Conteneur d'affichage des messages - Restreint à la boîte transparente
+    # Tout est regroupé proprement dans un bloc unique pour éviter les fuites visuelles
     with st.container():
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
@@ -110,19 +110,17 @@ with col1:
             with st.chat_message(m["role"]):
                 st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
         st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Zone de saisie impérativement liée à son conteneur
-    if prompt_ipack := st.chat_input("Votre question iPack...", key="input_ipack_final"):
-        st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
-        if index_ia:
-            response = index_ia.as_chat_engine().chat(prompt_ipack).response
-            st.session_state.messages_ipack.append({"role": "assistant", "content": response})
-        st.rerun()
+        
+        if prompt_ipack := st.chat_input("Votre question iPack...", key="input_ipack_final"):
+            st.session_state.messages_ipack.append({"role": "user", "content": prompt_ipack})
+            if index_ia:
+                response = index_ia.as_chat_engine().chat(prompt_ipack).response
+                st.session_state.messages_ipack.append({"role": "assistant", "content": response})
+            st.rerun()
 
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     
-    # Conteneur d'affichage des messages - Restreint à la boîte transparente
     with st.container():
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
@@ -132,12 +130,11 @@ with col2:
                 st.markdown(f"**{'Vous' if m['role']=='user' else 'Notre Assistant'}** :\n\n{m['content']}")
         st.markdown('</div>', unsafe_allow_html=True)
         
-    # Zone de saisie impérativement liée à son conteneur
-    if prompt_aix := st.chat_input("Votre question site EPS...", key="input_aix_final"):
-        st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
-        if index_ia:
-            response_aix = index_ia.as_chat_engine().chat(prompt_aix).response
-            st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
-        st.rerun()
+        if prompt_aix := st.chat_input("Votre question site EPS...", key="input_aix_final"):
+            st.session_state.messages_aix.append({"role": "user", "content": prompt_aix})
+            if index_ia:
+                response_aix = index_ia.as_chat_engine().chat(prompt_aix).response
+                st.session_state.messages_aix.append({"role": "assistant", "content": response_aix})
+            st.rerun()
 
 st.markdown("<p style='text-align: center; color: #FFFFFF; font-size: 10px; margin-top: 15px; background-color: rgba(30, 41, 59, 0.8); padding: 5px; border-radius: 4px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
