@@ -9,3 +9,14 @@ BANQUE DE CONNAISSANCES ET RESSOURCES - HUB EPS
 • Accès aux outils numériques : https://www1.ac-lyon.fr/pedagogie/eps
 • Accès aux chartes de sécurité APPN : https://www.ac-grenoble.fr/disciplines/eps/
 • Accès au portail iPack EPS général : https://ipackeps.ac-creteil.fr/
+CONTENU ET DOCUMENTATION DE RÉFÉRENCE - HUB EPS
+
+[SECTION : RECHERCHES ET GUIDES SITE EPS]
+• Protocoles d'examens pour la voie professionnelle (Bac Pro/CAP) et banques d'outils numériques pour le suivi des élèves : se référer aux fiches de l'académie de Lyon.
+• Chartes de sécurité liées aux APPN (Activités Physiques de Pleine Nature) et livrets d'évaluation harmonisés : se référer aux livrets de l'académie de Grenoble.
+• Guides d'aide iPack EPS, foires aux questions et fiches d'évaluation par compétences : utiliser les protocoles de l'académie de Créteil.
+
+[SECTION : PORTAILS ET ACCÈS DIRECTS]
+• Saisie et validation des épreuves : https://ipackeps.ac-creteil.fr/
+• Outils de suivi numérique : https://www1.ac-lyon.fr/pedagogie/eps
+• Chartes de sécurité APPN : https://www.ac-grenoble.fr/disciplines/eps/
