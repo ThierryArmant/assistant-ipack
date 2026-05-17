@@ -4,7 +4,7 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
-# 1. CONFIGURATION DE LA PAGE
+# 1. CONFIGURATION DE LA PAGE - VERSION COMPACTE SANS SCROLL
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -13,33 +13,34 @@ st.markdown("""
     .stApp { background-color: #F3F4F6 !important; }
     header[data-testid="stHeader"] { display: none !important; }
     
-    /* Bandeau Supérieur */
+    /* Bandeau Supérieur Slim */
     .hub-header {
         background-color: #002060;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 8px 20px;
-        margin-bottom: 15px;
+        padding: 6px 20px;
+        margin-bottom: 10px;
         border-radius: 4px;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
     }
     .hub-title { text-align: center; color: white; }
-    .hub-title h1 { color: white !important; margin: 0; font-size: 20px; font-weight: bold; }
-    .hub-title p { color: #cbd5e0 !important; margin: 0; font-size: 11px; }
+    .hub-title h1 { color: white !important; margin: 0; font-size: 18px; font-weight: bold; }
+    .hub-title p { color: #cbd5e0 !important; margin: 0; font-size: 10px; }
     
     /* Titres des colonnes */
     .column-title {
         color: #002060;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
+        height: 18px;
     }
     
-    /* Zone interne des messages pour garder un défilement propre */
+    /* Hauteur réduite à 280px pour garantir que tout entre sur un seul écran */
     .scroll-chat {
-        height: 380px;
+        height: 280px;
         overflow-y: auto;
         padding-right: 5px;
     }
@@ -58,14 +59,14 @@ logo_droite = "image_6.png" if os.path.exists("image_6.png") else ""
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 120px; text-align: left;">
-            {"<img src='app/static/" + logo_gauche + "' width='85'>" if logo_gauche else "<span style='color:white; font-size:10px;'>Académie</span>"}
+            {"<img src='app/static/" + logo_gauche + "' width='80'>" if logo_gauche else "<span style='color:white; font-size:10px;'>Académie</span>"}
         </div>
         <div class="hub-title">
             <h1>Hub IA - EPS Aix-Marseille</h1>
             <p>Espace Ressources &amp; Assistance Numérique</p>
         </div>
         <div style="width: 120px; text-align: right;">
-            {"<img src='app/static/" + logo_droite + "' width='40'>" if logo_droite else "<span style='color:white; font-size:10px;'>EPS</span>"}
+            {"<img src='app/static/" + logo_droite + "' width='35'>" if logo_droite else "<span style='color:white; font-size:10px;'>EPS</span>"}
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -93,7 +94,6 @@ with col1:
     if "messages_ipack" not in st.session_state: 
         st.session_state.messages_ipack = []
         
-    # Utilisation du conteneur natif avec bordure blanche style Chatbase
     with st.container(border=True):
         st.markdown('<div class="scroll-chat">', unsafe_allow_html=True)
         with st.chat_message("assistant"): 
@@ -103,7 +103,6 @@ with col1:
                 st.markdown(m["content"])
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # L'input est maintenant scotché à l'intérieur du bloc blanc !
         prompt = st.chat_input("Message...", key="input_ipack")
 
 with col2:
@@ -138,4 +137,4 @@ if prompt_aix:
     st.rerun()
 
 # Pied de page
-st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 10px; margin-top: 15px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 10px; margin-top: 8px; margin-bottom: 0px;'>© 2026 - Académie d'Aix-Marseille</p>", unsafe_allow_html=True)
