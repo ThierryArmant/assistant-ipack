@@ -7,10 +7,10 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 # 1. CONFIGURATION DE LA PAGE
 st.set_page_config(page_title="Hub IA - EPS Aix-Marseille", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
 
-# Identification des images à la racine de ton GitHub
-img_acad = "image_5.png"  # Logo iPack EPS (Gauche)
-img_eps = "image_6.png"   # Logo EPS (Droite)
-img_fond = "image_8.png"  # Ton image de fond personnalisée épurée
+# Identification des images à la racine de ton GitHub (Inversion demandée)
+img_gauche = "image_7.png"  # Nouveau placement : Image 7 à gauche
+img_droite = "image_5.png"  # Nouveau placement : Image 5 à droite
+img_fond = "image_8.png"    # Ton fond lumineux (vérifie bien l'extension .png ou .jpg)
 
 # Construction de l'URL GitHub pour les images
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -19,7 +19,7 @@ st.markdown(f"""
     <style>
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     
-    /* INTEGRATION DE IMAGE_8 EN FOND D'ECRAN GLOBAL */
+    /* INTEGRATION DU FOND D'ECRAN LUMINEUX */
     .stApp {{ 
         background-image: url('{github_url}{img_fond}') !important;
         background-size: cover !important;
@@ -88,7 +88,7 @@ st.markdown(f"""
         margin-left: 8% !important;
     }}
     
-    /* Message de l'IA (Assistant Numérique) : Grisé opaque de la maquette */
+    /* Message de l'IA (Assistant Numérique) : Grisé opaque */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{
         background-color: #E9ECEF !important;
         color: #212529 !important;
@@ -97,7 +97,7 @@ st.markdown(f"""
         box-shadow: 0px 2px 6px rgba(0,0,0,0.05) !important;
     }}
     
-    /* Nettoyage absolu des conteneurs d'avatars de Streamlit */
+    /* Nettoyage avatars */
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{
         display: none !important;
     }}
@@ -125,19 +125,17 @@ if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# 3. BANDEAU DE NAVIGATION SUPÉRIEUR
+# 3. BANDEAU DE NAVIGATION SUPÉRIEUR (LOGOS INVERSÉS)
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;">
-            <img src="{github_url}{img_acad}" width="110">
-        </div>
+            <img src="{github_url}{img_gauche}" width="110"> </div>
         <div class="hub-title">
             <h1>Hub IA - EPS Aix-Marseille</h1>
             <p>Espace Ressources &amp; Assistance Numérique</p>
         </div>
         <div style="width: 150px; text-align: right;">
-            <img src="{github_url}{img_eps}" width="45">
-        </div>
+            <img src="{github_url}{img_droite}" width="75"> </div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -151,7 +149,7 @@ def load_all_indexes_safe():
 try:
     ipack_index, aix_index = load_all_indexes_safe()
 except Exception as e:
-    st.error("⚠️ Problème de configuration des services d'IA. Veuillez vérifier vos Secrets.")
+    st.error("⚠️ Problème de configuration. Vérifiez les Secrets.")
     st.stop()
 
 # 5. SPLIT ÉCRAN À DEUX COLONNES
