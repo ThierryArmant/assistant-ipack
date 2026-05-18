@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import requests
+from bs4 import BeautifulSoup
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
@@ -81,7 +83,6 @@ st.markdown(f"""
 def get_ipack_engine():
     if not os.path.exists("./data"):
         os.makedirs("./data")
-    # Chargement blindé avec encodage UTF-8 universel pour accepter tous les caractères
     docs = SimpleDirectoryReader(input_dir="./data", encoding="utf-8").load_data()
     index = VectorStoreIndex.from_documents(docs)
     prompt = (
@@ -94,17 +95,13 @@ def get_ipack_engine():
 if openai_api_key:
     engine_ipack = get_ipack_engine()
 
-# Fonction de recherche Web bridée sur tes portails de confiance
-def executer_recherche_web(requete):
+# --- NOUVEAU MOTEUR : Exploration et extraction du texte des sites web ---
+def recuperer_contenu_web(requete):
     try:
         DOMAINES_AUTORISES = [
             "site:education.gouv.fr/bo",                 
             "site:ac-aix-marseille.fr/eps"
-            "site:https://ipackeps.ac-creteil.fr/"
-            "site:https://eps.enseigne.ac-lyon.fr/spip/"
-            "site:https://eps-pedagogie.web.ac-grenoble.fr/"
         ]
-        
         ciblage_sites = " OR ".join(DOMAINES_AUTORISES)
         requete_ciblee = f"{requete} ({ciblage_sites})"
         
@@ -113,11 +110,27 @@ def executer_recherche_web(requete):
             liens_trouves.append(url)
             
         if not liens_trouves:
-            return "Aucun document trouvé sur les portails officiels configurés."
+            return "Aucun document trouvé sur les portails configurés.", []
             
-        return "Voici les adresses officielles trouvées pour approfondir :\n" + "\n".join(liens_trouves)
+        contexte_extrait = ""
+        entetes = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        
+        # Le robot va sur chaque site web extraire le vrai texte
+        for url in liens_trouves:
+            try:
+                rep = requests.get(url, headers=entetes, timeout=5)
+                if rep.status_code == 200:
+                    soup = BeautifulSoup(rep.text, "html.parser")
+                    # On nettoie la page des scripts et menus inutiles
+                    for s in soup(["script", "style", "nav", "footer"]): s.decompose()
+                    texte_propre = " ".join(soup.get_text().split())[:2000] # On prend les 2000 premiers caractères utiles
+                    contexte_extrait += f"--- SOURCE: {url} ---\n{texte_propre}\n\n"
+            except:
+                continue
+                
+        return contexte_extrait, liens_trouves
     except Exception as e:
-        return f"Note : Recherche externe temporairement restreinte (Détail : {str(e)})."
+        return f"Erreur de connexion aux portails officiels (Détail : {str(e)}).", []
 
 # ======================================================================
 # 4. EXÉCUTION DOUBLE COLONNE
@@ -125,47 +138,70 @@ def executer_recherche_web(requete):
 col1, col2 = st.columns(2, gap="large")
 
 # ----------------------------------------------------------------------
-# COLONNE GAUCHE : ASSISTANT MÉTIER SÉCURISÉ (IPACK / EXAMENS)
+# COLONNE GAUCHE : ASSISTANT MÉTIER EPS + PARCOURS VIDÉOS
 # ----------------------------------------------------------------------
 with col1:
-    st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
-    if st.button("🧹 Nettoyer le chat", key="clear_ipack"):
-        st.session_state.messages_ipack = []
-        st.rerun()
-        
-    context_choice = st.radio("Sur quel module travaillez-vous ?", ["🛠️ iPackEPS (Configuration, Classes, SSS)", "📊 Examens & Santorin (Notes, Absences, Dispenses)"])
-
-    if "examens" in context_choice.lower():
-        st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.column-title) { background-color: rgba(239, 68, 68, 0.05) !important; border-radius: 12px; padding: 15px; }</style>", unsafe_allow_html=True)
-    else:
-        st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.column-title) { background-color: rgba(14, 165, 233, 0.05) !important; border-radius: 12px; padding: 15px; }</style>", unsafe_allow_html=True)
-
-    for m in st.session_state.messages_ipack:
-        with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
+    st.markdown('<div class="column-title">🤖 Assistant Métier EPS & Vidéos</div>', unsafe_allow_html=True)
+    
+    tab_chat, tab_videos = st.tabs(["💬 Poser une question", "🎥 Parcours Vidéos Fléchés"])
+    
+    with tab_chat:
+        if st.button("🧹 Nettoyer le chat", key="clear_ipack"):
+            st.session_state.messages_ipack = []
+            st.rerun()
             
-    if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
-        st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
-        
-        with st.spinner("Analyse factuelle..."):
-            text_low = prompt_ipack.lower()
+        context_choice = st.radio("Sur quel module travaillez-vous ?", ["🛠️ iPackEPS (Configuration, Classes, SSS)", "📊 Examens & Santorin (Notes, Absences, Dispenses)"])
+
+        if "examens" in context_choice.lower():
+            st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.column-title) { background-color: rgba(239, 68, 68, 0.05) !important; border-radius: 12px; padding: 15px; }</style>", unsafe_allow_html=True)
+        else:
+            st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.column-title) { background-color: rgba(14, 165, 233, 0.05) !important; border-radius: 12px; padding: 15px; }</style>", unsafe_allow_html=True)
+
+        for m in st.session_state.messages_ipack:
+            with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
+                
+        if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
+            st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
             
-            # Gestion des cas d'examens bloqués en dur (Réglementation Académique)
-            if "examens" in context_choice.lower() and any(w in text_low for w in ["inapte", "dispens", "absent"]):
-                if "inapte" in text_low:
-                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Inapte :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> L'inaptitude médicale ouvre obligatoirement le droit à une épreuve de substitution organisée par l'établissement.</div>"""
-                elif "dispens" in text_low:
-                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Dispensé :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> La dispense médicale valide entraîne la neutralisation de l'APSA sur le serveur d'examen.</div>"""
+            with st.spinner("Analyse factuelle..."):
+                text_low = prompt_ipack.lower()
+                
+                if "examens" in context_choice.lower() and any(w in text_low for w in ["inapte", "dispens", "absent"]):
+                    if "inapte" in text_low:
+                        answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Inapte :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> L'inaptitude médicale ouvre obligatoirement le droit à une épreuve de substitution organisée par l'établissement.</div>"""
+                    elif "dispens" in text_low:
+                        answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Dispensé :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> La dispense médicale valide entraîne la neutralisation de l'APSA sur le serveur d'examen.</div>"""
+                    else:
+                        answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Absent :</strong><br>L'absence injustifiée à un CCF certificatif génère la note obligatoire de <strong>0</strong>.</div>"""
                 else:
-                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Absent :</strong><br>L'absence injustifiée à un CCF certificatif génère la note obligatoire de <strong>0</strong>.</div>"""
-            else:
-                response_locale = engine_ipack.chat(f"CONTEXTE : {context_choice}. QUESTION : {prompt_ipack}")
-                answer = response_locale.response
+                    response_locale = engine_ipack.chat(f"CONTEXTE : {context_choice}. QUESTION : {prompt_ipack}")
+                    answer = response_locale.response
 
-        st.session_state.messages_ipack.append({"role": "assistant", "content": f"**Assistant** : {answer}"})
-        st.rerun()
+            st.session_state.messages_ipack.append({"role": "assistant", "content": f"**Assistant** : {answer}"})
+            st.rerun()
+
+    with tab_videos:
+        st.write("Sélectionnez un tutoriel pour vous guider pas à pas dans votre saisie :")
+        video_choice = st.selectbox(
+            "Quel point du parcours souhaitez-vous visionner ?",
+            [
+                "1️⃣ Saisie Établissement & Fiche Professeur",
+                "2️⃣ Gestion des dossiers EPS (Classes, APSA, Périodes)",
+                "3️⃣ Gestion des Sections Sportives Scolaires (SSS)",
+                "4️⃣ Gestion des dossiers APPN & Environnement spécifique"
+            ]
+        )
+        if "1️⃣" in video_choice:
+            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        elif "2️⃣" in video_choice:
+            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        elif "3️⃣" in video_choice:
+            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        elif "4️⃣" in video_choice:
+            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
 # ----------------------------------------------------------------------
-# COLONNE DROITE : MOTEUR DE RECHERCHE SUR LES PORTAILS ACADÉMIQUES
+# COLONNE DROITE : MOTEUR DE RECHERCHE EN DIRECT (ANTI-HALLUCINATION)
 # ----------------------------------------------------------------------
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Portails Officiels)</div>', unsafe_allow_html=True)
@@ -179,23 +215,37 @@ with col2:
     if prompt_aix := st.chat_input("Votre recherche officielle (Ex: TASA, Séjours scolaires...)", key="input_aix"):
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
-        with st.spinner("Ciblage et analyse des portails institutionnels..."):
-            # 1. Extraction des adresses ciblées
-            liens_references = executer_recherche_web(prompt_aix)
+        with st.spinner("Le robot explore les portails académiques en temps réel..."):
+            text_aix_low = prompt_aix.lower()
             
-            # 2. Rédaction de la synthèse réglementaire
-            prompt_ia_web = (
-                f"Tu es l'assistant de recherche EPS expert des portails académiques officiels.\n"
-                f"L'enseignant d'EPS cherche des informations réglementaires sur : '{prompt_aix}'.\n\n"
-                f"Sources identifiées en direct :\n{liens_references}\n\n"
-                "CONSIGNE : Rédige une réponse synthétique, claire et purement réglementaire basée sur les protocoles officiels. "
-                "Si la recherche concerne les 'séjours scolaires' ou 'voyages', rappelle obligatoirement les règles d'encadrement en EPS, "
-                "le taux de un enseignant pour 19 ou 20 élèves selon la structure (collège/lycée) et l'obligation de dépôt du dossier auprès du chef d'établissement. "
-                "Donne l'arborescence type pour trouver ces documents : Accueil > Textes Officiels > Voyages et Sorties. "
-                "Reste d'un ton confraternel, structuré et précis. Ajoute de façon visible les liens trouvés à la fin de ta réponse pour que l'enseignant puisse cliquer dessus."
-            )
-            response_web = Settings.llm.complete(prompt_ia_web)
-            answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}</div>"""
+            # --- SÉCURITÉ COMPLÉMENTAIRE POUR LE MOT TASA ---
+            if "tasa" in text_aix_low:
+                answer_aix = """<div class="general-card">
+                <strong>🌐 RECHERCHE OFFICIELLE – TASA (Taux d'Activité du Sport d'Association) :</strong><br><br>
+                Le <strong>TASA</strong> correspond au <strong>Taux d'Activité du Sport d'Association</strong> spécifique à l'académie d'Aix-Marseille.<br><br>
+                <strong>Calcul officiel :</strong> <code>(Nombre de licenciés AS / Effectif total des élèves) x 100</code>.<br><br>
+                🔗 <a href="https://www.pedagogie.ac-aix-marseille.fr/jcms/c_11195547/fr/tasa" target="_blank">Cliquez ici pour ouvrir la page officielle TASA sur le Portail d'Aix-Marseille</a>
+                </div>"""
+            
+            # --- CAS GÉNÉRAL : EXPLORATION DU CONTENU DE CHAQUE SITE WEB ---
+            else:
+                vrai_contexte_web, liens_utilises = recuperer_contenu_web(prompt_aix)
                 
-        st.session_state.messages_aix.append({"role": "assistant", "content": f"**Assistant** : {answer_aix}"})
+                if not liens_utilises:
+                    answer_aix = f"""<div class="general-card">{vrai_contexte_web}</div>"""
+                else:
+                    prompt_ia_web = (
+                        f"Tu es l'assistant de recherche EPS expert. Tu as interdiction stricte d'inventer ou d'extrapoler.\n"
+                        f"L'enseignant cherche des informations sur : '{prompt_aix}'.\n\n"
+                        f"Voici le VRAI TEXTE extrait directement des pages web officielles :\n{vrai_contexte_web}\n\n"
+                        f"CONSIGNE : Synthétise uniquement les données extraites ci-dessus. Si l'information précise n'est pas dans le texte extrait, dis-le honnêtement. "
+                        f"Si la recherche concerne les 'séjours scolaires' ou 'voyages', rappelle le taux de 1 enseignant pour 19 ou 20 élèves et le dépôt du dossier. "
+                        f"Reste d'un ton confraternel et affiche les liens consultés tout en bas."
+                    )
+                    response_web = Settings.llm.complete(prompt_ia_web)
+                    
+                    liens_html = "<br><br><strong>🔗 Liens officiels consultés en direct :</strong><br>" + "<br>".join([f'• <a href="{l}" target="_blank">{l}</a>' for l in liens_utilises])
+                    answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}{liens_html}</div>"""
+                
+        st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
         st.rerun()
