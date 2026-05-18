@@ -4,3 +4,4 @@ llama-index-llms-openai
 llama-index-embeddings-openai
 llama-index-readers-web
 googlesearch-python
+duckduckgo_search
