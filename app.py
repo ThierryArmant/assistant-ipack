@@ -100,7 +100,7 @@ col1, col2 = st.columns(2, gap="large")
 # ----------------------------------------------------------------------
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
-    if st.button("🧹 Nouveau chat (iPack/Exam)", key="clear_ipack"):
+    if st.button("🧹 Nettoyer le chat", key="clear_ipack"):
         st.session_state.messages_ipack = []
         st.rerun()
         
