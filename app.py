@@ -100,6 +100,9 @@ def executer_recherche_web(requete):
         DOMAINES_AUTORISES = [
             "site:education.gouv.fr/bo",                 
             "site:ac-aix-marseille.fr/eps"
+            "site:https://ipackeps.ac-creteil.fr/"
+            "site:https://eps.enseigne.ac-lyon.fr/spip/"
+            "site:https://eps-pedagogie.web.ac-grenoble.fr/"
         ]
         
         ciblage_sites = " OR ".join(DOMAINES_AUTORISES)
