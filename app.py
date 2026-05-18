@@ -1,10 +1,12 @@
 import streamlit as st
 import os
-import requests
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
+
+# Import de la bibliothèque de recherche présente dans ton requirements.txt
+from googlesearch import search
 
 # ======================================================================
 # 1. INITIALISATION ET COMPTEUR DE VISITES CENTRALISÉ
@@ -61,7 +63,6 @@ st.markdown(f"""
 # ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
-    # Température à 0.0 pour un respect strict et mathématique des faits
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
@@ -78,7 +79,10 @@ st.markdown(f"""
 
 @st.cache_resource
 def get_ipack_engine():
-    docs = SimpleDirectoryReader(input_dir="./data").load_data()
+    if not os.path.exists("./data"):
+        os.makedirs("./data")
+    # Chargement blindé avec encodage UTF-8 universel pour accepter tous les caractères
+    docs = SimpleDirectoryReader(input_dir="./data", encoding="utf-8").load_data()
     index = VectorStoreIndex.from_documents(docs)
     prompt = (
         "Tu es l'IA experte du module 'iPackEPS, Santorin & Examens'. Tu parles exclusivement à des professeurs d'EPS. "
@@ -89,6 +93,28 @@ def get_ipack_engine():
 
 if openai_api_key:
     engine_ipack = get_ipack_engine()
+
+# Fonction de recherche Web bridée sur tes portails de confiance
+def executer_recherche_web(requete):
+    try:
+        DOMAINES_AUTORISES = [
+            "site:education.gouv.fr/bo",                 
+            "site:ac-aix-marseille.fr/eps"
+        ]
+        
+        ciblage_sites = " OR ".join(DOMAINES_AUTORISES)
+        requete_ciblee = f"{requete} ({ciblage_sites})"
+        
+        liens_trouves = []
+        for url in search(requete_ciblee, num_results=3, lang="fr"):
+            liens_trouves.append(url)
+            
+        if not liens_trouves:
+            return "Aucun document trouvé sur les portails officiels configurés."
+            
+        return "Voici les adresses officielles trouvées pour approfondir :\n" + "\n".join(liens_trouves)
+    except Exception as e:
+        return f"Note : Recherche externe temporairement restreinte (Détail : {str(e)})."
 
 # ======================================================================
 # 4. EXÉCUTION DOUBLE COLONNE
@@ -136,7 +162,7 @@ with col1:
         st.rerun()
 
 # ----------------------------------------------------------------------
-# COLONNE DROITE : MOTEUR DE RECHERCHE FACTUEL SUR LES 4 PORTAILS DE CONFIANCE
+# COLONNE DROITE : MOTEUR DE RECHERCHE SUR LES PORTAILS ACADÉMIQUES
 # ----------------------------------------------------------------------
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Portails Officiels)</div>', unsafe_allow_html=True)
@@ -150,16 +176,20 @@ with col2:
     if prompt_aix := st.chat_input("Votre recherche officielle (Ex: TASA, Séjours scolaires...)", key="input_aix"):
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
-        with st.spinner("Analyse des portails institutionnels..."):
-            # Consigne ultra-stricte d'extraction réglementaire
+        with st.spinner("Ciblage et analyse des portails institutionnels..."):
+            # 1. Extraction des adresses ciblées
+            liens_references = executer_recherche_web(prompt_aix)
+            
+            # 2. Rédaction de la synthèse réglementaire
             prompt_ia_web = (
-                f"Tu es l'assistant de recherche EPS expert des 4 portails académiques (Aix-Marseille, Lyon, Créteil, Grenoble). "
-                f"L'enseignant d'EPS cherche des informations factuelles sur : '{prompt_aix}'. "
-                "Rédige une réponse synthétique, claire et purement réglementaire en te basant sur les protocoles officiels de l'Éducation Nationale. "
+                f"Tu es l'assistant de recherche EPS expert des portails académiques officiels.\n"
+                f"L'enseignant d'EPS cherche des informations réglementaires sur : '{prompt_aix}'.\n\n"
+                f"Sources identifiées en direct :\n{liens_references}\n\n"
+                "CONSIGNE : Rédige une réponse synthétique, claire et purement réglementaire basée sur les protocoles officiels. "
                 "Si la recherche concerne les 'séjours scolaires' ou 'voyages', rappelle obligatoirement les règles d'encadrement en EPS, "
                 "le taux de un enseignant pour 19 ou 20 élèves selon la structure (collège/lycée) et l'obligation de dépôt du dossier auprès du chef d'établissement. "
                 "Donne l'arborescence type pour trouver ces documents : Accueil > Textes Officiels > Voyages et Sorties. "
-                "Reste d'un ton confraternel, pas-à-pas et précis, sans inventer d'URL cassée."
+                "Reste d'un ton confraternel, structuré et précis. Ajoute de façon visible les liens trouvés à la fin de ta réponse pour que l'enseignant puisse cliquer dessus."
             )
             response_web = Settings.llm.complete(prompt_ia_web)
             answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}</div>"""
