@@ -11,6 +11,23 @@ from llama_index.core.memory import ChatMemoryBuffer
 from googlesearch import search
 
 # ======================================================================
+# CONFIGURATION DES LIENS VIDÉOS (REMPLACE ICI PAR TES VRAIS LIENS)
+# ======================================================================
+LIENS_VIDEOS = {
+    "1️⃣": "https://youtu.be/-Ka0fNtMLBk?si=Is6IymIiNmvaJ4kO",
+    "2️⃣": "Lien de la vidéo Étape 2 - Fiche Professeur",
+    "3️⃣": "Lien de la vidéo Étape 3 - Classes",
+    "4️⃣": "Lien de la vidéo Étape 4 - APSA",
+    "5️⃣": "Lien de la vidéo Étape 5 - Périodes",
+    "6️⃣": "Lien de la vidéo Étape 6 - Élèves et Groupes",
+    "7️⃣": "Lien de la vidéo Étape 7 - Ouverture SSS",
+    "8️⃣": "Lien de la vidéo Étape 8 - Projet et Bilan SSS",
+    "9️⃣": "Lien de la vidéo Étape 9 - Dossier APPN",
+    "🔟": "Lien de la vidéo Étape 10 - Validation finale",
+    "ℹ️": "Lien de la vidéo Étape 11 - Assistance technique"
+}
+
+# ======================================================================
 # 1. INITIALISATION ET COMPTEUR DE VISITES CENTRALISÉ
 # ======================================================================
 if "messages_ipack" not in st.session_state:
@@ -34,7 +51,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS)
+# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS ULTRA-OPAQUE)
 # ======================================================================
 st.set_page_config(page_title="Hub IA - EPS", layout="wide", initial_sidebar_state="collapsed")
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
@@ -45,21 +62,54 @@ st.markdown(f"""
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
+    
+    /* En-tête principal */
     .hub-header {{ background-color: #1E293B; display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; font-family: monospace; margin-top: 8px; display: inline-block; }}
-    .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 10px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0; }}
+    
+    /* Titres des colonnes */
+    .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 0px; height: 35px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
     
-    .content-container {{ background-color: rgba(255, 255, 255, 0.94) !important; border-radius: 12px; padding: 20px; box-shadow: 0px 4px 15px rgba(0,0,0,0.15); color: #1E293B !important; margin-bottom: 20px; }}
-    .content-container p, .content-container label, .content-container div {{ color: #1E293B !important; font-weight: 500; }}
+    /* FORCE LE BLOC BLANC ENTIER SUR CHAQUE COLONNE (Supprime TOUTE transparence de fond) */
+    [data-testid="stVerticalBlock"] > div:has(div.column-title) {{
+        background-color: rgba(255, 255, 255, 0.96) !important;
+        border-radius: 8px;
+        padding: 0px 0px 15px 0px;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+    }}
     
-    .santorin-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; }}
-    .general-card {{ background-color: rgba(255, 255, 255, 0.95) !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; }}
+    /* Ajustement des marges internes pour le texte sous le fond blanc */
+    [data-testid="stVerticalBlock"] > div:has(div.column-title) > div {{
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }}
+    
+    /* Rendre les textes, étiquettes, boutons radios et sélecteurs parfaitement visibles en noir */
+    .stApp p, .stApp label, .stApp span, .stApp div[data-baseweb="select"] {{
+        color: #1E293B !important;
+        font-weight: 500 !important;
+    }}
+    
+    /* Correction spécifique des onglets (Tabs) pour forcer le fond blanc et l'écriture foncée */
+    div[data-testid="stTab"] button p {{
+        color: #475569 !important;
+    }}
+    div[data-testid="stTab"] button[aria-selected="true"] p {{
+        color: #1E293B !important;
+        font-weight: 700 !important;
+    }}
+    
+    /* Cartes de messages */
+    .santorin-card {{ background-color: #FFFFFF !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 5px rgba(0,0,0,0.05); }}
+    .general-card {{ background-color: #FFFFFF !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 5px rgba(0,0,0,0.05); }}
+    
+    /* Chat messages */
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: rgba(255, 255, 255, 0.85) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 15% !important; }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{ background-color: rgba(243, 244, 246, 0.95) !important; color: #1F2937 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 15% !important; }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: rgba(241, 245, 249, 0.9) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{ background-color: rgba(226, 232, 240, 0.95) !important; color: #1F2937 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 10% !important; }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -140,11 +190,10 @@ def recuperer_contenu_web(requete):
 col1, col2 = st.columns(2, gap="large")
 
 # ----------------------------------------------------------------------
-# COLONNE GAUCHE : ASSISTANT MÉTIER EPS + PARCOURS VIDÉOS ÉTENDU
+# COLONNE GAUCHE : ASSISTANT MÉTIER EPS + PARCOURS VIDÉOS
 # ----------------------------------------------------------------------
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS & Vidéos</div>', unsafe_allow_html=True)
-    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     
     tab_chat, tab_videos = st.tabs(["💬 Poser une question", "🎥 Parcours Vidéos Fléchés"])
     
@@ -178,7 +227,6 @@ with col1:
             st.session_state.messages_ipack.append({"role": "assistant", "content": f"**Assistant** : {answer}"})
             st.rerun()
 
-    # --- SECTION VIDÉOS ENTIÈREMENT DÉPLOYÉE SELON LES DIAPOS OFFICIELLES ---
     with tab_videos:
         st.write(" Sélectionnez un tutoriel officiel pour suivre le parcours fléché :")
         
@@ -199,38 +247,19 @@ with col1:
             ]
         )
         
-        # Structure prête : remplace les liens fictifs ci-dessous par tes vrais liens vidéos
-        if "1️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 1 - Saisie Établissement")
-        elif "2️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 2 - Fiche Professeur")
-        elif "3️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 3 - Classes")
-        elif "4️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 4 - APSA")
-        elif "5️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 5 - Périodes")
-        elif "6️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 6 - Élèves et Groupes")
-        elif "7️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 7 - Ouverture SSS")
-        elif "8️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 8 - Projet et Bilan SSS")
-        elif "9️⃣" in video_choice:
-            st.video("Lien de la vidéo Étape 9 - Dossier APPN")
-        elif "🔟" in video_choice:
-            st.video("Lien de la vidéo Étape 10 - Validation finale")
-        elif "ℹ️" in video_choice:
-            st.video("Lien de la vidéo Étape 11 - Assistance technique")
-            
-    st.markdown('</div>', unsafe_allow_html=True)
+        cle_emodji = video_choice[:2].strip()
+        lien_selectionne = LIENS_VIDEOS.get(cle_emodji, "")
+        
+        if not lien_selectionne or "Lien de la vidéo" in lien_selectionne:
+            st.info(f"🎥 **Tutoriel bientôt disponible** : Le lien vidéo pour l'étape *'{video_choice[3:]}'* est en cours de configuration.")
+        else:
+            st.video(lien_selectionne)
 
 # ----------------------------------------------------------------------
 # COLONNE DROITE : MOTEUR DE RECHERCHE EN DIRECT (ANTI-HALLUCINATION)
 # ----------------------------------------------------------------------
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Portails Officiels)</div>', unsafe_allow_html=True)
-    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     
     if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
         st.session_state.messages_aix = []
@@ -269,9 +298,7 @@ with col2:
                     response_web = Settings.llm.complete(prompt_ia_web)
                     
                     liens_html = "<br><br><strong>🔗 Liens officiels consultés en direct :</strong><br>" + "<br>".join([f'• <a href="{l}" target="_blank">{l}</a>' for l in liens_utilises])
-                    answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}</div>"""
+                    answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}{liens_html}</div>"""
                 
         st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
         st.rerun()
-        
-    st.markdown('</div>', unsafe_allow_html=True)
