@@ -51,6 +51,10 @@ st.markdown(f"""
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; font-family: monospace; margin-top: 8px; display: inline-block; }}
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 10px; height: 30px; background-color: #1E293B; border-radius: 6px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
+    
+    .content-container {{ background-color: rgba(255, 255, 255, 0.94) !important; border-radius: 12px; padding: 20px; box-shadow: 0px 4px 15px rgba(0,0,0,0.15); color: #1E293B !important; margin-bottom: 20px; }}
+    .content-container p, .content-container label, .content-container div {{ color: #1E293B !important; font-weight: 500; }}
+    
     .santorin-card {{ background-color: rgba(255, 255, 255, 0.9) !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; }}
     .general-card {{ background-color: rgba(255, 255, 255, 0.95) !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; }}
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
@@ -95,7 +99,7 @@ def get_ipack_engine():
 if openai_api_key:
     engine_ipack = get_ipack_engine()
 
-# --- NOUVEAU MOTEUR : Exploration et extraction du texte des sites web ---
+# --- MOTEUR DE RECHERCHE TEXTE WEB ---
 def recuperer_contenu_web(requete):
     try:
         DOMAINES_AUTORISES = [
@@ -115,15 +119,13 @@ def recuperer_contenu_web(requete):
         contexte_extrait = ""
         entetes = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         
-        # Le robot va sur chaque site web extraire le vrai texte
         for url in liens_trouves:
             try:
                 rep = requests.get(url, headers=entetes, timeout=5)
                 if rep.status_code == 200:
                     soup = BeautifulSoup(rep.text, "html.parser")
-                    # On nettoie la page des scripts et menus inutiles
                     for s in soup(["script", "style", "nav", "footer"]): s.decompose()
-                    texte_propre = " ".join(soup.get_text().split())[:2000] # On prend les 2000 premiers caractères utiles
+                    texte_propre = " ".join(soup.get_text().split())[:2000]
                     contexte_extrait += f"--- SOURCE: {url} ---\n{texte_propre}\n\n"
             except:
                 continue
@@ -138,10 +140,11 @@ def recuperer_contenu_web(requete):
 col1, col2 = st.columns(2, gap="large")
 
 # ----------------------------------------------------------------------
-# COLONNE GAUCHE : ASSISTANT MÉTIER EPS + PARCOURS VIDÉOS
+# COLONNE GAUCHE : ASSISTANT MÉTIER EPS + PARCOURS VIDÉOS ÉTENDU
 # ----------------------------------------------------------------------
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS & Vidéos</div>', unsafe_allow_html=True)
+    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     
     tab_chat, tab_videos = st.tabs(["💬 Poser une question", "🎥 Parcours Vidéos Fléchés"])
     
@@ -151,11 +154,6 @@ with col1:
             st.rerun()
             
         context_choice = st.radio("Sur quel module travaillez-vous ?", ["🛠️ iPackEPS (Configuration, Classes, SSS)", "📊 Examens & Santorin (Notes, Absences, Dispenses)"])
-
-        if "examens" in context_choice.lower():
-            st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.column-title) { background-color: rgba(239, 68, 68, 0.05) !important; border-radius: 12px; padding: 15px; }</style>", unsafe_allow_html=True)
-        else:
-            st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.column-title) { background-color: rgba(14, 165, 233, 0.05) !important; border-radius: 12px; padding: 15px; }</style>", unsafe_allow_html=True)
 
         for m in st.session_state.messages_ipack:
             with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
@@ -180,31 +178,60 @@ with col1:
             st.session_state.messages_ipack.append({"role": "assistant", "content": f"**Assistant** : {answer}"})
             st.rerun()
 
+    # --- SECTION VIDÉOS ENTIÈREMENT DÉPLOYÉE SELON LES DIAPOS OFFICIELLES ---
     with tab_videos:
-        st.write("Sélectionnez un tutoriel pour vous guider pas à pas dans votre saisie :")
+        st.write(" Sélectionnez un tutoriel officiel pour suivre le parcours fléché :")
+        
         video_choice = st.selectbox(
-            "Quel point du parcours souhaitez-vous visionner ?",
+            "Étape du parcours iPackEPS :",
             [
-                "1️⃣ Saisie Établissement & Fiche Professeur",
-                "2️⃣ Gestion des dossiers EPS (Classes, APSA, Périodes)",
-                "3️⃣ Gestion des Sections Sportives Scolaires (SSS)",
-                "4️⃣ Gestion des dossiers APPN & Environnement spécifique"
+                "1️⃣ Saisie Établissement (Axes du projet, EDT, Équipe...)",
+                "2️⃣ Ma Fiche Professeur & Coordonnées",
+                "3️⃣ Dossier 3.1 : Création des Classes & Affectations",
+                "4️⃣ Dossier 3.1 : Configuration des APSA & Référentiels",
+                "5️⃣ Dossier 3.1 : Paramétrage des Périodes d'évaluation",
+                "6️⃣ Dossier 3.1 : Attribution des Élèves & Groupes",
+                "7️⃣ Dossier 3.4 : Demande d'ouverture de SSS (Sections Sportives)",
+                "8️⃣ Dossier 3.4 : Projet annuel & Bilan de votre SSS",
+                "9️⃣ Dossier 3.6 : Dossier APPN & Environnement spécifique",
+                "🔟 Demande de Validation finale du dossier",
+                "ℹ️ Demande d'assistance technique & Contact iPack"
             ]
         )
+        
+        # Structure prête : remplace les liens fictifs ci-dessous par tes vrais liens vidéos
         if "1️⃣" in video_choice:
-            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            st.video("Lien de la vidéo Étape 1 - Saisie Établissement")
         elif "2️⃣" in video_choice:
-            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            st.video("Lien de la vidéo Étape 2 - Fiche Professeur")
         elif "3️⃣" in video_choice:
-            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            st.video("Lien de la vidéo Étape 3 - Classes")
         elif "4️⃣" in video_choice:
-            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            st.video("Lien de la vidéo Étape 4 - APSA")
+        elif "5️⃣" in video_choice:
+            st.video("Lien de la vidéo Étape 5 - Périodes")
+        elif "6️⃣" in video_choice:
+            st.video("Lien de la vidéo Étape 6 - Élèves et Groupes")
+        elif "7️⃣" in video_choice:
+            st.video("Lien de la vidéo Étape 7 - Ouverture SSS")
+        elif "8️⃣" in video_choice:
+            st.video("Lien de la vidéo Étape 8 - Projet et Bilan SSS")
+        elif "9️⃣" in video_choice:
+            st.video("Lien de la vidéo Étape 9 - Dossier APPN")
+        elif "🔟" in video_choice:
+            st.video("Lien de la vidéo Étape 10 - Validation finale")
+        elif "ℹ️" in video_choice:
+            st.video("Lien de la vidéo Étape 11 - Assistance technique")
+            
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------
 # COLONNE DROITE : MOTEUR DE RECHERCHE EN DIRECT (ANTI-HALLUCINATION)
 # ----------------------------------------------------------------------
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Portails Officiels)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="content-container">', unsafe_allow_html=True)
+    
     if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
         st.session_state.messages_aix = []
         st.rerun()
@@ -215,10 +242,9 @@ with col2:
     if prompt_aix := st.chat_input("Votre recherche officielle (Ex: TASA, Séjours scolaires...)", key="input_aix"):
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
-        with st.spinner("Le robot explore les portails académiques en temps réel..."):
+        with st.spinner("Le robot explore les portails académiques..."):
             text_aix_low = prompt_aix.lower()
             
-            # --- SÉCURITÉ COMPLÉMENTAIRE POUR LE MOT TASA ---
             if "tasa" in text_aix_low:
                 answer_aix = """<div class="general-card">
                 <strong>🌐 RECHERCHE OFFICIELLE – TASA (Taux d'Activité du Sport d'Association) :</strong><br><br>
@@ -226,8 +252,6 @@ with col2:
                 <strong>Calcul officiel :</strong> <code>(Nombre de licenciés AS / Effectif total des élèves) x 100</code>.<br><br>
                 🔗 <a href="https://www.pedagogie.ac-aix-marseille.fr/jcms/c_11195547/fr/tasa" target="_blank">Cliquez ici pour ouvrir la page officielle TASA sur le Portail d'Aix-Marseille</a>
                 </div>"""
-            
-            # --- CAS GÉNÉRAL : EXPLORATION DU CONTENU DE CHAQUE SITE WEB ---
             else:
                 vrai_contexte_web, liens_utilises = recuperer_contenu_web(prompt_aix)
                 
@@ -245,7 +269,9 @@ with col2:
                     response_web = Settings.llm.complete(prompt_ia_web)
                     
                     liens_html = "<br><br><strong>🔗 Liens officiels consultés en direct :</strong><br>" + "<br>".join([f'• <a href="{l}" target="_blank">{l}</a>' for l in liens_utilises])
-                    answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}{liens_html}</div>"""
+                    answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE EXTRACT :</strong><br><br>{response_web.text}</div>"""
                 
         st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
         st.rerun()
+        
+    st.markdown('</div>', unsafe_allow_html=True)
