@@ -14,8 +14,8 @@ from googlesearch import search
 # CONFIGURATION DES LIENS VIDÉOS (REMPLACE ICI PAR TES VRAIS LIENS)
 # ======================================================================
 LIENS_VIDEOS = {
-    "1️⃣": "Lien de la vidéo Étape 1 - Saisie Établissement",
-    "2️⃣": "Lien de la vidéo Étape 2 - Fiche Professeur",
+    "1️⃣": "https://youtu.be/-Ka0fNtMLBk?si=f_goWeopD3u93NoU",
+    "2️⃣": "https://youtu.be/WoTtGxzawAI?si=J5jWxfSy4SnOdcQ1",
     "3️⃣": "Lien de la vidéo Étape 3 - Classes",
     "4️⃣": "Lien de la vidéo Étape 4 - APSA",
     "5️⃣": "Lien de la vidéo Étape 5 - Périodes",
