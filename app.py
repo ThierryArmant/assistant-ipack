@@ -14,7 +14,7 @@ from googlesearch import search
 # CONFIGURATION DES LIENS VIDÉOS (REMPLACE ICI PAR TES VRAIS LIENS)
 # ======================================================================
 LIENS_VIDEOS = {
-    "1️⃣": "https://youtu.be/-Ka0fNtMLBk?si=Is6IymIiNmvaJ4kO",
+    "1️⃣": "Lien de la vidéo Étape 1 - Saisie Établissement",
     "2️⃣": "Lien de la vidéo Étape 2 - Fiche Professeur",
     "3️⃣": "Lien de la vidéo Étape 3 - Classes",
     "4️⃣": "Lien de la vidéo Étape 4 - APSA",
@@ -51,7 +51,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS ULTRA-OPAQUE)
+# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (EFFET DEPOLI SEMI-TRANSPARENT)
 # ======================================================================
 st.set_page_config(page_title="Hub IA - EPS", layout="wide", initial_sidebar_state="collapsed")
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
@@ -73,43 +73,46 @@ st.markdown(f"""
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 0px; height: 35px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
     
-    /* FORCE LE BLOC BLANC ENTIER SUR CHAQUE COLONNE (Supprime TOUTE transparence de fond) */
+    /* STYLE SEMI-TRANSPARENT OPTIMISÉ (Effet verre poli anti-reflets) */
     [data-testid="stVerticalBlock"] > div:has(div.column-title) {{
-        background-color: rgba(255, 255, 255, 0.96) !important;
+        background-color: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
         border-radius: 8px;
         padding: 0px 0px 15px 0px;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.25);
+        border: 1px solid rgba(255, 255, 255, 0.4);
     }}
     
-    /* Ajustement des marges internes pour le texte sous le fond blanc */
+    /* Ajustement des marges internes */
     [data-testid="stVerticalBlock"] > div:has(div.column-title) > div {{
         padding-left: 15px !important;
         padding-right: 15px !important;
     }}
     
-    /* Rendre les textes, étiquettes, boutons radios et sélecteurs parfaitement visibles en noir */
+    /* Lisibilité parfaite des textes sur le fond semi-transparent */
     .stApp p, .stApp label, .stApp span, .stApp div[data-baseweb="select"] {{
-        color: #1E293B !important;
-        font-weight: 500 !important;
+        color: #0F172A !important;
+        font-weight: 600 !important;
     }}
     
-    /* Correction spécifique des onglets (Tabs) pour forcer le fond blanc et l'écriture foncée */
+    /* Style des onglets (Tabs) */
     div[data-testid="stTab"] button p {{
-        color: #475569 !important;
+        color: #334155 !important;
     }}
     div[data-testid="stTab"] button[aria-selected="true"] p {{
-        color: #1E293B !important;
+        color: #0F172A !important;
         font-weight: 700 !important;
     }}
     
-    /* Cartes de messages */
-    .santorin-card {{ background-color: #FFFFFF !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 5px rgba(0,0,0,0.05); }}
-    .general-card {{ background-color: #FFFFFF !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 5px rgba(0,0,0,0.05); }}
+    /* Cartes de messages (Blanches pures pour trancher sur le fond dépoli) */
+    .santorin-card {{ background-color: #FFFFFF !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
+    .general-card {{ background-color: #FFFFFF !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
     
-    /* Chat messages */
+    /* Bulles de chat */
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: rgba(241, 245, 249, 0.9) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{ background-color: rgba(226, 232, 240, 0.95) !important; color: #1F2937 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 10% !important; }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: #F1F5F9 !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; box-shadow: 0px 2px 4px rgba(0,0,0,0.05); }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{ background-color: #E2E8F0 !important; color: #1F2937 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 10% !important; box-shadow: 0px 2px 4px rgba(0,0,0,0.05); }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
 """, unsafe_allow_html=True)
