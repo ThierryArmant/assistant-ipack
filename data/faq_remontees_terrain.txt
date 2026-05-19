@@ -1,9 +1,0 @@
-CORRECTIONS ET VÉRIFICATIONS RÉGLEMENTAIRES - CCF EPS AIX-MARSEILLE
-
-[SANTORIN / IMAG'IN : Processus de convocation et distribution des lots]
-- Point 4 : Avant les saisies sur Santorin, il est obligatoire d'éditer la convocation dans IMAG'IN pour la transmettre à SANTORIN.
-- Point 6 : La distribution des lots dans Santorin n'est PAS consécutive à la convocation des enseignants. La distribution automatique ou manuelle des lots est consécutive à l'association des candidats aux protocoles dans CYCLADES (que ce soit via l'importation d'un fichier IPACK ou d'une saisie manuelle et directe dans CYCLADES).
-
-[IPACK EPS : Problème d'affichage de la page de protocole]
-- Si un utilisateur ne voit rien sur sa page de protocole dans iPackEPS, la vérification de la présence des élèves (Dossiers / Dossier EPS / Élèves) ou des groupes n'est pas le seul facteur.
-- Il est indispensable de procéder à la saisie des APSA (Activités Physiques, Sportives et Artistiques) et de définir leur caractère certificatif pour que la page de protocole devienne opérationnelle et se complète correctement.
