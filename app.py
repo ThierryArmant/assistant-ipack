@@ -51,7 +51,7 @@ nb_visites = incrementer_et_recuperer_compteur()
 # 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE 
 # ======================================================================
 img_gauche = "image_7.png"
-img_eps = "image_6.png"  # 🚀 CORRECTION ICI : La variable s'appelle bien img_eps
+img_eps = "image_6.png" 
 img_droite = "image_5.png"
 img_fond = "image_8.png"
 
@@ -85,7 +85,19 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
-    /* Barre Bleue Centrale avec instruction */
+    /* Encadré Sélection du Contexte */
+    .context-container {{
+        background-color: rgba(30, 41, 59, 0.7) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding: 14px 18px 18px 18px !important; 
+        border-radius: 12px !important;
+        margin-bottom: 18px !important;
+        box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
+    }}
+
+    /* Barre Bleue Centrale Enrichie */
     .column-title {{ 
         color: #FFFFFF; 
         text-align: center; 
@@ -112,7 +124,7 @@ st.markdown(f"""
         display: block;
     }}
     
-    /* BOUTONS DE CONTEXTE INACTIFS */
+    /* Boutons Inactifs */
     button[kind="secondary"] {{ 
         background-color: rgba(15, 23, 42, 0.9) !important; 
         color: #94A3B8 !important; 
@@ -123,7 +135,7 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
 
-    /* BOUTON DE CONTEXTE ACTIF */
+    /* Boutons Actifs (Vert Émeraude) */
     button[kind="primary"] {{
         background-color: rgba(16, 185, 129, 0.85) !important;
         color: #FFFFFF !important;
@@ -136,11 +148,11 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
     
-    /* BOUTON NETTOYER : Fond rouge transparent (5%) et texte blanc pur */
+    /* BOUTON NETTOYER : Opacité augmentée et texte blanc */
     div.element-container:has(.nettoyer-wrapper) + div.element-container button {{
-        background-color: rgba(220, 38, 38, 0.05) !important;
+        background-color: rgba(220, 38, 38, 0.45) !important; /* Opacité à 45% */
         color: #FFFFFF !important;
-        border: 1px solid rgba(220, 38, 38, 0.2) !important;
+        border: 1px solid rgba(220, 38, 38, 0.6) !important;
         border-radius: 8px !important;
         padding: 7px 10px !important;
         width: 100% !important;
@@ -148,7 +160,7 @@ st.markdown(f"""
         font-weight: 500 !important;
     }}
     div.element-container:has(.nettoyer-wrapper) + div.element-container button:hover {{
-        background-color: rgba(220, 38, 38, 0.25) !important;
+        background-color: rgba(220, 38, 38, 0.65) !important; /* Opacité à 65% au survol */
         color: #FFFFFF !important;
     }}
     
@@ -192,7 +204,7 @@ if openai_api_key:
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
 # ======================================================================
-# 5. BANDEAU SUPERIEUR 
+# 5. BANDEAU SUPERIEUR
 # ======================================================================
 st.markdown(f"""
     <div class="hub-header">
