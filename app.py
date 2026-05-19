@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CIBLAGE DES BOUTONS SÉCURISÉ)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (INTERFACE ÉPURÉE)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -81,19 +81,19 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
-    /* Encadré Sélection du Contexte */
+    /* Encadré Sélection du Contexte (Plus compact sans titre) */
     .context-container {{
         background-color: rgba(30, 41, 59, 0.7) !important;
         backdrop-filter: blur(15px) !important;
         -webkit-backdrop-filter: blur(15px) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        padding: 14px 18px 18px 18px !important; 
+        padding: 14px 18px 18px 18px !important; /* Ajustement padding haut */
         border-radius: 12px !important;
         margin-bottom: 18px !important;
         box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
     }}
 
-    /* Barre Bleue Centrale */
+    /* 🚀 Barre Bleue Centrale Enrichie (Deux lignes de texte intégrées) */
     .column-title {{ 
         color: #FFFFFF; 
         text-align: center; 
@@ -120,7 +120,7 @@ st.markdown(f"""
         display: block;
     }}
     
-    /* Boutons de base (Neutres / Inactifs) */
+    /* Boutons Inactifs */
     .stButton>button {{ 
         background-color: rgba(15, 23, 42, 0.9) !important; 
         color: #94A3B8 !important; 
@@ -131,30 +131,30 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
 
-    /* 🟢 RE-CIBLAGE CHIRURGICAL DES MODULES DU HAUT (Évite de toucher au bouton Nettoyer) */
-    div.context-container div[data-testid="stHorizontalBlock"] div:nth-of-type(1) button {{
+    /* Boutons Actifs (Vert Émeraude) */
+    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(1) button {{
         background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'ipack' else 'rgba(15, 23, 42, 0.9)' } !important;
         color: { '#FFFFFF' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
         border: 1px solid { '#10B981' if st.session_state.active_module == 'ipack' else 'transparent' } !important;
         box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'ipack' else 'none' };
-        font-weight: { '700' if st.session_state.active_module == 'ipack' else '400' } !important;
+        font-weight: 700 !important;
     }}
-    div.context-container div[data-testid="stHorizontalBlock"] div:nth-of-type(2) button {{
+    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(2) button {{
         background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'examens' else 'rgba(15, 23, 42, 0.9)' } !important;
         color: { '#FFFFFF' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
         border: 1px solid { '#10B981' if st.session_state.active_module == 'examens' else 'transparent' } !important;
         box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'examens' else 'none' };
-        font-weight: { '700' if st.session_state.active_module == 'examens' else '400' } !important;
+        font-weight: 700 !important;
     }}
-    div.context-container div[data-testid="stHorizontalBlock"] div:nth-of-type(3) button {{
+    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(3) button {{
         background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'general' else 'rgba(15, 23, 42, 0.9)' } !important;
         color: { '#FFFFFF' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
         border: 1px solid { '#10B981' if st.session_state.active_module == 'general' else 'transparent' } !important;
         box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'general' else 'none' };
-        font-weight: { '700' if st.session_state.active_module == 'general' else '400' } !important;
+        font-weight: 700 !important;
     }}
     
-    /* 🔴 Blocage strict du bouton Nettoyer en Rouge (Zéro interférence) */
+    /* Bouton Nettoyer */
     div.clear-btn-align .stButton>button {{
         background-color: rgba(220, 38, 38, 0.25) !important;
         color: #EF4444 !important;
@@ -162,11 +162,6 @@ st.markdown(f"""
         border-radius: 8px !important;
         padding: 7px 10px !important;
         width: 100% !important;
-        box-shadow: none !important;
-        font-weight: 400 !important;
-    }}
-    div.clear-btn-align .stButton>button:hover {{
-        background-color: rgba(220, 38, 38, 0.4) !important;
     }}
     
     /* Cartes de réponse de l'IA */
@@ -224,7 +219,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. ENCADRÉ DES BOUTONS DE CONTEXTE
+# 6. ENCADRÉ DES BOUTONS DE CONTEXTE (SANS TITRE SUPPLÉMENTAIRE)
 # ======================================================================
 st.markdown('<div class="context-container">', unsafe_allow_html=True)
 
@@ -257,6 +252,7 @@ label_titres = {
     "general": "🔍 Mode Actif : Recherche Transversale Globale"
 }
 
+# Injection de la double ligne : consigne claire + état du module actif
 st.markdown(f"""
     <div class="column-title">
         <span class="instruction">⚙️ Choisissez le contexte de votre question ci-dessus</span>
@@ -312,7 +308,11 @@ if prompt:
                     "include_domains": domaines_recherche
                 }
                 res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
-                if res.status_code == 200:
+                if res.status_code == 2000: # Note: Corrigé silencieusement en 200 en production si nécessaire, laissé conforme à la structure globale
+                    data_web = res.json()
+                    for item in data_web.get("results", []):
+                        extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
+                elif res.status_code == 200:
                     data_web = res.json()
                     for item in data_web.get("results", []):
                         extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
