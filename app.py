@@ -8,6 +8,9 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core import Document
 
+# Désactive proprement les messages d'avertissement secondaires de Streamlit
+st.set_option('deprecation.showPyplotGlobalUse', False)
+
 # ======================================================================
 # 1. INITIALISATION ET COMPTEUR DE VISITES CENTRALISÉ
 # ======================================================================
@@ -44,7 +47,7 @@ st.markdown(f"""
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* En-tête principal */
+    /* En-tête principal du Hub */
     .hub-header {{ background-color: #1E293B; display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
@@ -54,7 +57,7 @@ st.markdown(f"""
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 0px; height: 35px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
     
-    /* 🎛️ Bloc choix iPack / Santorin Prononcé */
+    /* 🎛️ Bloc de sélection iPack / Santorin (Fond Sombre Prononcé) */
     div[data-testid="stRadio"] {{
         background-color: #1E293B !important;
         padding: 15px !important;
@@ -63,14 +66,13 @@ st.markdown(f"""
         box-shadow: inset 0px 2px 4px rgba(0,0,0,0.3) !important;
         margin-bottom: 15px !important;
     }}
-    /* Forcer le texte des labels du radio bouton en blanc pour le contraste */
     div[data-testid="stRadio"] label p {{
         color: #FFFFFF !important;
         font-weight: 600 !important;
         font-size: 13px !important;
     }}
     
-    /* 🖼️ Fenêtres Effet Verre Dépoli Plus Transparentes (40% d'opacité au lieu de 65%) */
+    /* 🖼️ Fenêtres Effet Verre Dépoli Plus Transparentes (40% d'opacité) */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.40) !important;
         backdrop-filter: blur(16px) !important;
@@ -84,13 +86,12 @@ st.markdown(f"""
         margin-bottom: 20px;
     }}
     
-    /* Éléments de contrôle hors bulles de texte */
     .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{
         color: #0F172A !important;
         font-weight: 700 !important;
     }}
     
-    /* 🛡️ Préservation totale de la lisibilité des réponses de l'IA (Opaque à 100%) */
+    /* 🛡️ Préservation totale de la lisibilité des réponses (Opaque à 100%) */
     .santorin-card {{ 
         background-color: #FFFFFF !important; 
         border-left: 6px solid #DC2626 !important; 
@@ -110,7 +111,7 @@ st.markdown(f"""
         box-shadow: 0px 4px 12px rgba(0,0,0,0.15); 
     }}
     
-    /* Tableau Markdown dans les réponses */
+    /* Tableaux Markdown dans les bulles de l'IA */
     .santorin-card table, .general-card table {{
         background-color: #FFFFFF !important;
         color: #1E293B !important;
@@ -133,7 +134,6 @@ st.markdown(f"""
     /* Bulles de discussion utilisateurs */
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: #FFFFFF !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) ** {{ color: #0F172A !important; }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -157,7 +157,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- CHARGEMENT DES COMPOSANTS ET MULTI-FEUILLES ---
+# --- CHARGEMENT CIBLÉ ET ROBUSTE SUR TES FICHIERS RÉELS ---
 @st.cache_resource
 def get_separated_engines_final():
     index_santorin = VectorStoreIndex.from_documents([])
@@ -169,39 +169,48 @@ def get_separated_engines_final():
             nom_minuscule = fichier.lower()
             chemin_complet = os.path.join(dossier_data, fichier)
             
-            if "santorin" in nom_minuscule or "examen" in nom_minuscule:
-                if fichier.endswith(('.xlsx', '.xls')):
-                    try:
-                        xl = pd.ExcelFile(chemin_complet)
-                        for sheet_name in xl.sheet_names:
-                            df = xl.parse(sheet_name)
-                            for idx, row in df.iterrows():
-                                texte_ligne = f"[Source: {sheet_name}] " + " | ".join([f"{col}: {val}" for col, val in row.items() if pd.notna(val)])
-                                documents_list.append(Document(text=texte_ligne))
-                    except Exception as e:
-                        st.error(f"Erreur d'ouverture Excel ({fichier}) : {str(e)}")
-                        
-                elif fichier.endswith('.csv'):
+            # 📊 MOULINETTE A : PARTIE EXAMENS & SANTORIN
+            # On attrape la FAQ CSV et le gros tableau de notation (même s'il n'a pas l'extension finale)
+            if "santorin" in nom_minuscule or "notation" in nom_minuscule:
+                if nom_minuscule.endswith('.csv'):
                     try:
                         df = pd.read_csv(chemin_complet, sep=";", encoding="utf-8", on_bad_lines='skip')
                         for idx, row in df.iterrows():
                             texte_ligne = f"[Source: {fichier}] " + " | ".join([f"{col}: {val}" for col, val in row.items() if pd.notna(val)])
                             documents_list.append(Document(text=texte_ligne))
                     except Exception as e:
-                        st.error(f"Erreur d'ouverture CSV ({fichier}) : {str(e)}")
+                        st.error(f"Erreur d'ouverture du CSV ({fichier}) : {str(e)}")
+                else:
+                    # Traitement de sécurité pour forcer la lecture Excel multi-onglets même sans extension apparente
+                    try:
+                        xl = pd.ExcelFile(chemin_complet)
+                        for sheet_name in xl.sheet_names:
+                            df = xl.parse(sheet_name)
+                            for idx, row in df.iterrows():
+                                texte_ligne = f"[Onglet: {sheet_name}] " + " | ".join([f"{col}: {val}" for col, val in row.items() if pd.notna(val)])
+                                documents_list.append(Document(text=texte_ligne))
+                    except Exception as e:
+                        pass
 
         if documents_list:
             index_santorin = VectorStoreIndex.from_documents(documents_list)
         
+    # 🛠️ MOULINETTE B : PARTIE IPACKEPS UNIVERSELLE
+    # On ramasse tout ce qui contient 'ipack' : le .txt de 50 pages, le pdf lycée, et la carte collège tronquée
     index_ipack = VectorStoreIndex.from_documents([])
     if os.path.exists(dossier_data):
-        ipack_files = [os.path.join(dossier_data, f) for f in os.listdir(dossier_data) if "ipack" in f.lower() and f.endswith(".pdf")]
-        if ipack_files:
+        fichiers_ipack = []
+        for f in os.listdir(dossier_data):
+            nom_f = f.lower()
+            if "ipack" in nom_f and not nom_f.endswith('.csv'):
+                fichiers_ipack.append(os.path.join(dossier_data, f))
+                
+        if fichiers_ipack:
             try:
-                docs_i = SimpleDirectoryReader(input_files=ipack_files).load_data()
+                docs_i = SimpleDirectoryReader(input_files=fichiers_ipack).load_data()
                 index_ipack = VectorStoreIndex.from_documents(docs_i)
             except Exception as e:
-                st.error(f"Erreur iPack PDF : {str(e)}")
+                st.error(f"Erreur de lecture de la doc iPack : {str(e)}")
     
     return index_ipack, index_santorin
 
@@ -242,14 +251,22 @@ with col1:
                 )
                 chosen_index = index_santorin
             else:
-                system_prompt = (
-                    "Tu es l'assistant spécialisé IPACKEPS. Tu parles exclusivement à des professeurs d'EPS.\n"
-                    "Tu réponds pas-à-pas en te basant sur les guides PDF iPack fournis."
-                )
+                system_prompt = """
+Tu es l'assistant informatique et technique exclusif de l'application iPackEPS.
+Ton unique rôle est d'aider les professeurs d'EPS dans la manipulation logicielle.
+
+CONSIGNES STRICTES :
+1. Réponds de manière purement LOGICIELLE, TECHNIQUE et PAS-À-PAS.
+2. Décris précisément les actions à mener dans l'interface (menus, boutons, onglets, imports de fichiers, clics).
+3. Base-toi STRICTEMENT et UNIQUEMENT sur les guides d'utilisation et les fichiers de documentation (.txt ou .pdf) fournis.
+4. INTERDICTION FORMELLE de donner des conseils pédagogiques, didactiques ou méthodologiques sur la gestion de classe réelle. 
+
+Si la question de l'utilisateur porte sur un concept de terrain ou de pédagogie, recadre-le immédiatement en lui indiquant uniquement comment l'action se traduit ou se configure techniquement dans le logiciel iPackEPS.
+""".strip()
                 chosen_index = index_ipack
             
             chat_engine = chosen_index.as_chat_engine(
-                chat_mode="condense_plus_context", 
+                chat_mode="context", 
                 memory=ChatMemoryBuffer.from_defaults(token_limit=4000), 
                 system_prompt=system_prompt
             )
