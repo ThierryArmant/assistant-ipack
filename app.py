@@ -177,7 +177,7 @@ st.markdown(f"""
 
 col1, col2 = st.columns(2, gap="medium")
 
-# --- 🤖 COLONNE 1 : ASSISTANT IPACKEPS & EXAMENS (CRÉTEIL OU AIX-MARSEILLE + EDUSCOL) ---
+# --- 🤖 COLONNE 1 : ASSISTANT IPACKEPS & EXAMENS ---
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Ipackeps & Examens</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -192,15 +192,17 @@ with col1:
         key="radio_context"
     )
 
+    # Affichage du fil de discussion local
     for m in st.session_state.messages_ipack:
         with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
             
     if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
         st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
         
-        # Configuration dynamique des domaines selon le bouton coché
-        if "examens" in context_choice.lower():
-            # 🚀 CIBLAGE : TEXTES INTERNES AIX-MARSEILLE + REGLEMENTATION NATIONALE EDUSCOL
+        # Aiguillage strict basé sur la sélection réelle
+        is_examen = "examens" in context_choice.lower() or "santorin" in context_choice.lower()
+        
+        if is_examen:
             domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr"]
             texte_spinner = "Fouille des protocoles d'Aix-Marseille et des textes Éduscol..."
         else:
@@ -224,18 +226,18 @@ with col1:
                             extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
                 except: pass
 
-            # Ajustement des rôles IA
-            if "examens" in context_choice.lower():
+            # Rendu des prompts systèmes consolidés
+            if is_examen:
                 consigne_ia = f"""
                 Tu es l'assistant expert pour le module EXAMENS, EVALUATIONS ET DISPENSES en EPS.
                 Ton rôle est d'apporter des réponses institutionnelles claires concernant la gestion des examens (DNB, BAC, CAP) et des élèves inaptes ou dispensés.
                 
-                Tu dois formuler ta réponse en croisant le cadre légal d'Éduscol et les protocoles officiels de l'académie d'Aix-Marseille fournis ici :
+                Tu dois formuler ta réponse en croisant exclusivement le cadre légal d'Éduscol et les protocoles officiels de l'académie d'Aix-Marseille fournis ici :
                 {extraits_doc if extraits_doc else 'Utilise les textes officiels et protocoles d Aix-Marseille.'}
                 
                 Question de l'enseignant : '{prompt_ipack}'
                 
-                Donne une réponse rigoureuse, précise et directement applicable. Ne propose aucune option fictive. Ajoute obligatoirement à la fin de ta réponse la liste des liens URL exacts consultés (Aix-Marseille ou Éduscol).
+                Donne une réponse rigoureuse, précise et directement applicable sur le terrain. Ne propose aucune option fictive ou obsolète. Ajoute obligatoirement à la fin de ta réponse la liste des liens URL exacts consultés (Aix-Marseille ou Éduscol) pour preuve.
                 """
                 titre_badge = "📊 EXAMENS & EVALUATIONS (AIX-MARSEILLE & ÉDUSCOL)"
             else:
@@ -268,6 +270,7 @@ with col2:
         st.session_state.messages_aix = []
         st.rerun()
         
+    # Rendu corrigé des messages de tchat pour la colonne web
     for m in st.session_state.messages_aix:
         with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
             
