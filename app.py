@@ -22,8 +22,9 @@ st.set_page_config(
 # ======================================================================
 if "messages_hub" not in st.session_state:
     st.session_state.messages_hub = []
+# 🚀 CALAGE D'OFFICE SUR LE MODE GENERAL AU DEMARRAGE
 if "active_module" not in st.session_state:
-    st.session_state.active_module = "ipack"  # 'ipack', 'examens', ou 'general'
+    st.session_state.active_module = "general"  
 
 def incrementer_et_recuperer_compteur():
     fichier_compteur = "compteur.txt"
@@ -48,7 +49,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (Boutons Verts & Explications)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (Boutons Verts & Effet Halo)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -118,7 +119,7 @@ st.markdown(f"""
         transition: all 0.2s ease;
     }}
 
-    /* 🟢 Passage au vert avec effet de halo lumineux pour le bouton actif */
+    /* 🟢 Activation et halo vert émeraude sur le bouton actif */
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(1) button {{
         background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'ipack' else 'rgba(30, 41, 59, 0.75)' } !important;
         color: { '#10B981' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
@@ -211,40 +212,28 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. COMMUTATION HORIZONTALE HARMONISÉE (TEXTE RÉDUIT & ASSIGNÉ)
+# 6. COMMUTATION HORIZONTALE MUTUELLE CIBLEE
 # ======================================================================
 st.markdown('<div class="context-label">⚙️ Choix du contexte :</div>', unsafe_allow_html=True)
 
 col_b1, col_b2, col_b3 = st.columns(3, gap="small")
 
 with col_b1:
-    btn_ipack = st.button(
-        "🛠️ iPackEPS", 
-        use_container_width=True, 
-        key="btn_module_ipack"
-    )
+    btn_ipack = st.button("🛠️ iPackEPS", use_container_width=True, key="btn_module_ipack")
     if btn_ipack:
         st.session_state.active_module = "ipack"
         st.session_state.messages_hub = []
         st.rerun()
 
 with col_b2:
-    btn_exams = st.button(
-        "📊 Examens & Santorin", 
-        use_container_width=True, 
-        key="btn_module_exams"
-    )
+    btn_exams = st.button("📊 Examens & Santorin", use_container_width=True, key="btn_module_exams")
     if btn_exams:
         st.session_state.active_module = "examens"
         st.session_state.messages_hub = []
         st.rerun()
 
 with col_b3:
-    btn_general = st.button(
-        "🔍 Recherches Générales", 
-        use_container_width=True, 
-        key="btn_module_general"
-    )
+    btn_general = st.button("🔍 Recherches Générales", use_container_width=True, key="btn_module_general")
     if btn_general:
         st.session_state.active_module = "general"
         st.session_state.messages_hub = []
@@ -255,13 +244,13 @@ with col_b3:
 # ======================================================================
 label_titres = {
     "ipack": "🛠️ Mode : Assistance Technique iPackEPS",
-    "examens": "📊 Mode : Textes Officiels Examens (Aix-Marseille & Éduscol)",
+    "examens": "📊 Mode : Réglementation Examens & Dispenses",
     "general": "🔍 Mode : Recherche Transversale Globale (Tous serveurs EPS)"
 }
 
 st.markdown(f'<div class="column-title">{label_titres[st.session_state.active_module]}</div>', unsafe_allow_html=True)
 
-# Couplage horizontal : Alignement du bouton Nettoyer et de la barre de saisie
+# Alignement horizontal du bouton Nettoyer et de la zone d'écriture
 col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
 
 with col_action_clear:
@@ -275,15 +264,12 @@ with col_action_clear:
 with col_action_input:
     prompt = st.chat_input("Posez votre question ici (iPack, Règlements, Grilles...)...", key="chat_input_unique")
 
-# Conteneur d'affichage du flux de messages (Sous le bloc d'action)
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
-# Rendu du fil de discussion
 for m in st.session_state.messages_hub:
     with st.chat_message(m["role"]): 
         st.markdown(m["content"], unsafe_allow_html=True)
 
-# Traitement de la requête utilisateur
 if prompt:
     st.session_state.messages_hub.append({"role": "user", "content": f"**Vous** : {prompt}"})
     
@@ -293,7 +279,7 @@ if prompt:
         color_card = "general-card"
     elif st.session_state.active_module == "examens":
         domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr"]
-        texte_spinner = "Recherche dans les archives d'Aix-Marseille & Éduscol..."
+        texte_spinner = "Recherche dans les archives réglementaires..."
         color_card = "santorin-card"
     else:
         domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr", "eps.enseigne.ac-lyon.fr", "eps.ac-creteil.fr"]
@@ -321,7 +307,7 @@ if prompt:
             consigne_ia = f"Tu es l'assistant technique expert d'iPackEPS. Génère un protocole pas-à-pas précis (onglets, clics) basé STRICTEMENT sur cette aide : {extraits_doc}. Ajoute l'URL exacte à la fin. Ne mentionne aucun menu imaginaire."
             badge_title = "🛠️ PROTOCOLE TECHNIQUE IPACKEPS"
         elif st.session_state.active_module == "examens":
-            consigne_ia = f"Tu es l'assistant de terrain officiel d'Aix-Marseille et Éduscol. Réponds de façon purement administrative sur les textes, livrets ou dispenses à partir de ces documents : {extraits_doc}. ⚠️ INTERDICTION STRICTE de parler d'interface logicielle, d'onglets ou de clics (pas de mention d'iPack). Reste sur le règlement. Ajoute les liens URL exacts consultés à la fin."
+            consigne_ia = f"Tu es l'assistant de terrain officiel. Réponds de façon purement administrative sur les textes, livrets ou dispenses à partir de ces documents : {extraits_doc}. ⚠️ INTERDICTION STRICTE de parler d'interface logicielle, d'onglets ou de clics (pas de mention d'iPack). Reste sur le règlement. Ajoute les liens URL exacts consultés à la fin."
             badge_title = "📊 REGLEMENTATION EXAMENS & EVALUATIONS"
         else:
             consigne_ia = f"Tu es l'assistant de recherche globale EPS. Synthétise clairement les informations institutionnelles récoltées : {extraits_doc}. Donne la liste complète des URL sources trouvées à la fin."
