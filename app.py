@@ -185,7 +185,7 @@ col1, col2 = st.columns(2, gap="large")
 
 # --- COLONNE 1 : ASSISTANT MÉTIER ---
 with col1:
-    st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="column-title">🤖 Assistant Ipackeps & Examens</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
     if st.button("🧹 Nettoyer le chat", key="clear_ipack"):
@@ -263,7 +263,7 @@ with col1:
 
 # --- COLONNE 2 : ASSISTANT RECHERCHES SITES (MOTEUR SECURE AVEC TAVILY) ---
 with col2:
-    st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="column-title">🔍 Assistant Recherches Générales</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
     if st.button("🧹 Nettoyer le chat", key="clear_aix"):
