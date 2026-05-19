@@ -8,7 +8,7 @@ from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core import Document
 
 # ======================================================================
-# 1. CONFIGURATION DE L'APPLICATION (IMPÉRATIVEMENT EN PREMIER)
+# 1. PAGE CONFIGURATION (MUST BE FIRST)
 # ======================================================================
 st.set_page_config(
     page_title="Hub IA - EPS", 
@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ======================================================================
-# 2. GESTION DE LA MÉMOIRE ET DU COMPTEUR DE VISITES
+# 2. SESSION STATE & VISITOR COUNTER
 # ======================================================================
 if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
@@ -25,6 +25,7 @@ if "messages_aix" not in st.session_state:
     st.session_state.messages_aix = []
 
 def incrementer_et_recuperer_compteur():
+    """Manages compteur.txt to track total visits"""
     fichier_compteur = "compteur.txt"
     if not os.path.exists(fichier_compteur):
         with open(fichier_compteur, "w", encoding="utf-8") as f: 
@@ -47,25 +48,38 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS AVANCÉ)
+# 3. GRAPHICAL INTERFACE & ADVANCED CSS (UPDATED WINDOW OPACITY)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
 st.markdown(f"""
     <style>
+    /* General page adjustments */
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    .hub-header {{ background-color: #1E293B; display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }}
+    /* Top Hub Header Banner */
+    .hub-header {{ 
+        background-color: #1E293B; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 12px 25px; 
+        margin-bottom: 25px; 
+        border-radius: 8px; 
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
+    }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; font-family: monospace; margin-top: 8px; display: inline-block; }}
     
+    /* Column Titles and Buttons */
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 0px; height: 35px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
     
+    /* module selection block (Deep Night Blue) */
     div[data-testid="stRadio"] {{
         background-color: #1E293B !important;
         padding: 15px !important;
@@ -76,27 +90,32 @@ st.markdown(f"""
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 13px !important; }}
     
+    /* 🖼️ THE TWO CHAT WINDOWS - Frosted Glass Effect - UPDATED TO 20% OPACITY */
     .glass-card {{
-        background-color: rgba(255, 255, 255, 0.40) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
+        background-color: rgba(255, 255, 255, 0.20) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
         border-radius: 0px 0px 8px 8px;
         padding: 18px;
         box-shadow: 0px 10px 30px rgba(0,0,0,0.25);
-        border-left: 1px solid rgba(255, 255, 255, 0.25);
-        border-right: 1px solid rgba(255, 255, 255, 0.25);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+        border-left: 1px solid rgba(255, 255, 255, 0.20);
+        border-right: 1px solid rgba(255, 255, 255, 0.20);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.20);
         margin-bottom: 20px;
     }}
-    .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{ color: #0F172A !important; font-weight: 700 !important; }}
+    /* Keep controls legible within the glass card */
+    .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{ color: #F1F5F9 !important; font-weight: 700 !important; }}
     
+    /* 🛡️ Legible Response Cards (White, 100% Opaque) */
     .santorin-card {{ background-color: #FFFFFF !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 4px 12px rgba(0,0,0,0.15); }}
     .general-card {{ background-color: #FFFFFF !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 4px 12px rgba(0,0,0,0.15); }}
     
+    /* Markdown Tables in responses */
     .santorin-card table, .general-card table {{ background-color: #FFFFFF !important; color: #1E293B !important; border-collapse: collapse; width: 100%; margin-top: 10px; }}
     .santorin-card th, .general-card th {{ background-color: #F1F5F9 !important; color: #0F172A !important; padding: 8px !important; font-weight: bold !important; border: 1px solid #CBD5E1 !important; }}
     .santorin-card td, .general-card td {{ padding: 8px !important; border: 1px solid #E2E8F0 !important; }}
     
+    /* User chat bubbles */
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: #FFFFFF !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
@@ -104,7 +123,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 4. CONFIGURATION DE L'INTELLIGENCE ARTIFICIELLE
+# 4. AI CONFIGURATION & CONNECTION
 # ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
@@ -123,7 +142,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 5. MOTEUR D'INDEXATION AVEC CLOISONNEMENT DES BASES DE DONNÉES
+# 5. INTELLIGENT INDEXING ENGINE (MULTI-FORMAT READING)
 # ======================================================================
 @st.cache_resource
 def get_separated_engines_final():
@@ -132,12 +151,11 @@ def get_separated_engines_final():
     
     base_dir = "./data"
     
-    # 📊 A. LECTURE EXCLUSIVEMENT DÉDIÉE AUX EXAMENS / SANTORIN
+    # 📊 EXAMS & SANTORIN MODULE (CSV & EXCEL)
     if os.path.exists(base_dir):
         for fichier in os.listdir(base_dir):
             nom_f = fichier.lower()
             chemin = os.path.join(base_dir, fichier)
-            # On n'embarque QUE ce qui concerne Santorin ou les fichiers de Notation
             if "santorin" in nom_f or "notation" in nom_f:
                 if nom_f.endswith('.csv'):
                     try:
@@ -148,6 +166,7 @@ def get_separated_engines_final():
                     except:
                         pass
                 else:
+                    # Handle robust reading of Excel workbook (even if file extension is missing)
                     try:
                         xl = pd.ExcelFile(chemin)
                         for sheet_name in xl.sheet_names:
@@ -161,13 +180,12 @@ def get_separated_engines_final():
         if documents_list:
             index_santorin = VectorStoreIndex.from_documents(documents_list)
         
-    # 🛠️ B. LECTURE EXCLUSIVEMENT DÉDIÉE À IPACKEPS (ZÉRO DONNÉE EXAMEN)
+    # 🛠️ IPACKEPS MODULE (50-PAGE TEXT FILE, PDF MAPS...)
     index_ipack = VectorStoreIndex.from_documents([])
     if os.path.exists(base_dir):
         fichiers_ipack = []
         for f in os.listdir(base_dir):
             nom_f = f.lower()
-            # On prend uniquement les manuels d'utilisation et fichiers textes iPack
             if "ipack" in nom_f and not nom_f.endswith('.csv') and "santorin" not in nom_f:
                 fichiers_ipack.append(os.path.join(base_dir, f))
                 
@@ -184,7 +202,7 @@ if openai_api_key:
     index_ipack, index_santorin = get_separated_engines_final()
 
 # ======================================================================
-# 6. DOUBLE COLONNE D'INTERFACE
+# 6. INDEPENDENT DUAL-COLUMN EXECUTION
 # ======================================================================
 col1, col2 = st.columns(2, gap="large")
 
@@ -210,7 +228,6 @@ with col1:
         
         with st.spinner("Analyse des fichiers..."):
             if "examens" in context_choice.lower():
-                # Configuration pour le module Examen / Validation Certificative
                 system_prompt = (
                     "Tu es l'assistant expert EXAMENS & SANTORIN pour les professeurs d'EPS.\n"
                     "Tu traites STRICTEMENT de la réglementation des examens (DNB, BAC, CAP) et de la remontée des notes.\n\n"
@@ -223,7 +240,6 @@ with col1:
                 )
                 chosen_index = index_santorin
             else:
-                # Configuration TECHNIQUE exclusive pour iPackEPS (Zéro amalgame avec les examens)
                 system_prompt = (
                     "Tu es l'assistant informatique et technique exclusif du logiciel de saisie iPackEPS.\n"
                     "Ton unique rôle est d'expliquer comment configurer et manipuler l'application.\n\n"
@@ -253,7 +269,7 @@ with col1:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- COLONNE 2 : ASSISTANT RECHERCHES SITE EPS ---
+# --- COLONNE 2 : AIX SITE RESEARCH ASSISTANT ---
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
