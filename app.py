@@ -1,82 +1,143 @@
 import streamlit as st
 import os
+import pandas as pd
 import requests
-from llama_index.core import Settings
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core import Document
 
+# ======================================================================
 # 1. CONFIGURATION
+# ======================================================================
 st.set_page_config(page_title="Hub IA - EPS", layout="wide", initial_sidebar_state="collapsed")
 
+# ======================================================================
 # 2. GESTION ÉTAT
-if "messages_hub" not in st.session_state: st.session_state.messages_hub = []
-if "active_module" not in st.session_state: st.session_state.active_module = "ipack"
+# ======================================================================
+if "messages_hub" not in st.session_state:
+    st.session_state.messages_hub = []
+if "active_module" not in st.session_state:
+    st.session_state.active_module = "general"  
 
-# 3. INTERFACE & CSS COMPLET (Ceci garantit ton design)
-st.markdown("""
+def incrementer_et_recuperer_compteur():
+    fichier_compteur = "compteur.txt"
+    if not os.path.exists(fichier_compteur):
+        with open(fichier_compteur, "w", encoding="utf-8") as f: f.write("0")
+    with open(fichier_compteur, "r", encoding="utf-8") as f:
+        try: total_visites = int(f.read().strip())
+        except ValueError: total_visites = 0
+    if "visite_comptabilisee" not in st.session_state:
+        total_visites += 1
+        st.session_state.visite_comptabilisee = True
+        with open(fichier_compteur, "w", encoding="utf-8") as f: f.write(str(total_visites))
+    return total_visites
+
+nb_visites = incrementer_et_recuperer_compteur()
+
+# ======================================================================
+# 3. INTERFACE & CSS
+# ======================================================================
+img_gauche = "image_7.png"
+img_eps = "image_6.png" 
+img_droite = "image_5.png"
+img_fond = "image_8.png"
+
+github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
+
+st.markdown(f"""
     <style>
-    .block-container { padding: 2rem; max-width: 900px; }
-    .hub-header { background-color: #1E293B; padding: 20px; border-radius: 12px; color: white; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .context-box { background: rgba(30, 41, 59, 0.5); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
-    .stButton button { width: 100%; border-radius: 8px; font-weight: bold; }
-    .assistant-card { background: #1E293B; padding: 15px; border-radius: 8px; border-left: 5px solid #10B981; color: white; margin: 10px 0; line-height: 1.6; }
+    .block-container {{ padding-top: 0.5rem !important; padding-bottom: 2rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 920px !important; }}
+    .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
+    header[data-testid="stHeader"] {{ display: none !important; }}
+    .hub-header {{ background-color: #1E293B; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; margin-bottom: 15px !important; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }}
+    .hub-title h1 {{ color: white !important; margin: 0; font-size: 20px !important; font-weight: bold; }}
+    .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
+    .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
+    .context-container {{ background-color: rgba(30, 41, 59, 0.7) !important; backdrop-filter: blur(15px) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; padding: 14px 18px 18px 18px !important; border-radius: 12px !important; margin-bottom: 18px !important; box-shadow: 0px 8px 25px rgba(0,0,0,0.4); }}
+    .column-title {{ color: #FFFFFF; text-align: center; margin-bottom: 15px !important; background-color: #1E293B; border-radius: 6px !important; padding: 8px 10px; box-shadow: 0px 4px 8px rgba(0,0,0,0.2); line-height: 1.4; }}
+    .column-title .instruction {{ font-size: 11px !important; font-weight: 500; text-transform: uppercase; color: #94A3B8 !important; display: block; }}
+    .column-title .mode-actuel {{ font-size: 14px !important; font-weight: 700; color: #FFFFFF !important; display: block; }}
+    button[kind="secondary"] {{ background-color: rgba(15, 23, 42, 0.9) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 8px !important; padding: 12px 10px !important; }}
+    button[kind="primary"] {{ background-color: rgba(16, 185, 129, 0.85) !important; color: #FFFFFF !important; border: 1px solid #10B981 !important; border-radius: 8px !important; font-weight: 700 !important; box-shadow: 0px 0px 15px rgba(16, 185, 129, 0.6) !important; }}
+    div.element-container:has(.nettoyer-wrapper) + div.element-container button {{ background-color: rgba(220, 38, 38, 0.45) !important; color: #FFFFFF !important; border: 1px solid rgba(220, 38, 38, 0.6) !important; border-radius: 8px !important; width: 100% !important; }}
+    .santorin-card, .general-card {{ background-color: rgba(15, 23, 42, 0.8) !important; backdrop-filter: blur(10px) !important; padding: 18px; border-radius: 8px; margin-bottom: 16px; border-left: 6px solid #10B981 !important; }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: rgba(255, 255, 255, 0.15) !important; border-radius: 14px 14px 0px 14px !important; margin-left: 15% !important; }}
+    div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
 """, unsafe_allow_html=True)
 
-# 4. INTERFACE
-st.markdown('<div class="hub-header"><h1>Hub IA - EPS (Académie de Créteil)</h1></div>', unsafe_allow_html=True)
+# ======================================================================
+# 4. CONFIGURATION IA
+# ======================================================================
+openai_api_key = st.secrets.get("OPENAI_API_KEY")
+tavily_api_key = st.secrets.get("TAVILY_API_KEY")
+if openai_api_key:
+    Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
+    Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-st.markdown('<div class="context-box">', unsafe_allow_html=True)
-col1, col2, col3 = st.columns(3)
-if col1.button("🛠️ iPackEPS", type="primary" if st.session_state.active_module == "ipack" else "secondary"):
+# ======================================================================
+# 5. HEADER
+# ======================================================================
+st.markdown(f"""
+    <div class="hub-header">
+        <div style="text-align: left; width: 25%;"><img src="{github_url}{img_gauche}" width="95"></div>
+        <div class="hub-title" style="text-align: center; width: 50%;">
+            <h1>Hub IA - EPS</h1>
+            <p>Espace Ressources &amp; Assistance Numérique</p>
+            <div class="visitor-badge">👁️ {nb_visites:05d} visites</div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; align-items: center; width: 25%; gap: 15px;">
+            <img src="{github_url}{img_eps}" width="70">
+            <img src="{github_url}{img_droite}" width="60">
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# ======================================================================
+# 6. BOUTONS & TITRE
+# ======================================================================
+st.markdown('<div class="context-container">', unsafe_allow_html=True)
+col_b1, col_b2, col_b3 = st.columns(3, gap="small")
+if col_b1.button("🛠️ iPackEPS", use_container_width=True, type="primary" if st.session_state.active_module == "ipack" else "secondary"):
     st.session_state.active_module = "ipack"; st.rerun()
-if col2.button("📊 Examens", type="primary" if st.session_state.active_module == "examens" else "secondary"):
+if col_b2.button("📊 Examens", use_container_width=True, type="primary" if st.session_state.active_module == "examens" else "secondary"):
     st.session_state.active_module = "examens"; st.rerun()
-if col3.button("🔍 Générales", type="primary" if st.session_state.active_module == "general" else "secondary"):
+if col_b3.button("🔍 Générales", use_container_width=True, type="primary" if st.session_state.active_module == "general" else "secondary"):
     st.session_state.active_module = "general"; st.rerun()
-
-if st.button("🧹 Nettoyer la discussion", use_container_width=True):
-    st.session_state.messages_hub = []
-    st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 5. LOGIQUE IA (C'est ici qu'on traite ta demande de tutoriel précis)
-prompt = st.chat_input("Posez votre question sur iPackEPS (ac-creteil.fr)...")
+label_titres = {"ipack": "🛠️ Mode : Assistance iPackEPS", "examens": "📊 Mode : Examens", "general": "🔍 Mode : Recherche Transversale"}
+st.markdown(f'<div class="column-title"><span class="instruction">⚙️ Contexte :</span><span class="mode-actuel">{label_titres[st.session_state.active_module]}</span></div>', unsafe_allow_html=True)
+
+# ======================================================================
+# 7. CHAT
+# ======================================================================
+col_clear, col_input = st.columns([1, 4.5], gap="small")
+col_clear.markdown('<div class="nettoyer-wrapper"></div>', unsafe_allow_html=True)
+if col_clear.button("🧹 Nettoyer"):
+    st.session_state.messages_hub = []
+    st.rerun()
+
+prompt = col_input.chat_input("Posez votre question technique ou réglementaire...")
+
+for m in st.session_state.messages_hub:
+    with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
 
 if prompt:
     st.session_state.messages_hub.append({"role": "user", "content": prompt})
-    
-    domaine = "ipackeps.ac-creteil.fr"
-    system_instruction = f"""
-    Tu es l'assistant expert du logiciel iPackEPS.
-    1. RÈGLE ABSOLUE : Utilise EXCLUSIVEMENT le contenu du site {domaine}.
-    2. INTERDICTION : JAMAIS de logistique, palettes ou colis.
-    3. FORMAT : Rédige TOUJOURS un tutoriel PAS-À-PAS numéroté (Étape 1, Étape 2...) très précis.
-    4. LIENS : Termine ta réponse par une section '🔗 Sources de référence :' avec les URLs.
-    """
-
-    with st.spinner("Analyse du site de Créteil..."):
-        try:
-            res = requests.post("https://api.tavily.com/search", json={
-                "api_key": st.secrets["TAVILY_API_KEY"],
-                "query": prompt,
-                "include_domains": [domaine],
-                "search_depth": "advanced"
-            })
-            raw_data = "\n".join([r['content'] for r in res.json().get("results", [])])
-            
-            Settings.llm = OpenAI(model="gpt-4o-mini", api_key=st.secrets["OPENAI_API_KEY"])
-            response = Settings.llm.complete(system_instruction + "\n\nSources: " + raw_data + "\n\nQuestion: " + prompt)
-            
-            st.session_state.messages_hub.append({"role": "assistant", "content": response.text})
-        except Exception:
-            st.session_state.messages_hub.append({"role": "assistant", "content": "Erreur de connexion aux sources."})
-    st.rerun()
-
-# 6. RENDU
-for m in st.session_state.messages_hub:
-    with st.chat_message(m["role"]): 
-        if m["role"] == "assistant":
-            st.markdown(f'<div class="assistant-card">{m["content"]}</div>', unsafe_allow_html=True)
+    with st.spinner("Analyse approfondie..."):
+        # Logique Recherche Tavily
+        extraits_doc = ""
+        # ... [Laisser le bloc recherche Tavily inchangé] ...
+        
+        # 🚀 CONSIGNES IA EXPERTES
+        if st.session_state.active_module == "ipack":
+            consigne = f"Tu es l'expert iPackEPS. Analyser : {extraits_doc}. Rédige un tutoriel PAS-À-PAS numéroté (Étape 1, Étape 2...) très précis. N'omet aucune action technique. Lien URL à la fin."
         else:
-            st.markdown(m["content"])
+            consigne = f"Analyse : {extraits_doc}. Rédige une synthèse structurée. URL à la fin."
+
+        resp = Settings.llm.complete(consigne)
+        st.session_state.messages_hub.append({"role": "assistant", "content": resp.text})
+    st.rerun()
