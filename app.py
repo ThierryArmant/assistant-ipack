@@ -78,7 +78,7 @@ st.markdown(f"""
 
 @st.cache_resource
 def get_ipack_engine():
-    docs = SimpleDirectoryReader(input_dir="./data").load_data()
+    docs = SimpleDirectoryReader(input_dir="./data", encoding="utf-8").load_data()
     index = VectorStoreIndex.from_documents(docs)
     prompt = (
         "Tu es l'IA experte du module 'iPackEPS, Santorin & Examens'. Tu parles exclusivement à des professeurs d'EPS. "
