@@ -77,7 +77,7 @@ st.markdown(f"""
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 13px !important; }}
     
-    /* Fenêtres de chat transparentes à 15% pour voir la Sainte-Victoire */
+    /* Fenêtres principales transparentes à 15% pour voir la Sainte-Victoire */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.15) !important;
         backdrop-filter: blur(12px) !important;
@@ -129,7 +129,7 @@ st.markdown(f"""
 # 4. CONFIGURATION DE L'INTELLIGENCE ARTIFICIELLE
 # ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
-tavily_api_key = st.secrets.get("TAVILY_API_KEY") # 🔑 Pense à ajouter ta clé Tavily dans tes secrets Streamlit !
+tavily_api_key = st.secrets.get("TAVILY_API_KEY")
 
 if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
@@ -263,7 +263,7 @@ with col1:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- COLONNE 2 : ASSISTANT RECHERCHES SITES (MOTEUR DE RECHERCHE IA CONTEXTUEL) ---
+# --- COLONNE 2 : ASSISTANT RECHERCHES SITES (MOTEUR SECURE AVEC TAVILY) ---
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -281,14 +281,18 @@ with col2:
         with st.spinner("Recherche approfondie sur les sites officiels d'EPS..."):
             extraits_textes = ""
             
-            # Si la clé Tavily est configurée, on lance une recherche web ciblée et intelligente
             if tavily_api_key:
                 try:
                     payload = {
                         "api_key": tavily_api_key,
                         "query": f"{prompt_aix} EPS",
                         "search_depth": "advanced",
-                        "include_domains": ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr", "eps.enseigne.ac-lyon.fr", "eps.ac-creteil.fr"]
+                        "include_domains": [
+                            "pedagogie.ac-aix-marseille.fr", 
+                            "eduscol.education.gouv.fr", 
+                            "eps.enseigne.ac-lyon.fr", 
+                            "eps.ac-creteil.fr"
+                        ]
                     }
                     res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
                     if res.status_code == 200:
@@ -298,7 +302,6 @@ with col2:
                 except:
                     pass
 
-            # Remplacement par les connaissances expertes si la recherche web échoue ou si pas de clé
             if extraits_textes:
                 consigne_ia = f"""
                 Tu es l'assistant expert des textes officiels et protocoles EPS pour l'Éducation Nationale.
@@ -307,14 +310,14 @@ with col2:
                 {extraits_textes}
                 
                 Réponds de manière claire, rigoureuse et exhaustive à la question suivante : '{prompt_aix}'.
-                Ajoute obligatoirement à la fin de ta réponse la liste des liens URL sources trouvés pour que l'enseignant puisse s'y référer.
+                Ajoute obligatoirement à la fin de ta réponse la liste des liens URL sources trouvés pour que l'enseignant puisse s'y référer et télécharger les documents originaux si besoin.
                 """
             else:
                 consigne_ia = f"""
                 Tu es l'assistant expert des textes officiels EPS. 
                 Réponds de manière très précise, structurée et professionnelle à la question suivante : '{prompt_aix}'.
-                Cible tes connaissances sur les directives d'Éduscol et des académies de Lyon, Créteil et Aix-Marseille. 
-                Si la question porte sur un acronyme comme le TASA (Travail d'Accompagnement et de Suivi des Apprenants), détaille précisément son fonctionnement réglementaire sans rien inventer.
+                Cible tes connaissances sur les directives d'Éduscol et des académies de Lyon, Créteil et Aix-Marseille.
+                Si la question porte sur un dispositif comme le TASA (Travail d'Accompagnement et de Suivi des Apprenants), détaille précisément son fonctionnement réglementaire sans rien éluder.
                 """
 
             response_web = Settings.llm.complete(consigne_ia)
