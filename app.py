@@ -24,6 +24,8 @@ if "messages_ipack" not in st.session_state:
     st.session_state.messages_ipack = []
 if "messages_aix" not in st.session_state:
     st.session_state.messages_aix = []
+if "current_radio" not in st.session_state:
+    st.session_state.current_radio = "🛠️ iPackEPS (Configuration, Classes, SSS)"
 
 def incrementer_et_recuperer_compteur():
     fichier_compteur = "compteur.txt"
@@ -162,7 +164,6 @@ if openai_api_key:
 # 5. EXECUTION DE L'INTERFACE GRAPHIQUE EN DOUBLE COLONNE
 # ======================================================================
 
-# Bandeau Supérieur
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="100"></div>
@@ -192,13 +193,18 @@ with col1:
         key="radio_context"
     )
 
+    # 🔄 SECURITÉ MÉMOIRE : Si l'utilisateur change de module, on vide le tchat pour éviter les interférences
+    if context_choice != st.session_state.current_radio:
+        st.session_state.messages_ipack = []
+        st.session_state.current_radio = context_choice
+        st.rerun()
+
     for m in st.session_state.messages_ipack:
         with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
             
     if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
         st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
         
-        # Aiguillage strict basé sur la sélection réelle
         is_examen = "examens" in context_choice.lower() or "santorin" in context_choice.lower()
         
         if is_examen:
@@ -225,23 +231,24 @@ with col1:
                             extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
                 except: pass
 
-            # 🚀 NETTOYAGE DU PROMPT SYSTÈME (ZÉRO JARGON THEORIQUE)
             if is_examen:
                 consigne_ia = f"""
-                Tu es l'assistant de terrain officiel pour le portail académique d'Aix-Marseille et Éduscol.
-                Ton rôle est d'apporter des réponses institutionnelles, concrètes et pratiques concernant l'organisation des examens, des grilles d'évaluation académiques, des calendriers de remontée des notes ou de la gestion administrative des inaptitudes/dispenses en EPS.
+                Tu es l'assistant de terrain officiel pour l'académie d'Aix-Marseille et Éduscol.
+                Tu traites UNIQUEMENT de la réglementation des examens (DNB, BAC), des grilles d'évaluation institutionnelles et des règles administratives sur les dispenses/inaptitudes.
                 
-                Tu dois formuler ta réponse en te basant EXCLUSIVEMENT sur les fiches ressources, circulaires et données réelles extraites ici :
-                {extraits_doc if extraits_doc else 'Utilise uniquement les fiches pratiques et textes d Aix-Marseille.'}
+                ⚠️ INTERDICTION FORMELLE : Ne parle JAMAIS de l'interface informatique d'iPackEPS, de clics, de menus logiciels (ex: pas de "Dossier Certificatif", pas de "Dépôt de documents pour la commission"). Reste purement sur les textes, les circulaires et le protocole réglementaire d'Aix-Marseille ou Éduscol.
+                
+                Données à utiliser :
+                {extraits_doc if extraits_doc else 'Utilise uniquement les fiches pratiques et textes officiels d Aix-Marseille.'}
                 
                 Question de l'enseignant : '{prompt_ipack}'
                 
-                Donne une méthode claire ou un résumé directement applicable. Ne fais aucune dissertation théorique. Ajoute obligatoirement à la fin de ta réponse la liste des liens URL exacts consultés (Aix-Marseille ou Éduscol) pour preuve.
+                Réponds de façon concise et claire. Ajoute obligatoirement à la fin de ta réponse la liste des liens URL exacts consultés (Aix-Marseille ou Éduscol).
                 """
                 titre_badge = "📊 EXAMENS & EVALUATIONS (AIX-MARSEILLE & ÉDUSCOL)"
             else:
                 consigne_ia = f"""
-                Tu es l'assistant technique expert du logiciel de gestion iPackEPS.
+                Tu es l'assistant technique expert du logiciel de gestion iPackEPS (Configuration, structures, classes).
                 Tu réponds en te basant STRICTEMENT sur les guides d'aide officiels de l'académie de Créteil fournis ci-après :
                 
                 {extraits_doc if extraits_doc else 'Se référer aux procédures standards de configuration iPack.'}
@@ -305,7 +312,7 @@ with col2:
                 {extraits_textes}
                 
                 Réponds de manière claire, rigoureuse et exhaustive à la question suivante : '{prompt_aix}'.
-                Ajoute obligatoirement à la fin de ta réponse la liste des liens URL sources trouvés pour que l'enseignant puisse s'y référer et télécharger les documents originaux si besoin.
+                Ajoute obligatoirement à la fin de ta réponse la liste des liens URL sources trouvés.
                 """
             else:
                 consigne_ia = f"Tu es l'assistant expert des textes officiels EPS. Réponds de manière très précise, structurée et professionnelle à la question suivante : '{prompt_aix}'."
