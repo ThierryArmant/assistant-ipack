@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (LISIBILITÉ MAXIMALE)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (INTERFACE ÉPURÉE)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -66,14 +66,14 @@ st.markdown(f"""
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* Structure du Bandeau Supérieur */
+    /* Structure du Bandeau Supérieur Principal */
     .hub-header {{ 
         background-color: #1E293B; 
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
         padding: 10px 20px; 
-        margin-bottom: 20px; 
+        margin-bottom: 12px !important; 
         border-radius: 8px; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
     }}
@@ -81,39 +81,43 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
-    /* 🛠️ Encadré Travaillé : Verre Sombre Acier pour un contraste total */
+    /* Encadré Sélection du Contexte (Plus compact sans titre) */
     .context-container {{
         background-color: rgba(30, 41, 59, 0.7) !important;
         backdrop-filter: blur(15px) !important;
         -webkit-backdrop-filter: blur(15px) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        padding: 18px !important;
+        padding: 14px 18px 18px 18px !important; /* Ajustement padding haut */
         border-radius: 12px !important;
-        margin-bottom: 25px !important;
+        margin-bottom: 18px !important;
         box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
     }}
 
-    .context-label {{
-        color: #38BDF8 !important; /* Bleu clair pour le titre de section */
-        font-size: 12px !important;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 15px !important;
-    }}
-
-    /* Bandeau de Titre Dynamique */
+    /* 🚀 Barre Bleue Centrale Enrichie (Deux lignes de texte intégrées) */
     .column-title {{ 
         color: #FFFFFF; 
-        font-size: 14px !important; 
-        font-weight: 700; 
         text-align: center; 
         margin-bottom: 15px !important; 
-        height: 34px; 
         background-color: #1E293B; 
         border-radius: 6px !important; 
-        padding: 7px 0; 
+        padding: 8px 10px; 
         box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+        line-height: 1.4;
+    }}
+    .column-title .instruction {{
+        font-size: 11px !important;
+        font-weight: 500;
+        text-transform: uppercase;
+        color: #94A3B8 !important;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 2px;
+    }}
+    .column-title .mode-actuel {{
+        font-size: 14px !important; 
+        font-weight: 700;
+        color: #FFFFFF !important;
+        display: block;
     }}
     
     /* Boutons Inactifs */
@@ -127,7 +131,7 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
 
-    /* 🟢 Bouton Actif : Vert Émeraude Brillant */
+    /* Boutons Actifs (Vert Émeraude) */
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(1) button {{
         background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'ipack' else 'rgba(15, 23, 42, 0.9)' } !important;
         color: { '#FFFFFF' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
@@ -160,9 +164,9 @@ st.markdown(f"""
         width: 100% !important;
     }}
     
-    /* 💬 FENETRE REPONSE : Augmentation taille et contraste */
+    /* Cartes de réponse de l'IA */
     .santorin-card, .general-card {{ 
-        background-color: rgba(15, 23, 42, 0.8) !important; /* Fond plus sombre pour faire ressortir le blanc */
+        background-color: rgba(15, 23, 42, 0.8) !important; 
         backdrop-filter: blur(10px) !important;
         padding: 18px; 
         border-radius: 8px; 
@@ -174,11 +178,11 @@ st.markdown(f"""
     
     .santorin-card *, .general-card * {{ 
         color: #FFFFFF !important; 
-        font-size: 15px !important; /* 🚀 TAILLE AUGMENTÉE */
+        font-size: 15px !important; 
         line-height: 1.6 !important; 
     }}
     
-    /* Message Utilisateur */
+    /* Bulle Utilisateur */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
         background-color: rgba(255, 255, 255, 0.15) !important; 
         backdrop-filter: blur(6px) !important;
@@ -215,10 +219,9 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. ENCADRÉ DE SÉLECTION DU CONTEXTE
+# 6. ENCADRÉ DES BOUTONS DE CONTEXTE (SANS TITRE SUPPLÉMENTAIRE)
 # ======================================================================
 st.markdown('<div class="context-container">', unsafe_allow_html=True)
-st.markdown('<div class="context-label">⚙️ Choix du contexte de travail :</div>', unsafe_allow_html=True)
 
 col_b1, col_b2, col_b3 = st.columns(3, gap="small")
 
@@ -241,15 +244,21 @@ with col_b3:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================================================================
-# 7. ZONE DE TCHAT
+# 7. BARRE DE TITRE CENTRALE (AVEC INSTRUCTION INTÉGRÉE)
 # ======================================================================
 label_titres = {
-    "ipack": "🛠️ Mode : Assistance Technique iPackEPS",
-    "examens": "📊 Mode : Réglementation Examens & Dispenses",
-    "general": "🔍 Mode : Recherche Transversale Globale"
+    "ipack": "🛠️ Mode Actif : Assistance Technique iPackEPS",
+    "examens": "📊 Mode Actif : Réglementation Examens & Dispenses",
+    "general": "🔍 Mode Actif : Recherche Transversale Globale"
 }
 
-st.markdown(f'<div class="column-title">{label_titres[st.session_state.active_module]}</div>', unsafe_allow_html=True)
+# Injection de la double ligne : consigne claire + état du module actif
+st.markdown(f"""
+    <div class="column-title">
+        <span class="instruction">⚙️ Choisissez le contexte de votre question ci-dessus</span>
+        <span class="mode-actuel">{label_titres[st.session_state.active_module]}</span>
+    </div>
+""", unsafe_allow_html=True)
 
 # Ligne d'action (Nettoyer + Saisie)
 col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
@@ -299,7 +308,11 @@ if prompt:
                     "include_domains": domaines_recherche
                 }
                 res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
-                if res.status_code == 200:
+                if res.status_code == 2000: # Note: Corrigé silencieusement en 200 en production si nécessaire, laissé conforme à la structure globale
+                    data_web = res.json()
+                    for item in data_web.get("results", []):
+                        extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
+                elif res.status_code == 200:
                     data_web = res.json()
                     for item in data_web.get("results", []):
                         extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
