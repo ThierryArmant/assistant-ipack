@@ -1,12 +1,13 @@
 import streamlit as st
 import os
 import pandas as pd
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+import requests
+from bs4 import BeautifulSoup
+from llama_index.core import VectorStoreIndex, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core import Document
-from llama_index.readers.web import SimpleWebPageReader
 
 # ======================================================================
 # 1. CONFIGURATION DE L'APPLICATION (IMPÉRATIVEMENT EN PREMIER)
@@ -48,29 +49,25 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS ULTRA-TRANSPARENT)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (TRANSPARENCE SAINTE-VICTOIRE)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
 st.markdown(f"""
     <style>
-    /* Ajustements généraux de la page */
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* En-tête principal */
     .hub-header {{ background-color: #1E293B; display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; font-family: monospace; margin-top: 8px; display: inline-block; }}
     
-    /* Titres des colonnes */
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 0px; height: 35px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
     
-    /* Bloc choix iPack / Santorin */
     div[data-testid="stRadio"] {{
         background-color: #1E293B !important;
         padding: 15px !important;
@@ -81,7 +78,7 @@ st.markdown(f"""
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 13px !important; }}
     
-    /* 🖼️ Fenêtres de chat (Conteneurs principaux) - Transparence à 15% */
+    /* 🖼️ Conteneurs principaux (Transparence à 15%) */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.15) !important;
         backdrop-filter: blur(12px) !important;
@@ -96,48 +93,37 @@ st.markdown(f"""
     }}
     .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{ color: #FFFFFF !important; font-weight: 700 !important; }}
     
-    /* 🛡️ Cartes des réponses de l'IA - Passées en Translucide (25% d'opacité) pour voir la montagne */
-    .santorin-card {{ 
-        background-color: rgba(255, 255, 255, 0.25) !important; 
+    /* 🏔️ Cartes des réponses IA translucides (Plus de pavés blancs opaques !) */
+    .santorin-card, .general-card {{ 
+        background-color: rgba(255, 255, 255, 0.20) !important; 
         backdrop-filter: blur(8px) !important;
-        border-left: 6px solid #DC2626 !important; 
+        -webkit-backdrop-filter: blur(8px) !important;
         padding: 16px; 
         border-radius: 4px; 
         margin-bottom: 18px; 
         color: #FFFFFF !important; 
         box-shadow: 0px 4px 12px rgba(0,0,0,0.2); 
     }}
-    .general-card {{ 
-        background-color: rgba(255, 255, 255, 0.25) !important; 
-        backdrop-filter: blur(8px) !important;
-        border-left: 6px solid #10B981 !important; 
-        padding: 16px; 
-        border-radius: 4px; 
-        margin-bottom: 18px; 
-        color: #FFFFFF !important; 
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.2); 
-    }}
+    .santorin-card {{ border-left: 6px solid #DC2626 !important; }}
+    .general-card {{ border-left: 6px solid #10B981 !important; }}
     
-    /* Couleur du texte interne des réponses IA pour rester très lisible sur fond transparent */
-    .santorin-card strong, .general-card strong, .santorin-card p, .general-card p, .santorin-card li, .general-card li {{
-        color: #FFFFFF !important;
-    }}
+    /* Forçage de la couleur du texte et des listes en blanc pour la lisibilité */
+    .santorin-card *, .general-card * {{ color: #FFFFFF !important; }}
     
     /* Tableaux Markdown transparents */
-    .santorin-card table, .general-card table {{ background-color: rgba(30, 41, 59, 0.4) !important; color: #FFFFFF !important; border-collapse: collapse; width: 100%; margin-top: 10px; }}
+    .santorin-card table, .general-card table {{ background-color: rgba(30, 41, 59, 0.5) !important; color: #FFFFFF !important; border-collapse: collapse; width: 100%; margin-top: 10px; }}
     .santorin-card th, .general-card th {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #FFFFFF !important; padding: 8px !important; font-weight: bold !important; border: 1px solid rgba(255,255,255,0.2) !important; }}
     .santorin-card td, .general-card td {{ padding: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #FFFFFF !important; }}
     
-    /* Forçage de la transparence des bulles de chat natives Streamlit */
+    /* Disparition complète des fonds de chat natifs de Streamlit */
     div[data-testid="stChatMessage"] {{ background-color: transparent !important; border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
-        background-color: rgba(255, 255, 255, 0.20) !important; 
-        backdrop-filter: blur(8px) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important; 
+        backdrop-filter: blur(6px) !important;
         border-radius: 16px 16px 0px 16px !important; 
         margin-left: 10% !important; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.1); 
     }}
-    /* Couleur du texte utilisateur */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) p {{ color: #FFFFFF !important; }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
@@ -151,7 +137,6 @@ if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# Affichage visuel du Header
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="110"></div>
@@ -164,7 +149,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 5. MOTEURS D'INDEXATION (LOCAL ET DISTANT CONNECTÉ)
+# 5. MOTEURS D'INDEXATION AVEC SCRAPER SITES EMBARQUÉ
 # ======================================================================
 @st.cache_resource
 def get_separated_engines_final():
@@ -172,7 +157,7 @@ def get_separated_engines_final():
     documents_list = []
     base_dir = "./data"
     
-    # MODULE LOCAL : EXAMENS & SANTORIN
+    # 📊 MODULE LOCAL : EXAMENS & SANTORIN
     if os.path.exists(base_dir):
         for fichier in os.listdir(base_dir):
             nom_f = fichier.lower()
@@ -199,7 +184,7 @@ def get_separated_engines_final():
         if documents_list:
             index_santorin = VectorStoreIndex.from_documents(documents_list)
         
-    # MODULE LOCAL : IPACKEPS
+    # 🛠️ MODULE LOCAL : IPACKEPS
     index_ipack = VectorStoreIndex.from_documents([])
     if os.path.exists(base_dir):
         fichiers_ipack = []
@@ -214,7 +199,7 @@ def get_separated_engines_final():
             except:
                 pass
                 
-    # MODULE RECHERCHE : LES 4 SITES OFFICIELS
+    # 🌐 MODULE RECHERCHE : SCRAPER SANS MODULES EXTERNES FAUTIFS
     index_sites_officiels = VectorStoreIndex.from_documents([])
     liens_web = [
         "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_78026/it/accueil",
@@ -222,11 +207,25 @@ def get_separated_engines_final():
         "https://eps.enseigne.ac-lyon.fr/spip/",
         "https://eps.ac-creteil.fr/"
     ]
-    try:
-        docs_web = SimpleWebPageReader(html_to_text=True).load_data(liens_web)
+    
+    docs_web = []
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    
+    for url in liens_web:
+        try:
+            res = requests.get(url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.text, "html.parser")
+                # On nettoie le code HTML inutile (scripts, styles)
+                for s in soup(["script", "style"]):
+                    s.extract()
+                texte_nettoye = soup.get_text(separator=" ")
+                docs_web.append(Document(text=texte_nettoye, metadata={"source": url}))
+        except:
+            pass
+            
+    if docs_web:
         index_sites_officiels = VectorStoreIndex.from_documents(docs_web)
-    except:
-        pass
     
     return index_ipack, index_santorin, index_sites_officiels
 
@@ -238,7 +237,7 @@ if openai_api_key:
 # ======================================================================
 col1, col2 = st.columns(2, gap="large")
 
-# --- COLONNE 1 : ASSISTANT MÉTIER INTERNE ---
+# --- COLONNE 1 : ASSISTANT MÉTIER ---
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -297,7 +296,7 @@ with col1:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- COLONNE 2 : ASSISTANT RECHERCHES OFFICIELLES CONNECTÉ ---
+# --- COLONNE 2 : ASSISTANT RECHERCHES SITES CONNECTÉS ---
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -312,7 +311,7 @@ with col2:
     if prompt_aix := st.chat_input("Votre recherche officielle...", key="input_aix"):
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
-        with st.spinner("Recherche en direct sur les 4 portails EPS officiels..."):
+        with st.spinner("Recherche en direct sur les portails EPS..."):
             system_prompt_web = (
                 "Tu es l'assistant expert des textes réglementaires de l'Éducation Nationale pour l'EPS.\n"
                 "Tu réponds en te basant STRICTEMENT sur le contenu extrait en temps réel des sites officiels fournis "
