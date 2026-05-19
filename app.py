@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (MOBILE FIRST & CARDS HORIZONTALES)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (ULTRA CLEAN - NO GLASS BOX)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -58,8 +58,8 @@ st.markdown(f"""
     .block-container {{ 
         padding-top: 0.5rem !important; 
         padding-bottom: 2rem !important; 
-        padding-left: 1rem !important; 
-        padding-right: 1rem !important; 
+        padding-left: 1.5rem !important; 
+        padding-right: 1.5rem !important; 
         max-width: 900px !important; 
     }}
     
@@ -72,8 +72,8 @@ st.markdown(f"""
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
-        padding: 10px 15px; 
-        margin-bottom: 20px; 
+        padding: 10px 20px; 
+        margin-bottom: 25px; 
         border-radius: 8px; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
     }}
@@ -87,7 +87,7 @@ st.markdown(f"""
         font-size: 13px !important; 
         font-weight: 700; 
         text-align: center; 
-        margin-bottom: 12px !important; 
+        margin-bottom: 15px !important; 
         height: 32px; 
         background-color: #1E293B; 
         border-radius: 6px !important; 
@@ -106,15 +106,18 @@ st.markdown(f"""
         line-height: 1.4 !important;
     }}
     
-    /* Style spécifique pour le bouton Nettoyer le chat */
-    div.clear-btn-box .stButton>button {{
+    /* Style spécifique et alignement pour le bouton Nettoyer le chat */
+    div.clear-btn-align {{
+        padding-top: 3px !important;
+    }}
+    div.clear-btn-align .stButton>button {{
         background-color: rgba(220, 38, 38, 0.2) !important;
         color: #EF4444 !important;
-        border: 1px solid rgba(220, 38, 38, 0.3) !important;
-        border-radius: 20px !important;
-        padding: 3px 15px !important;
-        font-size: 10px !important;
-        margin-bottom: 15px;
+        border: 1px solid rgba(220, 38, 38, 0.4) !important;
+        border-radius: 8px !important;
+        padding: 7px 10px !important;
+        font-size: 12px !important;
+        width: 100% !important;
     }}
     
     /* Conteneur de tchat sans boîte opaque */
@@ -221,7 +224,7 @@ with col_b3:
         st.rerun()
 
 # ======================================================================
-# 7. ZONE DE DIALOGUE ACTIVE UNIQUE (AFFICHE LA BARRE DE SAISIE EN PREMIER)
+# 7. ZONE DE DIALOGUE ACTIVE UNIQUE CONSOLIDÉE
 # ======================================================================
 label_titres = {
     "ipack": "🛠️ Mode : Assistance Technique iPackEPS (Serveur de Créteil)",
@@ -231,28 +234,32 @@ label_titres = {
 
 st.markdown(f'<div class="column-title">{label_titres[st.session_state.active_module]}</div>', unsafe_allow_html=True)
 
-# 🚀 REMONTÉE DE LA BARRE DE SAISIE EN HAUT (Conforme à ton croquis de déplacement)
-prompt = st.chat_input("Posez votre question ici (iPack, Règlements, Grilles...)...", key="chat_input_unique")
+# 🚀 COUPLAGE HORIZONTAL : ALIGNEMENT DU BOUTON NETTOYER ET DE LA BARRE DE SAISIE
+col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
 
-# Conteneur d'affichage des messages (Sous la barre d'écriture)
+with col_action_clear:
+    st.markdown('<div class="clear-btn-align">', unsafe_allow_html=True)
+    clear_clicked = st.button("🧹 Nettoyer", key="clear_hub_unique")
+    st.markdown('</div>', unsafe_allow_html=True)
+    if clear_clicked:
+        st.session_state.messages_hub = []
+        st.rerun()
+
+with col_action_input:
+    prompt = st.chat_input("Posez votre question ici (iPack, Règlements, Grilles...)...", key="chat_input_unique")
+
+# Conteneur d'affichage du flux de messages (Sous le bloc d'action)
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
-st.markdown('<div class="clear-btn-box">', unsafe_allow_html=True)
-if st.button("🧹 Nettoyer le chat", key="clear_hub_unique"):
-    st.session_state.messages_hub = []
-    st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Déroulement du fil de discussion inversé visuellement
+# Rendu du fil de discussion
 for m in st.session_state.messages_hub:
     with st.chat_message(m["role"]): 
         st.markdown(m["content"], unsafe_allow_html=True)
 
-# Gestion de l'exécution de la requête utilisateur
+# Traitement de la requête utilisateur
 if prompt:
     st.session_state.messages_hub.append({"role": "user", "content": f"**Vous** : {prompt}"})
     
-    # Configuration dynamique des domaines cibles selon le bouton-carte actif
     if st.session_state.active_module == "ipack":
         domaines_recherche = ["ipackeps.ac-creteil.fr"]
         texte_spinner = "Fouille de la base d'assistance technique de Créteil..."
@@ -281,10 +288,8 @@ if prompt:
                     data_web = res.json()
                     for item in data_web.get("results", []):
                         extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
-            except:
-                pass
+            except: pass
 
-        # Formulation des consignes pour l'intelligence artificielle
         if st.session_state.active_module == "ipack":
             consigne_ia = f"Tu es l'assistant technique expert d'iPackEPS. Génère un protocole pas-à-pas précis (onglets, clics) basé STRICTEMENT sur cette aide : {extraits_doc}. Ajoute l'URL exacte à la fin. Ne mentionne aucun menu imaginaire."
             badge_title = "🛠️ PROTOCOLE TECHNIQUE IPACKEPS"
