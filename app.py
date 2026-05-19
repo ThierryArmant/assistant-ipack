@@ -150,7 +150,7 @@ st.markdown(f"""
     
     /* BOUTON NETTOYER : Opacité augmentée et texte blanc */
     div.element-container:has(.nettoyer-wrapper) + div.element-container button {{
-        background-color: rgba(220, 38, 38, 0.45) !important;
+        background-color: rgba(220, 38, 38, 0.45) !important; /* Opacité à 45% */
         color: #FFFFFF !important;
         border: 1px solid rgba(220, 38, 38, 0.6) !important;
         border-radius: 8px !important;
@@ -160,7 +160,7 @@ st.markdown(f"""
         font-weight: 500 !important;
     }}
     div.element-container:has(.nettoyer-wrapper) + div.element-container button:hover {{
-        background-color: rgba(220, 38, 38, 0.65) !important;
+        background-color: rgba(220, 38, 38, 0.65) !important; /* Opacité à 65% au survol */
         color: #FFFFFF !important;
     }}
     
@@ -318,16 +318,15 @@ if prompt:
                         extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
             except: pass
 
-        # 🚀 MODIFICATION DU "CERVEAU" DE L'IA POUR FORCER LE PAS-À-PAS DIRECT
         if st.session_state.active_module == "ipack":
-            consigne_ia = f"Tu es l'assistant technique expert d'iPackEPS. Ton but est de donner la solution directement. À partir de ces informations : {extraits_doc}, rédige OBLIGATOIREMENT un tutoriel 'pas-à-pas' clair et numéroté (Étape 1, Étape 2...) dans ta réponse. Fournis toutes les instructions pour que l'utilisateur n'ait pas besoin de quitter le chat. Place l'URL source uniquement à la toute fin sous la mention '🔗 Source :'. Ne crée pas de menus imaginaires."
-            badge_title = "🛠️ PROTOCOLE TECHNIQUE PAS-À-PAS"
+            consigne_ia = f"Tu es l'assistant technique iPackEPS. Crée un tuto précis basé sur : {extraits_doc}. Ajoute l'URL. Pas de menus imaginaires."
+            badge_title = "🛠️ PROTOCOLE TECHNIQUE"
         elif st.session_state.active_module == "examens":
-            consigne_ia = f"Tu es l'assistant officiel pour les examens EPS. À partir de ces textes : {extraits_doc}, rédige une réponse directe et structurée. Si une procédure est demandée, détaille-la étape par étape. Pas de clics logiciels. Ajoute les liens URL exacts à la fin sous la mention '🔗 Textes de référence :'."
-            badge_title = "📊 REGLEMENTATION & PROCÉDURE"
+            consigne_ia = f"Tu es l'assistant officiel. Réponds sur les textes ou dispenses à partir de : {extraits_doc}. Pas de clics logiciels. Ajoute les liens URL exacts."
+            badge_title = "📊 REGLEMENTATION & EXAMENS"
         else:
-            consigne_ia = f"Tu es l'assistant de recherche globale EPS. Synthétise clairement : {extraits_doc}. Détaille les points importants sous forme de liste. Donne la liste des URL consultées à la fin."
-            badge_title = "🔍 RÉSULTATS DE RECHERCHE DÉTAILLÉS"
+            consigne_ia = f"Tu es l'assistant de recherche globale EPS. Synthétise clairement : {extraits_doc}. Donne la liste des URL."
+            badge_title = "🔍 RÉSULTATS DE RECHERCHE"
 
         response_web = Settings.llm.complete(consigne_ia)
         formatted_answer = f'<div class="{color_card}"><strong>{badge_title} :</strong><br><br>{response_web.text}</div>'
