@@ -61,7 +61,6 @@ st.markdown(f"""
 # ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
-    # Température à 0.0 pour un respect strict et mathématique des faits
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
@@ -81,9 +80,10 @@ def get_ipack_engine():
     docs = SimpleDirectoryReader(input_dir="./data", encoding="utf-8").load_data()
     index = VectorStoreIndex.from_documents(docs)
     prompt = (
-        "Tu es l'IA experte du module 'iPackEPS, Santorin & Examens'. Tu parles exclusivement à des professeurs d'EPS. "
-        "CONSIGNE DE RIGUEUR : Appuie-toi uniquement sur les données factuelles fournies dans le contexte local. Si l'interlocuteur te demande un pas-à-pas, "
-        "déroule scrupuleusement les étapes de nos documents sans rien omettre. Si la réponse n'est pas dans le contexte, dis-le clairement."
+        "Tu es l'IA experte du module 'iPackEPS, Santorin & Examens'. Tu parles exclusivement à des professeurs d'EPS.\n\n"
+        "CONSIGNE DE RIGUEUR : Appuie-toi uniquement sur les données factuelles fournies dans le contexte local. "
+        "Si la question concerne les élèves absents ou inaptes, cherche la réponse exacte dans ton document local sans inventer de règles de CCF si elles n'y sont pas inscrites. "
+        "Si la réponse n'est pas dans le contexte, dis-le clairement."
     )
     return index.as_chat_engine(chat_mode="condense_plus_context", memory=ChatMemoryBuffer.from_defaults(token_limit=3500), system_prompt=prompt)
 
@@ -118,25 +118,15 @@ with col1:
         st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
         
         with st.spinner("Analyse factuelle..."):
-            text_low = prompt_ipack.lower()
-            
-            # Gestion des cas d'examens bloqués en dur (Réglementation Académique)
-            if "examens" in context_choice.lower() and any(w in text_low for w in ["inapte", "dispens", "absent"]):
-                if "inapte" in text_low:
-                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Inapte :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> L'inaptitude médicale ouvre obligatoirement le droit à une épreuve de substitution organisée par l'établissement.</div>"""
-                elif "dispens" in text_low:
-                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Dispensé :</strong><br><strong>Règle factuelle : On ne met pas 0.</strong> La dispense médicale valide entraîne la neutralisation de l'APSA sur le serveur d'examen.</div>"""
-                else:
-                    answer = """<div class="santorin-card"><strong>📊 EXAMENS – Élève Absent :</strong><br>L'absence injustifiée à un CCF certificatif génère la note obligatoire de <strong>0</strong>.</div>"""
-            else:
-                response_locale = engine_ipack.chat(f"CONTEXTE : {context_choice}. QUESTION : {prompt_ipack}")
-                answer = response_locale.response
+            # Envoi direct à LlamaIndex sans blocage artificiel
+            response_locale = engine_ipack.chat(f"CONTEXTE : {context_choice}. QUESTION : {prompt_ipack}")
+            answer = response_locale.response
 
         st.session_state.messages_ipack.append({"role": "assistant", "content": f"**Assistant** : {answer}"})
         st.rerun()
 
 # ----------------------------------------------------------------------
-# COLONNE DROITE : MOTEUR DE RECHERCHE FACTUEL SUR LES 4 PORTAILS DE CONFIANCE
+# COLONNE DROITE : MOTEUR DE RECHERCHE FACTUEL
 # ----------------------------------------------------------------------
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Portails Officiels)</div>', unsafe_allow_html=True)
@@ -151,7 +141,6 @@ with col2:
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
         with st.spinner("Analyse des portails institutionnels..."):
-            # Consigne ultra-stricte d'extraction réglementaire
             prompt_ia_web = (
                 f"Tu es l'assistant de recherche EPS expert des 4 portails académiques (Aix-Marseille, Lyon, Créteil, Grenoble). "
                 f"L'enseignant d'EPS cherche des informations factuelles sur : '{prompt_aix}'. "
