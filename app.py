@@ -23,7 +23,7 @@ st.set_page_config(
 if "messages_hub" not in st.session_state:
     st.session_state.messages_hub = []
 if "active_module" not in st.session_state:
-    st.session_state.active_module = "general"  
+    st.session_state.active_module = "ipack"  # 'ipack', 'examens', ou 'general'
 
 def incrementer_et_recuperer_compteur():
     fichier_compteur = "compteur.txt"
@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CONTRASTE TEXTE AMÉLIORÉ)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (Boutons Verts & Explications)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -84,7 +84,7 @@ st.markdown(f"""
     /* Texte d'explication "Choix du contexte" */
     .context-label {{
         color: #94A3B8;
-        font-size: 11px !important;
+        font-size: 12px !important;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -112,32 +112,32 @@ st.markdown(f"""
         color: #94A3B8 !important; 
         border: 1px solid rgba(255,255,255,0.1) !important; 
         border-radius: 8px !important; 
-        font-size: 12px !important; 
-        padding: 10px 10px !important; 
-        line-height: 1.2 !important;
+        font-size: 11px !important; 
+        padding: 8px 10px !important; 
+        line-height: 1.4 !important;
         transition: all 0.2s ease;
     }}
 
-    /* 🟢 Passage au vert, texte BLANC et GRAS avec halo pour le bouton actif */
+    /* 🟢 Passage au vert fluo/lumineux pour le bouton actif unique via détection d'index */
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(1) button {{
-        background-color: { 'rgba(16, 185, 129, 0.35)' if st.session_state.active_module == 'ipack' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'ipack' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'ipack' else 'none' };
+        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'ipack' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#10B981' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'ipack' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 10px rgba(16, 185, 129, 0.3)' if st.session_state.active_module == 'ipack' else 'none' };
         font-weight: { '700' if st.session_state.active_module == 'ipack' else 'normal' };
     }}
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(2) button {{
-        background-color: { 'rgba(16, 185, 129, 0.35)' if st.session_state.active_module == 'examens' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'examens' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'examens' else 'none' };
+        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'examens' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#10B981' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'examens' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 10px rgba(16, 185, 129, 0.3)' if st.session_state.active_module == 'examens' else 'none' };
         font-weight: { '700' if st.session_state.active_module == 'examens' else 'normal' };
     }}
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(3) button {{
-        background-color: { 'rgba(16, 185, 129, 0.35)' if st.session_state.active_module == 'general' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'general' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'general' else 'none' };
+        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'general' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#10B981' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'general' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 10px rgba(16, 185, 129, 0.3)' if st.session_state.active_module == 'general' else 'none' };
         font-weight: { '700' if st.session_state.active_module == 'general' else 'normal' };
     }}
     
@@ -211,28 +211,41 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. COMMUTATION HORIZONTALE MUTUELLE CIBLEE
+# 6. COMMUTATION HORIZONTALE NEUTRE ➔ VERT (AVEC EXPLICATION)
 # ======================================================================
+# Ajout du titre d'explication juste au-dessus des boutons
 st.markdown('<div class="context-label">⚙️ Choix du contexte :</div>', unsafe_allow_html=True)
 
 col_b1, col_b2, col_b3 = st.columns(3, gap="small")
 
 with col_b1:
-    btn_ipack = st.button("🛠️ iPackEPS", use_container_width=True, key="btn_module_ipack")
+    btn_ipack = st.button(
+        "🛠️ iPackEPS\n(Documentation Créteil)", 
+        use_container_width=True, 
+        key="btn_module_ipack"
+    )
     if btn_ipack:
         st.session_state.active_module = "ipack"
         st.session_state.messages_hub = []
         st.rerun()
 
 with col_b2:
-    btn_exams = st.button("📊 Examens & Santorin", use_container_width=True, key="btn_module_exams")
+    btn_exams = st.button(
+        "📊 Examens & Santorin\n(Aix-Marseille & Éduscol)", 
+        use_container_width=True, 
+        key="btn_module_exams"
+    )
     if btn_exams:
         st.session_state.active_module = "examens"
         st.session_state.messages_hub = []
         st.rerun()
 
 with col_b3:
-    btn_general = st.button("🔍 Recherches Générales", use_container_width=True, key="btn_module_general")
+    btn_general = st.button(
+        "🔍 Recherches Générales\n(Multi-sites EPS)", 
+        use_container_width=True, 
+        key="btn_module_general"
+    )
     if btn_general:
         st.session_state.active_module = "general"
         st.session_state.messages_hub = []
@@ -242,14 +255,14 @@ with col_b3:
 # 7. ZONE DE DIALOGUE ACTIVE UNIQUE CONSOLIDÉE
 # ======================================================================
 label_titres = {
-    "ipack": "🛠️ Mode : Assistance Technique iPackEPS",
-    "examens": "📊 Mode : Réglementation Examens & Dispenses",
+    "ipack": "🛠️ Mode : Assistance Technique iPackEPS (Serveur de Créteil)",
+    "examens": "📊 Mode : Textes Officiels Examens (Aix-Marseille & Éduscol)",
     "general": "🔍 Mode : Recherche Transversale Globale (Tous serveurs EPS)"
 }
 
 st.markdown(f'<div class="column-title">{label_titres[st.session_state.active_module]}</div>', unsafe_allow_html=True)
 
-# Alignement horizontal du bouton Nettoyer et de la zone d'écriture
+# Couplage horizontal : Alignement du bouton Nettoyer et de la barre de saisie
 col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
 
 with col_action_clear:
@@ -263,22 +276,25 @@ with col_action_clear:
 with col_action_input:
     prompt = st.chat_input("Posez votre question ici (iPack, Règlements, Grilles...)...", key="chat_input_unique")
 
+# Conteneur d'affichage du flux de messages (Sous le bloc d'action)
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
+# Rendu du fil de discussion
 for m in st.session_state.messages_hub:
     with st.chat_message(m["role"]): 
         st.markdown(m["content"], unsafe_allow_html=True)
 
+# Traitement de la requête utilisateur
 if prompt:
     st.session_state.messages_hub.append({"role": "user", "content": f"**Vous** : {prompt}"})
     
     if st.session_state.active_module == "ipack":
         domaines_recherche = ["ipackeps.ac-creteil.fr"]
-        texte_spinner = "Fouille de la base d'assistance technique d'iPackEPS..."
+        texte_spinner = "Fouille de la base d'assistance technique de Créteil..."
         color_card = "general-card"
     elif st.session_state.active_module == "examens":
         domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr"]
-        texte_spinner = "Recherche dans les archives réglementaires..."
+        texte_spinner = "Recherche dans les archives d'Aix-Marseille & Éduscol..."
         color_card = "santorin-card"
     else:
         domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr", "eps.enseigne.ac-lyon.fr", "eps.ac-creteil.fr"]
@@ -306,7 +322,7 @@ if prompt:
             consigne_ia = f"Tu es l'assistant technique expert d'iPackEPS. Génère un protocole pas-à-pas précis (onglets, clics) basé STRICTEMENT sur cette aide : {extraits_doc}. Ajoute l'URL exacte à la fin. Ne mentionne aucun menu imaginaire."
             badge_title = "🛠️ PROTOCOLE TECHNIQUE IPACKEPS"
         elif st.session_state.active_module == "examens":
-            consigne_ia = f"Tu es l'assistant de terrain officiel. Réponds de façon purement administrative sur les textes, livrets ou dispenses à partir de ces documents : {extraits_doc}. ⚠️ INTERDICTION STRICTE de parler d'interface logicielle, d'onglets ou de clics (pas de mention d'iPack). Reste sur le règlement. Ajoute les liens URL exacts consultés à la fin."
+            consigne_ia = f"Tu es l'assistant de terrain officiel d'Aix-Marseille et Éduscol. Réponds de façon purement administrative sur les textes, livrets ou dispenses à partir de ces documents : {extraits_doc}. ⚠️ INTERDICTION STRICTE de parler d'interface logicielle, d'onglets ou de clics (pas de mention d'iPack). Reste sur le règlement. Ajoute les liens URL exacts consultés à la fin."
             badge_title = "📊 REGLEMENTATION EXAMENS & EVALUATIONS"
         else:
             consigne_ia = f"Tu es l'assistant de recherche globale EPS. Synthétise clairement les informations institutionnelles récoltées : {extraits_doc}. Donne la liste complète des URL sources trouvées à la fin."
