@@ -48,12 +48,12 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (INTERFACE ÉPURÉE)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CORRIGÉ & SÉCURISÉ)
 # ======================================================================
 img_gauche = "image_7.png"
+img_centre_droit = "image_6.png" 
 img_droite = "image_5.png"
 img_fond = "image_8.png"
-img_eps = "image_6.png" # Ajout du logo rond EPS
 
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
@@ -77,7 +77,7 @@ st.markdown(f"""
         justify-content: space-between; 
         align-items: center; 
         padding: 10px 20px; 
-        margin-bottom: 12px !important; 
+        margin-bottom: 15px !important; 
         border-radius: 8px; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
     }}
@@ -85,19 +85,7 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
-    /* Encadré Sélection du Contexte */
-    .context-container {{
-        background-color: rgba(30, 41, 59, 0.7) !important;
-        backdrop-filter: blur(15px) !important;
-        -webkit-backdrop-filter: blur(15px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        padding: 14px 18px 18px 18px !important; 
-        border-radius: 12px !important;
-        margin-bottom: 18px !important;
-        box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
-    }}
-
-    /* Barre Bleue Centrale Enrichie */
+    /* Barre Bleue Centrale avec instruction */
     .column-title {{ 
         color: #FFFFFF; 
         text-align: center; 
@@ -124,8 +112,8 @@ st.markdown(f"""
         display: block;
     }}
     
-    /* Boutons Inactifs */
-    .stButton>button {{ 
+    /* BOUTONS DE CONTEXTE INACTIFS (Natif Streamlit : kind="secondary") */
+    button[kind="secondary"] {{ 
         background-color: rgba(15, 23, 42, 0.9) !important; 
         color: #94A3B8 !important; 
         border: 1px solid rgba(255,255,255,0.05) !important; 
@@ -135,37 +123,32 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
 
-    /* Boutons Actifs (Vert Émeraude) */
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(1) button {{
-        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'ipack' else 'rgba(15, 23, 42, 0.9)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
-        border: 1px solid { '#10B981' if st.session_state.active_module == 'ipack' else 'transparent' } !important;
-        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'ipack' else 'none' };
+    /* BOUTON DE CONTEXTE ACTIF (Natif Streamlit : kind="primary") */
+    button[kind="primary"] {{
+        background-color: rgba(16, 185, 129, 0.85) !important;
+        color: #FFFFFF !important;
+        border: 1px solid #10B981 !important;
+        border-radius: 8px !important; 
+        font-size: 13px !important; 
+        padding: 12px 10px !important;
+        box-shadow: 0px 0px 15px rgba(16, 185, 129, 0.6) !important;
         font-weight: 700 !important;
-    }}
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(2) button {{
-        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'examens' else 'rgba(15, 23, 42, 0.9)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
-        border: 1px solid { '#10B981' if st.session_state.active_module == 'examens' else 'transparent' } !important;
-        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'examens' else 'none' };
-        font-weight: 700 !important;
-    }}
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(3) button {{
-        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'general' else 'rgba(15, 23, 42, 0.9)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
-        border: 1px solid { '#10B981' if st.session_state.active_module == 'general' else 'transparent' } !important;
-        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'general' else 'none' };
-        font-weight: 700 !important;
+        transition: all 0.3s ease;
     }}
     
-    /* Bouton Nettoyer - Rouge strict */
-    div.clear-btn-align .stButton>button {{
+    /* BOUTON NETTOYER (Forcé en rouge grâce au marqueur HTML, zéro conflit) */
+    div.element-container:has(.nettoyer-wrapper) + div.element-container button {{
         background-color: rgba(220, 38, 38, 0.25) !important;
         color: #EF4444 !important;
         border: 1px solid rgba(220, 38, 38, 0.4) !important;
         border-radius: 8px !important;
         padding: 7px 10px !important;
         width: 100% !important;
+        box-shadow: none !important;
+        font-weight: 400 !important;
+    }}
+    div.element-container:has(.nettoyer-wrapper) + div.element-container button:hover {{
+        background-color: rgba(220, 38, 38, 0.4) !important;
     }}
     
     /* Cartes de réponse de l'IA */
@@ -221,36 +204,35 @@ st.markdown(f"""
             <div class="visitor-badge">👁️ {nb_visites:05d} visites</div>
         </div>
         <div style="display: flex; justify-content: flex-end; align-items: center; width: 25%; gap: 15px;">
-            <img src="{github_url}{img_eps}" width="70">
+            <img src="{github_url}{img_centre_droit}" width="70">
             <img src="{github_url}{img_droite}" width="60">
         </div>
     </div>
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. ENCADRÉ DES BOUTONS DE CONTEXTE
+# 6. BOUTONS DE CONTEXTE (UTILISATION NATIVE DE PRIMARY/SECONDARY)
 # ======================================================================
-st.markdown('<div class="context-container">', unsafe_allow_html=True)
-
+# L'attribut type="primary" gère automatiquement l'illumination du bouton actif !
 col_b1, col_b2, col_b3 = st.columns(3, gap="small")
 
 with col_b1:
-    if st.button("🛠️ iPackEPS", use_container_width=True, key="btn_ip"):
+    if st.button("🛠️ iPackEPS", use_container_width=True, key="btn_ip", type="primary" if st.session_state.active_module == "ipack" else "secondary"):
         st.session_state.active_module = "ipack"
         st.session_state.messages_hub = []
         st.rerun()
+
 with col_b2:
-    if st.button("📊 Examens & Santorin", use_container_width=True, key="btn_ex"):
+    if st.button("📊 Examens & Santorin", use_container_width=True, key="btn_ex", type="primary" if st.session_state.active_module == "examens" else "secondary"):
         st.session_state.active_module = "examens"
         st.session_state.messages_hub = []
         st.rerun()
+
 with col_b3:
-    if st.button("🔍 Recherches Générales", use_container_width=True, key="btn_ge"):
+    if st.button("🔍 Recherches Générales", use_container_width=True, key="btn_ge", type="primary" if st.session_state.active_module == "general" else "secondary"):
         st.session_state.active_module = "general"
         st.session_state.messages_hub = []
         st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================================================================
 # 7. BARRE DE TITRE CENTRALE
@@ -268,27 +250,30 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# Ligne d'action (Nettoyer + Saisie)
+# ======================================================================
+# 8. ZONE D'ACTION (NETTOYER + SAISIE)
+# ======================================================================
 col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
 
 with col_action_clear:
-    st.markdown('<div class="clear-btn-align">', unsafe_allow_html=True)
+    # Ce marqueur invisible permet au CSS de repérer spécifiquement ce bouton
+    st.markdown('<div class="nettoyer-wrapper"></div>', unsafe_allow_html=True)
     if st.button("🧹 Nettoyer", key="clear_all"):
         st.session_state.messages_hub = []
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_action_input:
     prompt = st.chat_input("Posez votre question institutionnelle ou technique ici...", key="chat_main")
 
-# Flux de messages
+# ======================================================================
+# 9. FLUX DE MESSAGES ET TRAITEMENT IA
+# ======================================================================
 st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
 for m in st.session_state.messages_hub:
     with st.chat_message(m["role"]): 
         st.markdown(m["content"], unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Traitement IA
 if prompt:
     st.session_state.messages_hub.append({"role": "user", "content": f"**Vous** : {prompt}"})
     
@@ -316,11 +301,7 @@ if prompt:
                     "include_domains": domaines_recherche
                 }
                 res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
-                if res.status_code == 2000: 
-                    data_web = res.json()
-                    for item in data_web.get("results", []):
-                        extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
-                elif res.status_code == 200:
+                if res.status_code == 200:
                     data_web = res.json()
                     for item in data_web.get("results", []):
                         extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
