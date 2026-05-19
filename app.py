@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (15% TRANSPARENCE & FIX FONT)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (15% TRANSPARENCE APURÉE)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -77,7 +77,6 @@ st.markdown(f"""
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 13px !important; }}
     
-    /* Fenêtres principales transparentes à 15% */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.15) !important;
         backdrop-filter: blur(12px) !important;
@@ -92,7 +91,6 @@ st.markdown(f"""
     }}
     .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{ color: #FFFFFF !important; font-weight: 700 !important; }}
     
-    /* 🏔️ Réponses de l'IA (Correction du bug de taille de police) */
     .santorin-card, .general-card {{ 
         background-color: rgba(255, 255, 255, 0.20) !important; 
         backdrop-filter: blur(8px) !important;
@@ -105,50 +103,16 @@ st.markdown(f"""
     .santorin-card {{ border-left: 6px solid #DC2626 !important; }}
     .general-card {{ border-left: 6px solid #10B981 !important; }}
     
-    /* Ciblage précis des textes pour préserver les proportions d'origine */
-    .santorin-card, .general-card, .santorin-card p, .general-card p, .santorin-card li, .general-card li, .santorin-card td, .general-card td {{
-        color: #FFFFFF !important;
-        font-size: 13px !important;
-        line-height: 1.5 !important;
-    }}
-    .santorin-card strong, .general-card strong {{
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-    }}
+    .santorin-card *, .general-card * {{ color: #FFFFFF !important; font-size: 13px !important; line-height: 1.5 !important; }}
+    .santorin-card strong, .general-card strong {{ color: #FFFFFF !important; font-weight: 700 !important; }}
     .santorin-card a, .general-card a {{ color: #38BDF8 !important; font-weight: bold !important; text-decoration: underline !important; }}
     
-    /* 📊 Tableaux Markdown avec tailles de caractères harmonisées */
-    .santorin-card table, .general-card table {{ 
-        background-color: rgba(30, 41, 59, 0.6) !important; 
-        color: #FFFFFF !important; 
-        border-collapse: collapse; 
-        width: 100%; 
-        margin-top: 10px;
-        font-size: 12px !important;
-    }}
-    .santorin-card th, .general-card th {{ 
-        background-color: rgba(15, 23, 42, 0.85) !important; 
-        color: #FFFFFF !important; 
-        padding: 10px !important; 
-        font-weight: bold !important; 
-        font-size: 13px !important;
-        border: 1px solid rgba(255,255,255,0.2) !important; 
-        text-align: left;
-    }}
-    .santorin-card td, .general-card td {{ 
-        padding: 10px !important; 
-        border: 1px solid rgba(255,255,255,0.1) !important; 
-        vertical-align: top !important;
-    }}
+    .santorin-card table, .general-card table {{ background-color: rgba(30, 41, 59, 0.6) !important; color: #FFFFFF !important; border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 12px !important; }}
+    .santorin-card th, .general-card th {{ background-color: rgba(15, 23, 42, 0.85) !important; color: #FFFFFF !important; padding: 10px !important; font-weight: bold !important; font-size: 13px !important; border: 1px solid rgba(255,255,255,0.2) !important; text-align: left; }}
+    .santorin-card td, .general-card td {{ padding: 10px !important; border: 1px solid rgba(255,255,255,0.1) !important; vertical-align: top !important; }}
     
     div[data-testid="stChatMessage"] {{ background-color: transparent !important; border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
-        background-color: rgba(255, 255, 255, 0.15) !important; 
-        backdrop-filter: blur(6px) !important;
-        border-radius: 16px 16px 0px 16px !important; 
-        margin-left: 10% !important; 
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1); 
-    }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: rgba(255, 255, 255, 0.15) !important; backdrop-filter: blur(6px) !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) p {{ color: #FFFFFF !important; font-size: 13px !important; }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
@@ -176,10 +140,10 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 5. MOTEURS D'INDEXATION DES DOCUMENTS LOCAUX (IPACK & SANTORIN)
+# 5. MOTEUR D'INDEXATION UNIQUE POUR SANTORIN (FICHIERS INTERNES)
 # ======================================================================
 @st.cache_resource
-def get_separated_engines_final():
+def get_santorin_engine():
     index_santorin = VectorStoreIndex.from_documents([])
     documents_list = []
     base_dir = "./data"
@@ -209,25 +173,10 @@ def get_separated_engines_final():
                         pass
         if documents_list:
             index_santorin = VectorStoreIndex.from_documents(documents_list)
-        
-    index_ipack = VectorStoreIndex.from_documents([])
-    if os.path.exists(base_dir):
-        fichiers_ipack = []
-        for f in os.listdir(base_dir):
-            nom_f = f.lower()
-            if "ipack" in nom_f and not nom_f.endswith('.csv') and "santorin" not in nom_f:
-                fichiers_ipack.append(os.path.join(base_dir, f))
-        if fichiers_ipack:
-            try:
-                docs_i = SimpleDirectoryReader(input_files=fichiers_ipack).load_data()
-                index_ipack = VectorStoreIndex.from_documents(docs_i)
-            except:
-                pass
-                
-    return index_ipack, index_santorin
+    return index_santorin
 
 if openai_api_key:
-    index_ipack, index_santorin = get_separated_engines_final()
+    index_santorin = get_santorin_engine()
 
 # ======================================================================
 # 6. EXÉCUTION DOUBLE COLONNE INDÉPENDANTE
@@ -254,8 +203,9 @@ with col1:
     if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
         st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
         
-        with st.spinner("Analyse des fichiers..."):
-            if "examens" in context_choice.lower():
+        # MODULE A : EXAMENS & SANTORIN (FICHIERS INTERNES)
+        if "examens" in context_choice.lower():
+            with st.spinner("Analyse de vos fichiers de notation..."):
                 system_prompt = (
                     "Tu es l'assistant expert EXAMENS & SANTORIN pour les professeurs d'EPS.\n"
                     "Tu traites STRICTEMENT de la réglementation des examens (DNB, BAC, CAP) et de la remontée des notes.\n\n"
@@ -264,28 +214,47 @@ with col1:
                     "tu dois l'analyser SOUS L'ANGLE DE L'EXAMEN (Le Certificatif).\n"
                     "Format de réponse obligatoire : Présente TOUJOURS tes résultats sous la forme d'un tableau Markdown comparatif."
                 )
-                chosen_index = index_santorin
-            else:
-                system_prompt = (
-                    "Tu es l'assistant informatique et technique exclusif du logiciel de saisie iPackEPS.\n"
-                    "Ton unique rôle est d'expliquer comment configurer et manipuler l'application.\n\n"
-                    "⚠️ CLOISONNEMENT STRICT : Reste purement technique, pas-à-pas (clics, menus, onglets). "
-                    "Interdiction absolue de donner des conseils de pédagogie réelle."
+                chat_engine = index_santorin.as_chat_engine(
+                    chat_mode="context", 
+                    memory=ChatMemoryBuffer.from_defaults(token_limit=4000), 
+                    system_prompt=system_prompt
                 )
-                chosen_index = index_ipack
-            
-            chat_engine = chosen_index.as_chat_engine(
-                chat_mode="context", 
-                memory=ChatMemoryBuffer.from_defaults(token_limit=4000), 
-                system_prompt=system_prompt
-            )
-            response_locale = chat_engine.chat(prompt_ipack)
-            answer = response_locale.response
+                response_locale = chat_engine.chat(prompt_ipack)
+                formatted_answer = f'<div class="santorin-card"><strong>📊 SYNTHÈSE CERTIFICATION :</strong><br><br>{response_locale.response}</div>'
 
-        if "examens" in context_choice.lower():
-            formatted_answer = f'<div class="santorin-card"><strong>📊 SYNTHÈSE CERTIFICATION :</strong><br><br>{answer}</div>'
+        # MODULE B : IPACKEPS (RECHERCHE EXCLUSIVE SUR IPACKEPS.AC-CRETEIL.FR)
         else:
-            formatted_answer = f'<div class="general-card"><strong>🛠️ PROTOCOLE TECHNIQUE IPACKEPS :</strong><br><br>{answer}</div>'
+            with st.spinner("Recherche des protocoles officiels sur iPackEPS Créteil..."):
+                extraits_ipack = ""
+                if tavily_api_key:
+                    try:
+                        payload = {
+                            "api_key": tavily_api_key,
+                            "query": f"{prompt_ipack}",
+                            "search_depth": "advanced",
+                            # 🚀 FORCE LE BOT À N'ALLER QUE SUR CE DOMAINE EXCLUSIF
+                            "include_domains": ["ipackeps.ac-creteil.fr"]
+                        }
+                        res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
+                        if res.status_code == 200:
+                            data_web = res.json()
+                            for item in data_web.get("results", []):
+                                extraits_ipack += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
+                    except:
+                        pass
+
+                consigne_ipack = f"""
+                Tu es l'assistant technique exclusif et expert du logiciel de gestion iPackEPS.\n
+                Tu réponds en te basant UNIQUEMENT et STRICTEMENT sur les tutoriels, fiches d aide et notices d assistance de la plateforme officielle iPackEPS de l'académie de Créteil fournis ci-dessous :\n
+                
+                {extraits_ipack if extraits_ipack else 'Utilise les règles standards iPackEPS Créteil.'}
+                
+                Question technique : '{prompt_ipack}'
+                
+                Rédige un protocole pas-à-pas clair et rigoureux (onglets, boutons à cocher, manipulations). Ne cite jamais de menus imaginaires. Si l information sur l action exacte n'est pas détaillée dans les extraits, explique au mieux ce qui est préconisé sur le portail d assistance de Créteil. Ajoute obligatoirement le lien web précis de l article consulté à la fin pour permettre à l'enseignant de s'y référer.
+                """
+                response_web = Settings.llm.complete(consigne_ipack)
+                formatted_answer = f'<div class="general-card"><strong>🛠️ PROTOCOLE OFFICIEL IPACKEPS (CRÉTEIL) :</strong><br><br>{response_web.text}</div>'
 
         st.session_state.messages_ipack.append({"role": "assistant", "content": formatted_answer})
         st.rerun()
@@ -309,7 +278,6 @@ with col2:
         
         with st.spinner("Recherche approfondie sur les sites officiels d'EPS..."):
             extraits_textes = ""
-            
             if tavily_api_key:
                 try:
                     payload = {
