@@ -23,7 +23,7 @@ st.set_page_config(
 if "messages_hub" not in st.session_state:
     st.session_state.messages_hub = []
 if "active_module" not in st.session_state:
-    st.session_state.active_module = "ipack"  
+    st.session_state.active_module = "general"  
 
 def incrementer_et_recuperer_compteur():
     fichier_compteur = "compteur.txt"
@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE AND CSS (RETOUR VERSION CONTAINER BLANC + FIX NETTOYER)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CIBLAGE DES BOUTONS SÉCURISÉ)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -60,20 +60,20 @@ st.markdown(f"""
         padding-bottom: 2rem !important; 
         padding-left: 1.5rem !important; 
         padding-right: 1.5rem !important; 
-        max-width: 900px !important; 
+        max-width: 920px !important; 
     }}
     
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* Structure du Bandeau Supérieur */
+    /* Structure du Bandeau Supérieur Principal */
     .hub-header {{ 
         background-color: #1E293B; 
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
         padding: 10px 20px; 
-        margin-bottom: 25px; 
+        margin-bottom: 12px !important; 
         border-radius: 8px; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
     }}
@@ -81,114 +81,118 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
-    /* Grand rectangle blanc de ton avant-dernière version (Transparence 20%) */
+    /* Encadré Sélection du Contexte */
     .context-container {{
-        background-color: rgba(255, 255, 255, 0.20) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
+        background-color: rgba(30, 41, 59, 0.7) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        padding: 15px !important;
-        border-radius: 8px !important;
-        margin-bottom: 15px !important;
-        box-shadow: 0px 10px 30px rgba(0,0,0,0.25);
-    }}
-    
-    .context-label {{
-        color: #FFFFFF !important;
-        font-size: 12px !important;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
-        margin-left: 2px;
+        padding: 14px 18px 18px 18px !important; 
+        border-radius: 12px !important;
+        margin-bottom: 18px !important;
+        box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
     }}
 
-    /* Grand Bandeau de Titre de la zone de tchat active */
+    /* Barre Bleue Centrale */
     .column-title {{ 
         color: #FFFFFF; 
-        font-size: 13px !important; 
-        font-weight: 700; 
         text-align: center; 
         margin-bottom: 15px !important; 
-        height: 32px; 
         background-color: #1E293B; 
         border-radius: 6px !important; 
-        padding: 6px 0; 
+        padding: 8px 10px; 
         box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+        line-height: 1.4;
+    }}
+    .column-title .instruction {{
+        font-size: 11px !important;
+        font-weight: 500;
+        text-transform: uppercase;
+        color: #94A3B8 !important;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 2px;
+    }}
+    .column-title .mode-actuel {{
+        font-size: 14px !important; 
+        font-weight: 700;
+        color: #FFFFFF !important;
+        display: block;
     }}
     
-    /* Boutons Neutres par défaut (Inactifs) */
+    /* Boutons de base (Neutres / Inactifs) */
     .stButton>button {{ 
-        background-color: rgba(30, 41, 59, 0.75) !important; 
+        background-color: rgba(15, 23, 42, 0.9) !important; 
         color: #94A3B8 !important; 
-        border: 1px solid rgba(255,255,255,0.1) !important; 
+        border: 1px solid rgba(255,255,255,0.05) !important; 
         border-radius: 8px !important; 
-        font-size: 12px !important; 
-        padding: 10px 10px !important; 
-        line-height: 1.2 !important;
-        transition: all 0.2s ease;
+        font-size: 13px !important; 
+        padding: 12px 10px !important;
+        transition: all 0.3s ease;
     }}
 
-    /* 🚀 SÉCURISATION CHIRURGICALE : On limite l'effet vert fluo UNIQUEMENT aux boutons du haut (.context-container) */
+    /* 🟢 RE-CIBLAGE CHIRURGICAL DES MODULES DU HAUT (Évite de toucher au bouton Nettoyer) */
     div.context-container div[data-testid="stHorizontalBlock"] div:nth-of-type(1) button {{
-        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'ipack' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#10B981' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'ipack' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.3)' if st.session_state.active_module == 'ipack' else 'none' };
-        font-weight: { '700' if st.session_state.active_module == 'ipack' else 'normal' };
+        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'ipack' else 'rgba(15, 23, 42, 0.9)' } !important;
+        color: { '#FFFFFF' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
+        border: 1px solid { '#10B981' if st.session_state.active_module == 'ipack' else 'transparent' } !important;
+        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'ipack' else 'none' };
+        font-weight: { '700' if st.session_state.active_module == 'ipack' else '400' } !important;
     }}
     div.context-container div[data-testid="stHorizontalBlock"] div:nth-of-type(2) button {{
-        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'examens' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#10B981' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'examens' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.3)' if st.session_state.active_module == 'examens' else 'none' };
-        font-weight: { '700' if st.session_state.active_module == 'examens' else 'normal' };
+        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'examens' else 'rgba(15, 23, 42, 0.9)' } !important;
+        color: { '#FFFFFF' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
+        border: 1px solid { '#10B981' if st.session_state.active_module == 'examens' else 'transparent' } !important;
+        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'examens' else 'none' };
+        font-weight: { '700' if st.session_state.active_module == 'examens' else '400' } !important;
     }}
     div.context-container div[data-testid="stHorizontalBlock"] div:nth-of-type(3) button {{
-        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'general' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#10B981' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'general' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.3)' if st.session_state.active_module == 'general' else 'none' };
-        font-weight: { '700' if st.session_state.active_module == 'general' else 'normal' };
+        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'general' else 'rgba(15, 23, 42, 0.9)' } !important;
+        color: { '#FFFFFF' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
+        border: 1px solid { '#10B981' if st.session_state.active_module == 'general' else 'transparent' } !important;
+        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'general' else 'none' };
+        font-weight: { '700' if st.session_state.active_module == 'general' else '400' } !important;
     }}
     
-    /* Isolation stricte et étanche du bouton Nettoyer (Reste Rouge brique transparent) */
+    /* 🔴 Blocage strict du bouton Nettoyer en Rouge (Zéro interférence) */
     div.clear-btn-align .stButton>button {{
-        background-color: rgba(220, 38, 38, 0.15) !important;
+        background-color: rgba(220, 38, 38, 0.25) !important;
         color: #EF4444 !important;
         border: 1px solid rgba(220, 38, 38, 0.4) !important;
         border-radius: 8px !important;
         padding: 7px 10px !important;
-        font-size: 12px !important;
         width: 100% !important;
         box-shadow: none !important;
+        font-weight: 400 !important;
+    }}
+    div.clear-btn-align .stButton>button:hover {{
+        background-color: rgba(220, 38, 38, 0.4) !important;
     }}
     
-    .glass-card {{ background-color: transparent !important; border: none !important; box-shadow: none !important; padding: 0px !important; margin-top: 15px; }}
-    
-    /* Bulles de réponse de l'IA */
+    /* Cartes de réponse de l'IA */
     .santorin-card, .general-card {{ 
-        background-color: rgba(255, 255, 255, 0.20) !important; 
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        padding: 14px; 
-        border-radius: 4px; 
-        margin-bottom: 14px; 
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+        background-color: rgba(15, 23, 42, 0.8) !important; 
+        backdrop-filter: blur(10px) !important;
+        padding: 18px; 
+        border-radius: 8px; 
+        margin-bottom: 16px; 
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
     }}
-    .santorin-card {{ border-left: 5px solid #38BDF8 !important; }} 
-    .general-card {{ border-left: 5px solid #10B981 !important; }} 
+    .santorin-card {{ border-left: 6px solid #38BDF8 !important; }} 
+    .general-card {{ border-left: 6px solid #10B981 !important; }} 
     
-    .santorin-card *, .general-card * {{ color: #FFFFFF !important; font-size: 13px !important; line-height: 1.4 !important; }}
-    .santorin-card strong, .general-card strong {{ color: #FFFFFF !important; font-weight: 700 !important; }}
-    .santorin-card a, .general-card a {{ color: #38BDF8 !important; font-weight: bold !important; text-decoration: underline !important; }}
+    .santorin-card *, .general-card * {{ 
+        color: #FFFFFF !important; 
+        font-size: 15px !important; 
+        line-height: 1.6 !important; 
+    }}
     
-    /* Style de la bulle utilisateur */
+    /* Bulle Utilisateur */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
         background-color: rgba(255, 255, 255, 0.15) !important; 
         backdrop-filter: blur(6px) !important;
         border-radius: 14px 14px 0px 14px !important; 
-        margin-left: 20% !important; 
+        margin-left: 15% !important; 
     }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
@@ -205,7 +209,7 @@ if openai_api_key:
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
 # ======================================================================
-# 5. RENDU DU BANDEAU SUPERIEUR STANDARD
+# 5. BANDEAU SUPERIEUR
 # ======================================================================
 st.markdown(f"""
     <div class="hub-header">
@@ -220,30 +224,24 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. ENCADRÉ BLANC TRANSLUCIDE (CHOIX DU CONTEXTE)
+# 6. ENCADRÉ DES BOUTONS DE CONTEXTE
 # ======================================================================
 st.markdown('<div class="context-container">', unsafe_allow_html=True)
-st.markdown('<div class="context-label">⚙️ Choix du contexte :</div>', unsafe_allow_html=True)
 
 col_b1, col_b2, col_b3 = st.columns(3, gap="small")
 
 with col_b1:
-    btn_ipack = st.button("🛠️ iPackEPS\n(Documentation Créteil)", use_container_width=True, key="btn_module_ipack")
-    if btn_ipack:
+    if st.button("🛠️ iPackEPS", use_container_width=True, key="btn_ip"):
         st.session_state.active_module = "ipack"
         st.session_state.messages_hub = []
         st.rerun()
-
 with col_b2:
-    btn_exams = st.button("📊 Examens & Santorin\n(Aix-Marseille & Éduscol)", use_container_width=True, key="btn_module_exams")
-    if btn_exams:
+    if st.button("📊 Examens & Santorin", use_container_width=True, key="btn_ex"):
         st.session_state.active_module = "examens"
         st.session_state.messages_hub = []
         st.rerun()
-
 with col_b3:
-    btn_general = st.button("🔍 Recherches Générales\n(Multi-sites EPS)", use_container_width=True, key="btn_module_general")
-    if btn_general:
+    if st.button("🔍 Recherches Générales", use_container_width=True, key="btn_ge"):
         st.session_state.active_module = "general"
         st.session_state.messages_hub = []
         st.rerun()
@@ -251,50 +249,56 @@ with col_b3:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================================================================
-# 7. ZONE DE DIALOGUE ACTIVE UNIQUE CONSOLIDÉE
+# 7. BARRE DE TITRE CENTRALE (AVEC INSTRUCTION INTÉGRÉE)
 # ======================================================================
 label_titres = {
-    "ipack": "🛠️ Mode : Assistance Technique iPackEPS (Serveur de Créteil)",
-    "examens": "📊 Mode : Textes Officiels Examens (Aix-Marseille & Éduscol)",
-    "general": "🔍 Mode : Recherche Transversale Globale (Tous serveurs EPS)"
+    "ipack": "🛠️ Mode Actif : Assistance Technique iPackEPS",
+    "examens": "📊 Mode Actif : Réglementation Examens & Dispenses",
+    "general": "🔍 Mode Actif : Recherche Transversale Globale"
 }
 
-st.markdown(f'<div class="column-title">{label_titres[st.session_state.active_module]}</div>', unsafe_allow_html=True)
+st.markdown(f"""
+    <div class="column-title">
+        <span class="instruction">⚙️ Choisissez le contexte de votre question ci-dessus</span>
+        <span class="mode-actuel">{label_titres[st.session_state.active_module]}</span>
+    </div>
+""", unsafe_allow_html=True)
 
-# Couplage horizontal : Alignement parfait
+# Ligne d'action (Nettoyer + Saisie)
 col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
 
 with col_action_clear:
     st.markdown('<div class="clear-btn-align">', unsafe_allow_html=True)
-    clear_clicked = st.button("🧹 Nettoyer", key="clear_hub_unique")
-    st.markdown('</div>', unsafe_allow_html=True)
-    if clear_clicked:
+    if st.button("🧹 Nettoyer", key="clear_all"):
         st.session_state.messages_hub = []
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_action_input:
-    prompt = st.chat_input("Posez votre question ici (iPack, Règlements, Grilles...)...", key="chat_input_unique")
+    prompt = st.chat_input("Posez votre question institutionnelle ou technique ici...", key="chat_main")
 
-st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-
+# Flux de messages
+st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
 for m in st.session_state.messages_hub:
     with st.chat_message(m["role"]): 
         st.markdown(m["content"], unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
+# Traitement IA
 if prompt:
     st.session_state.messages_hub.append({"role": "user", "content": f"**Vous** : {prompt}"})
     
     if st.session_state.active_module == "ipack":
         domaines_recherche = ["ipackeps.ac-creteil.fr"]
-        texte_spinner = "Fouille de la base d'assistance technique de Créteil..."
+        texte_spinner = "Fouille de la base technique..."
         color_card = "general-card"
     elif st.session_state.active_module == "examens":
         domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr"]
-        texte_spinner = "Recherche dans les archives d'Aix-Marseille & Éduscol..."
+        texte_spinner = "Analyse réglementaire..."
         color_card = "santorin-card"
     else:
         domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr", "eps.enseigne.ac-lyon.fr", "eps.ac-creteil.fr"]
-        texte_spinner = "Lancement de la recherche globale multi-académies..."
+        texte_spinner = "Recherche multi-académies..."
         color_card = "general-card"
 
     with st.spinner(texte_spinner):
@@ -315,19 +319,17 @@ if prompt:
             except: pass
 
         if st.session_state.active_module == "ipack":
-            consigne_ia = f"Tu es l'assistant technique expert d'iPackEPS. Génère un protocole pas-à-pas précis (onglets, clics) basé STRICTEMENT sur cette aide : {extraits_doc}. Ajoute l'URL exacte à la fin. Ne mentionne aucun menu imaginaire."
-            badge_title = "🛠️ PROTOCOLE TECHNIQUE IPACKEPS"
+            consigne_ia = f"Tu es l'assistant technique iPackEPS. Crée un tuto précis basé sur : {extraits_doc}. Ajoute l'URL. Pas de menus imaginaires."
+            badge_title = "🛠️ PROTOCOLE TECHNIQUE"
         elif st.session_state.active_module == "examens":
-            consigne_ia = f"Tu es l'assistant de terrain officiel d'Aix-Marseille et Éduscol. Réponds de façon purement administrative sur les textes, livrets ou dispenses à partir de ces documents : {extraits_doc}. ⚠️ INTERDICTION STRICTE de parler d'interface logicielle, d'onglets ou de clics (pas de mention d'iPack). Reste sur le règlement. Ajoute les liens URL exacts consultés à la fin."
-            badge_title = "📊 REGLEMENTATION EXAMENS & EVALUATIONS"
+            consigne_ia = f"Tu es l'assistant officiel. Réponds sur les textes ou dispenses à partir de : {extraits_doc}. Pas de clics logiciels. Ajoute les liens URL exacts."
+            badge_title = "📊 REGLEMENTATION & EXAMENS"
         else:
-            consigne_ia = f"Tu es l'assistant de recherche globale EPS. Synthétise clairement les informations institutionnelles récoltées : {extraits_doc}. Donne la liste complète des URL sources trouvées à la fin."
-            badge_title = "🔍 RÉSULTATS DE RECHERCHE GLOBALE"
+            consigne_ia = f"Tu es l'assistant de recherche globale EPS. Synthétise clairement : {extraits_doc}. Donne la liste des URL."
+            badge_title = "🔍 RÉSULTATS DE RECHERCHE"
 
         response_web = Settings.llm.complete(consigne_ia)
         formatted_answer = f'<div class="{color_card}"><strong>{badge_title} :</strong><br><br>{response_web.text}</div>'
 
     st.session_state.messages_hub.append({"role": "assistant", "content": formatted_answer})
     st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
