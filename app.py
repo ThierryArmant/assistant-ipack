@@ -2,10 +2,7 @@ import streamlit as st
 import os
 import pandas as pd
 import requests
-import urllib.parse
-import re
-from bs4 import BeautifulSoup
-from llama_index.core import VectorStoreIndex, Settings
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
@@ -51,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (15% TRANSPARENCE ACCENTUÉE)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (15% TRANSPARENCE)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -80,14 +77,14 @@ st.markdown(f"""
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 13px !important; }}
     
-    /* 🖼️ Conteneurs principaux (Transparence à 15% pour voir la Sainte-Victoire) */
+    /* Fenêtres de chat transparentes à 15% pour voir la Sainte-Victoire */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(14px) !important;
-        -webkit-backdrop-filter: blur(14px) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
         border-radius: 0px 0px 8px 8px;
         padding: 18px;
-        box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0px 10px 30px rgba(0,0,0,0.25);
         border-left: 1px solid rgba(255, 255, 255, 0.15);
         border-right: 1px solid rgba(255, 255, 255, 0.15);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
@@ -95,7 +92,7 @@ st.markdown(f"""
     }}
     .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{ color: #FFFFFF !important; font-weight: 700 !important; }}
     
-    /* 🏔️ Cartes des réponses IA translucides à 20% (Disparition complète des blocs opaques) */
+    /* Réponses IA translucides (20% opacité) */
     .santorin-card, .general-card {{ 
         background-color: rgba(255, 255, 255, 0.20) !important; 
         backdrop-filter: blur(8px) !important;
@@ -103,21 +100,18 @@ st.markdown(f"""
         padding: 16px; 
         border-radius: 4px; 
         margin-bottom: 18px; 
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.25); 
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.2); 
     }}
     .santorin-card {{ border-left: 6px solid #DC2626 !important; }}
     .general-card {{ border-left: 6px solid #10B981 !important; }}
     
-    /* Forçage de lisibilité blanc sur transparent */
     .santorin-card *, .general-card * {{ color: #FFFFFF !important; }}
-    .santorin-card a, .general-card a {{ color: #38BDF8 !important; text-decoration: underline !important; font-weight: bold; }}
+    .santorin-card a, .general-card a {{ color: #38BDF8 !important; font-weight: bold !important; text-decoration: underline !important; }}
     
-    /* Tableaux Markdown transparents */
     .santorin-card table, .general-card table {{ background-color: rgba(30, 41, 59, 0.5) !important; color: #FFFFFF !important; border-collapse: collapse; width: 100%; margin-top: 10px; }}
     .santorin-card th, .general-card th {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #FFFFFF !important; padding: 8px !important; font-weight: bold !important; border: 1px solid rgba(255,255,255,0.2) !important; }}
     .santorin-card td, .general-card td {{ padding: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #FFFFFF !important; }}
     
-    /* Zone de dialogue utilisateur */
     div[data-testid="stChatMessage"] {{ background-color: transparent !important; border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
         background-color: rgba(255, 255, 255, 0.15) !important; 
@@ -135,11 +129,12 @@ st.markdown(f"""
 # 4. CONFIGURATION DE L'INTELLIGENCE ARTIFICIELLE
 # ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
+tavily_api_key = st.secrets.get("TAVILY_API_KEY") # 🔑 Pense à ajouter ta clé Tavily dans tes secrets Streamlit !
+
 if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
-# bandeau titre
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="110"></div>
@@ -210,7 +205,7 @@ if openai_api_key:
 # ======================================================================
 col1, col2 = st.columns(2, gap="large")
 
-# --- COLONNE 1 : ASSISTANT MÉTIER (IPACK / EXAMENS) ---
+# --- COLONNE 1 : ASSISTANT MÉTIER ---
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -238,8 +233,7 @@ with col1:
                     "⚠️ CONSIGNE ABSOLUE SUR L'INTENTION DE SANTÉ :\n"
                     "Si l'utilisateur pose une question relative à un certificat médical, une dispense ou une inaptitude, "
                     "tu dois l'analyser SOUS L'ANGLE DE L'EXAMEN (Le Certificatif).\n"
-                    "Format de réponse obligatoire : Présente TOUJOURS tes résultats sous la forme d'un tableau Markdown comparatif "
-                    "détaillant le protocole précis pour chaque niveau (Collège DNB, Lycée GT Bac, Lycée Pro, etc.)."
+                    "Format de réponse obligatoire : Présente TOUJOURS tes résultats sous la forme d'un tableau Markdown comparatif."
                 )
                 chosen_index = index_santorin
             else:
@@ -247,7 +241,7 @@ with col1:
                     "Tu es l'assistant informatique et technique exclusif du logiciel de saisie iPackEPS.\n"
                     "Ton unique rôle est d'expliquer comment configurer et manipuler l'application.\n\n"
                     "⚠️ CLOISONNEMENT STRICT : Reste purement technique, pas-à-pas (clics, menus, onglets). "
-                    "Interdiction de parler des examens nationaux ou de Santorin."
+                    "Interdiction absolue de donner des conseils de pédagogie réelle."
                 )
                 chosen_index = index_ipack
             
@@ -269,7 +263,7 @@ with col1:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- COLONNE 2 : ASSISTANT RECHERCHES SITES ACADÉMIQUES PROFONDES ---
+# --- COLONNE 2 : ASSISTANT RECHERCHES SITES (MOTEUR DE RECHERCHE IA CONTEXTUEL) ---
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -284,71 +278,47 @@ with col2:
     if prompt_aix := st.chat_input("Votre recherche officielle...", key="input_aix"):
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
-        with st.spinner("Recherche et lecture approfondie des directives académiques..."):
-            # Requête ciblée restreinte aux 4 portails académiques officiels
-            terme_recherche = f"{prompt_aix} (site:pedagogie.ac-aix-marseille.fr OR site:eduscol.education.gouv.fr OR site:eps.enseigne.ac-lyon.fr OR site:eps.ac-creteil.fr)"
-            url_moteur = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(terme_recherche)}"
+        with st.spinner("Recherche approfondie sur les sites officiels d'EPS..."):
+            extraits_textes = ""
             
-            contenu_profond = ""
-            liens_trouves = []
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-            
-            try:
-                res_moteur = requests.get(url_moteur, headers=headers, timeout=6)
-                if res_moteur.status_code == 200:
-                    soup_moteur = BeautifulSoup(res_moteur.text, "html.parser")
-                    # On extrait les 3 premiers vrais liens profonds des résultats
-                    blocs_liens = soup_moteur.find_all("a", class_="result__url")[:3]
-                    for b in blocs_liens:
-                        href = b.get("href")
-                        if href and "duckduckgo" not in href:
-                            # Extraction de la vraie URL propre
-                            vraie_url = urllib.parse.parse_qs(urllib.parse.urlparse(href).query).get('uddg', [None])[0]
-                            if vraie_url:
-                                liens_trouves.append(vraie_url)
-                            else:
-                                liens_trouves.append(href)
-            except:
-                pass
+            # Si la clé Tavily est configurée, on lance une recherche web ciblée et intelligente
+            if tavily_api_key:
+                try:
+                    payload = {
+                        "api_key": tavily_api_key,
+                        "query": f"{prompt_aix} EPS",
+                        "search_depth": "advanced",
+                        "include_domains": ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr", "eps.enseigne.ac-lyon.fr", "eps.ac-creteil.fr"]
+                    }
+                    res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
+                    if res.status_code == 200:
+                        data_web = res.json()
+                        for item in data_web.get("results", []):
+                            extraits_textes += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
+                except:
+                    pass
 
-            # 🚀 LE CORRECTIF : On va lire le CONTENU RÉEL de ces liens profonds en direct
-            if liens_trouves:
-                for url in liens_trouves:
-                    try:
-                        res_page = requests.get(url, headers=headers, timeout=5)
-                        if res_page.status_code == 200:
-                            soup_page = BeautifulSoup(res_page.text, "html.parser")
-                            # Nettoyage des balises inutiles pour isoler le texte de la circulaire
-                            for tag in soup_page(["script", "style", "nav", "footer", "header"]):
-                                tag.extract()
-                            
-                            # On ne prend que les paragraphes significatifs pour ne pas surcharger l'IA
-                            paragraphes = [p.get_text().strip() for p in soup_page.find_all(["p", "li", "td"]) if len(p.get_text().strip()) > 40]
-                            texte_page = " ".join(paragraphes[:15]) # Analyse des 15 premiers blocs de texte profonds
-                            contenu_profond += f"\n--- CONTENU DE LA PAGE ({url}) ---\n{texte_page}\n"
-                    except:
-                        pass
-
-            # Formulation de l'instruction finale pour le modèle de langage
-            if contenu_profond.strip():
-                consigne_analyse = f"""
-                Tu es l'assistant expert des textes officiels et protocoles EPS de l'Éducation Nationale.
-                Tu dois répondre de façon claire, structurée et exhaustive à la demande de l'enseignant.
+            # Remplacement par les connaissances expertes si la recherche web échoue ou si pas de clé
+            if extraits_textes:
+                consigne_ia = f"""
+                Tu es l'assistant expert des textes officiels et protocoles EPS pour l'Éducation Nationale.
+                En te basant STRICTEMENT sur ces données de recherche extraites des sites académiques officiels :
                 
-                Voici le texte extrait des documents profonds trouvés sur les sites officiels :
-                {contenu_profond}
+                {extraits_textes}
                 
-                Question de l'enseignant : '{prompt_aix}'
-                
-                Rédige une synthèse immédiate du protocole ou de la directive trouvée (par exemple s'il s'agit du protocole TASA ou d'une fiche d'évaluation). 
-                À la fin de ta réponse, ajoute explicitement les liens internet consultés sous cette forme Markdown pour permettre au collègue de télécharger les PDF d'origine :
-                - [Lien vers la ressource officielle](adresse_url)
+                Réponds de manière claire, rigoureuse et exhaustive à la question suivante : '{prompt_aix}'.
+                Ajoute obligatoirement à la fin de ta réponse la liste des liens URL sources trouvés pour que l'enseignant puisse s'y référer.
                 """
             else:
-                consigne_analyse = f"Tu es l'assistant expert des textes officiels EPS. Réponds au mieux de tes connaissances sur : '{prompt_aix}' car les serveurs académiques profonds n'ont pas renvoyé de texte lisible."
+                consigne_ia = f"""
+                Tu es l'assistant expert des textes officiels EPS. 
+                Réponds de manière très précise, structurée et professionnelle à la question suivante : '{prompt_aix}'.
+                Cible tes connaissances sur les directives d'Éduscol et des académies de Lyon, Créteil et Aix-Marseille. 
+                Si la question porte sur un acronyme comme le TASA (Travail d'Accompagnement et de Suivi des Apprenants), détaille précisément son fonctionnement réglementaire sans rien inventer.
+                """
 
-            response_web = Settings.llm.complete(consigne_analyse)
-            answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE ET LIENS :</strong><br><br>{response_web.text}</div>"""
+            response_web = Settings.llm.complete(consigne_ia)
+            answer_aix = f"""<div class="general-card"><strong>🌐 SITES OFFICIELS EPS :</strong><br><br>{response_web.text}</div>"""
                 
         st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
         st.rerun()
