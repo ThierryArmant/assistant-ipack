@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (ULTRA CLEAN - NO GLASS BOX)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (Boutons Verts & Explications)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -73,7 +73,7 @@ st.markdown(f"""
         justify-content: space-between; 
         align-items: center; 
         padding: 10px 20px; 
-        margin-bottom: 25px; 
+        margin-bottom: 15px; 
         border-radius: 8px; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
     }}
@@ -81,6 +81,17 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
+    /* Texte d'explication "Choix du contexte" */
+    .context-label {{
+        color: #94A3B8;
+        font-size: 11px !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        margin-left: 2px;
+    }}
+
     /* Grand Bandeau de Titre de la zone de tchat active */
     .column-title {{ 
         color: #FFFFFF; 
@@ -95,39 +106,56 @@ st.markdown(f"""
         box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
     }}
     
-    /* Boutons de Choix de Module (Cards Horizontales) */
+    /* Boutons Neutres par défaut (Inactifs) */
     .stButton>button {{ 
-        background-color: rgba(30, 41, 59, 0.8) !important; 
-        color: #FFFFFF !important; 
-        border: 1px solid rgba(255,255,255,0.15) !important; 
+        background-color: rgba(30, 41, 59, 0.75) !important; 
+        color: #94A3B8 !important; 
+        border: 1px solid rgba(255,255,255,0.1) !important; 
         border-radius: 8px !important; 
-        font-size: 11px !important; 
-        padding: 8px 10px !important; 
-        line-height: 1.4 !important;
+        font-size: 12px !important; 
+        padding: 10px 10px !important; 
+        line-height: 1.2 !important;
+        transition: all 0.2s ease;
+    }}
+
+    /* 🟢 Passage au vert avec effet de halo lumineux pour le bouton actif */
+    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(1) button {{
+        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'ipack' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#10B981' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'ipack' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.4)' if st.session_state.active_module == 'ipack' else 'none' };
+        font-weight: { '700' if st.session_state.active_module == 'ipack' else 'normal' };
+    }}
+    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(2) button {{
+        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'examens' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#10B981' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'examens' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.4)' if st.session_state.active_module == 'examens' else 'none' };
+        font-weight: { '700' if st.session_state.active_module == 'examens' else 'normal' };
+    }}
+    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(3) button {{
+        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'general' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#10B981' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'general' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.4)' if st.session_state.active_module == 'general' else 'none' };
+        font-weight: { '700' if st.session_state.active_module == 'general' else 'normal' };
     }}
     
-    /* Style spécifique et alignement pour le bouton Nettoyer le chat */
-    div.clear-btn-align {{
-        padding-top: 3px !important;
-    }}
+    /* Bouton Nettoyer le chat */
+    div.clear-btn-align {{ padding-top: 3px !important; }}
     div.clear-btn-align .stButton>button {{
-        background-color: rgba(220, 38, 38, 0.2) !important;
+        background-color: rgba(220, 38, 38, 0.15) !important;
         color: #EF4444 !important;
-        border: 1px solid rgba(220, 38, 38, 0.4) !important;
+        border: 1px solid rgba(220, 38, 38, 0.3) !important;
         border-radius: 8px !important;
         padding: 7px 10px !important;
         font-size: 12px !important;
         width: 100% !important;
+        box-shadow: none !important;
     }}
     
     /* Conteneur de tchat sans boîte opaque */
-    .glass-card {{
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0px !important;
-        margin-top: 15px;
-    }}
+    .glass-card {{ background-color: transparent !important; border: none !important; box-shadow: none !important; padding: 0px !important; margin-top: 15px; }}
     
     /* Bulles de réponse de l'IA */
     .santorin-card, .general-card {{ 
@@ -183,16 +211,17 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. BLOC DE COMMUTATION : 3 PETITES CARTES BOUTONS HORIZONTAUX CÔTE À CÔTE
+# 6. COMMUTATION HORIZONTALE HARMONISÉE (TEXTE RÉDUIT & ASSIGNÉ)
 # ======================================================================
+st.markdown('<div class="context-label">⚙️ Choix du contexte :</div>', unsafe_allow_html=True)
+
 col_b1, col_b2, col_b3 = st.columns(3, gap="small")
 
 with col_b1:
     btn_ipack = st.button(
-        "🛠️ iPackEPS\n(Documentation Créteil)", 
+        "🛠️ iPackEPS", 
         use_container_width=True, 
-        key="btn_module_ipack",
-        type="primary" if st.session_state.active_module == "ipack" else "secondary"
+        key="btn_module_ipack"
     )
     if btn_ipack:
         st.session_state.active_module = "ipack"
@@ -201,10 +230,9 @@ with col_b1:
 
 with col_b2:
     btn_exams = st.button(
-        "📊 Examens & Santorin\n(Aix-Marseille & Éduscol)", 
+        "📊 Examens & Santorin", 
         use_container_width=True, 
-        key="btn_module_exams",
-        type="primary" if st.session_state.active_module == "examens" else "secondary"
+        key="btn_module_exams"
     )
     if btn_exams:
         st.session_state.active_module = "examens"
@@ -213,10 +241,9 @@ with col_b2:
 
 with col_b3:
     btn_general = st.button(
-        "🔍 Recherches Générales\n(Multi-sites EPS)", 
+        "🔍 Recherches Générales", 
         use_container_width=True, 
-        key="btn_module_general",
-        type="primary" if st.session_state.active_module == "general" else "secondary"
+        key="btn_module_general"
     )
     if btn_general:
         st.session_state.active_module = "general"
@@ -227,14 +254,14 @@ with col_b3:
 # 7. ZONE DE DIALOGUE ACTIVE UNIQUE CONSOLIDÉE
 # ======================================================================
 label_titres = {
-    "ipack": "🛠️ Mode : Assistance Technique iPackEPS (Serveur de Créteil)",
+    "ipack": "🛠️ Mode : Assistance Technique iPackEPS",
     "examens": "📊 Mode : Textes Officiels Examens (Aix-Marseille & Éduscol)",
     "general": "🔍 Mode : Recherche Transversale Globale (Tous serveurs EPS)"
 }
 
 st.markdown(f'<div class="column-title">{label_titres[st.session_state.active_module]}</div>', unsafe_allow_html=True)
 
-# 🚀 COUPLAGE HORIZONTAL : ALIGNEMENT DU BOUTON NETTOYER ET DE LA BARRE DE SAISIE
+# Couplage horizontal : Alignement du bouton Nettoyer et de la barre de saisie
 col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
 
 with col_action_clear:
@@ -262,7 +289,7 @@ if prompt:
     
     if st.session_state.active_module == "ipack":
         domaines_recherche = ["ipackeps.ac-creteil.fr"]
-        texte_spinner = "Fouille de la base d'assistance technique de Créteil..."
+        texte_spinner = "Fouille de la base d'assistance technique d'iPackEPS..."
         color_card = "general-card"
     elif st.session_state.active_module == "examens":
         domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr"]
