@@ -48,10 +48,10 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (BOUTON NETTOYER AJUSTÉ)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE 
 # ======================================================================
 img_gauche = "image_7.png"
-img_centre_droit = "image_6.png" 
+img_eps = "image_6.png"  # 🚀 CORRECTION ICI : La variable s'appelle bien img_eps
 img_droite = "image_5.png"
 img_fond = "image_8.png"
 
@@ -112,7 +112,7 @@ st.markdown(f"""
         display: block;
     }}
     
-    /* BOUTONS DE CONTEXTE INACTIFS (Natif Streamlit : kind="secondary") */
+    /* BOUTONS DE CONTEXTE INACTIFS */
     button[kind="secondary"] {{ 
         background-color: rgba(15, 23, 42, 0.9) !important; 
         color: #94A3B8 !important; 
@@ -123,7 +123,7 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
 
-    /* BOUTON DE CONTEXTE ACTIF (Natif Streamlit : kind="primary") */
+    /* BOUTON DE CONTEXTE ACTIF */
     button[kind="primary"] {{
         background-color: rgba(16, 185, 129, 0.85) !important;
         color: #FFFFFF !important;
@@ -136,7 +136,7 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
     
-    /* 🚀 BOUTON NETTOYER : Fond rouge ultra-transparent (5%) et texte blanc pur */
+    /* BOUTON NETTOYER : Fond rouge transparent (5%) et texte blanc pur */
     div.element-container:has(.nettoyer-wrapper) + div.element-container button {{
         background-color: rgba(220, 38, 38, 0.05) !important;
         color: #FFFFFF !important;
@@ -192,7 +192,7 @@ if openai_api_key:
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
 # ======================================================================
-# 5. BANDEAU SUPERIEUR (AVEC L'IMAGE 6 INTÉGRÉE)
+# 5. BANDEAU SUPERIEUR 
 # ======================================================================
 st.markdown(f"""
     <div class="hub-header">
