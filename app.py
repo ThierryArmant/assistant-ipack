@@ -48,14 +48,14 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (DOS-À-DOS PARFAIT & TAILLE FINE)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (ULTRA CLEAN - NO GLASS BOX)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
 st.markdown(f"""
     <style>
-    /* Marges globales optimisées pour casser l'effet zoomé */
+    /* Marges globales ajustées au millimètre */
     .block-container {{ 
         padding-top: 0.5rem !important; 
         padding-bottom: 2rem !important; 
@@ -67,14 +67,14 @@ st.markdown(f"""
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* Structure du Bandeau Supérieur */
+    /* Structure du Bandeau Supérieur Principal */
     .hub-header {{ 
         background-color: #1E293B; 
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
         padding: 10px 20px; 
-        margin-bottom: 20px; 
+        margin-bottom: 25px; 
         border-radius: 8px; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
     }}
@@ -82,35 +82,46 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
-    /* Titres des colonnes */
-    .column-title {{ color: #FFFFFF; font-size: 13px !important; font-weight: 700; text-align: center; margin-bottom: 0px; height: 30px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 5px 0; }}
+    /* 🚀 Bandeau Bleu Épuré Autonome pour chaque colonne (Coins entièrement arrondis) */
+    .column-title {{ 
+        color: #FFFFFF; 
+        font-size: 13px !important; 
+        font-weight: 700; 
+        text-align: center; 
+        margin-bottom: 20px !important; 
+        height: 32px; 
+        background-color: #1E293B; 
+        border-radius: 6px !important; 
+        padding: 6px 0; 
+        box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+    }}
+    
+    /* Bouton Nettoyer */
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 10px !important; padding: 3px 12px !important; }}
     
+    /* Boutons Radio Modules */
     div[data-testid="stRadio"] {{
         background-color: #1E293B !important;
         padding: 10px 15px !important;
         border-radius: 8px !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         box-shadow: inset 0px 2px 4px rgba(0,0,0,0.3) !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 15px !important;
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 12px !important; }}
     
-    /* Cartes transparentes à 15% (Sainte-Victoire visible) */
+    /* 🏔️ Suppression totale de la boîte transparente "Glass-Card" floue */
     .glass-card {{
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        border-radius: 0px 0px 8px 8px;
-        padding: 15px;
-        box-shadow: 0px 10px 30px rgba(0,0,0,0.25);
-        border-left: 1px solid rgba(255, 255, 255, 0.15);
-        border-right: 1px solid rgba(255, 255, 255, 0.15);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        margin-bottom: 15px;
+        background-color: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0px !important;
+        margin-bottom: 0px !important;
     }}
     
-    /* Bulles de réponse IA translucides (20% opacité) */
+    /* Réponses de l'IA (Elles gardent leur structure pour rester lisibles) */
     .santorin-card, .general-card {{ 
         background-color: rgba(255, 255, 255, 0.20) !important; 
         backdrop-filter: blur(8px) !important;
@@ -123,7 +134,6 @@ st.markdown(f"""
     .santorin-card {{ border-left: 5px solid #DC2626 !important; }}
     .general-card {{ border-left: 5px solid #10B981 !important; }}
     
-    /* Calibrage des polices fines à 13px */
     .santorin-card *, .general-card * {{ color: #FFFFFF !important; font-size: 13px !important; line-height: 1.4 !important; }}
     .santorin-card strong, .general-card strong {{ color: #FFFFFF !important; font-weight: 700 !important; }}
     .santorin-card a, .general-card a {{ color: #38BDF8 !important; font-weight: bold !important; text-decoration: underline !important; }}
@@ -133,7 +143,7 @@ st.markdown(f"""
     .santorin-card th, .general-card th {{ background-color: rgba(15, 23, 42, 0.85) !important; color: #FFFFFF !important; padding: 8px !important; font-weight: bold !important; font-size: 12px !important; border: 1px solid rgba(255,255,255,0.2) !important; text-align: left; }}
     .santorin-card td, .general-card td {{ padding: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; vertical-align: top !important; }}
     
-    /* Style des messages de tchat */
+    /* Messages utilisateur */
     div[data-testid="stChatMessage"] {{ background-color: transparent !important; border: none !important; padding: 8px 12px !important; margin-bottom: 8px !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
         background-color: rgba(255, 255, 255, 0.15) !important; 
@@ -217,7 +227,7 @@ col1, col2 = st.columns(2, gap="medium")
 # --- 🤖 COLONNE 1 : ASSISTANT IPACKEPS & EXAMENS ---
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Ipackeps & Examens</div>', unsafe_allow_html=True)
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True) # Classe gardée pour compatibilité mais vidée par CSS
     
     if st.button("🧹 Nettoyer le chat", key="clear_ipack"):
         st.session_state.messages_ipack = []
@@ -295,7 +305,7 @@ with col1:
 # --- 🔍 COLONNE 2 : ASSISTANT RECHERCHES GÉNÉRALES ---
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Générales</div>', unsafe_allow_html=True)
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True) # Classe gardée pour compatibilité mais vidée par CSS
     
     if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
         st.session_state.messages_aix = []
