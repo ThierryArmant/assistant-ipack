@@ -48,13 +48,14 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (STRIPPED & ULTRA CLEAN)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (DOS-À-DOS PARFAIT & TAILLE FINE)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
 st.markdown(f"""
     <style>
+    /* Marges globales optimisées pour casser l'effet zoomé */
     .block-container {{ 
         padding-top: 0.5rem !important; 
         padding-bottom: 2rem !important; 
@@ -81,6 +82,7 @@ st.markdown(f"""
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 10px !important; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 12px; border-radius: 20px; font-size: 10px !important; font-weight: bold; font-family: monospace; margin-top: 5px; display: inline-block; }}
     
+    /* Titres des colonnes */
     .column-title {{ color: #FFFFFF; font-size: 13px !important; font-weight: 700; text-align: center; margin-bottom: 0px; height: 30px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 5px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 10px !important; padding: 3px 12px !important; }}
     
@@ -94,7 +96,7 @@ st.markdown(f"""
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 12px !important; }}
     
-    /* Fenêtre principale transparente à 15% */
+    /* Cartes transparentes à 15% (Sainte-Victoire visible) */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.15) !important;
         backdrop-filter: blur(12px) !important;
@@ -108,11 +110,7 @@ st.markdown(f"""
         margin-bottom: 15px;
     }}
     
-    .search-box-container {{
-        margin-bottom: 10px;
-    }}
-    
-    /* Réponses de l'IA fines à 13px */
+    /* Bulles de réponse IA translucides (20% opacité) */
     .santorin-card, .general-card {{ 
         background-color: rgba(255, 255, 255, 0.20) !important; 
         backdrop-filter: blur(8px) !important;
@@ -125,6 +123,7 @@ st.markdown(f"""
     .santorin-card {{ border-left: 5px solid #DC2626 !important; }}
     .general-card {{ border-left: 5px solid #10B981 !important; }}
     
+    /* Calibrage des polices fines à 13px */
     .santorin-card *, .general-card * {{ color: #FFFFFF !important; font-size: 13px !important; line-height: 1.4 !important; }}
     .santorin-card strong, .general-card strong {{ color: #FFFFFF !important; font-weight: 700 !important; }}
     .santorin-card a, .general-card a {{ color: #38BDF8 !important; font-weight: bold !important; text-decoration: underline !important; }}
@@ -134,13 +133,13 @@ st.markdown(f"""
     .santorin-card th, .general-card th {{ background-color: rgba(15, 23, 42, 0.85) !important; color: #FFFFFF !important; padding: 8px !important; font-weight: bold !important; font-size: 12px !important; border: 1px solid rgba(255,255,255,0.2) !important; text-align: left; }}
     .santorin-card td, .general-card td {{ padding: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; vertical-align: top !important; }}
     
-    /* Input des zones de tchat */
+    /* Style des messages de tchat */
     div[data-testid="stChatMessage"] {{ background-color: transparent !important; border: none !important; padding: 8px 12px !important; margin-bottom: 8px !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
         background-color: rgba(255, 255, 255, 0.15) !important; 
         backdrop-filter: blur(6px) !important;
         border-radius: 14px 14px 0px 14px !important; 
-        margin-left: 25% !important; 
+        margin-left: 15% !important; 
         box-shadow: 0px 3px 8px rgba(0,0,0,0.1); 
     }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) p {{ color: #FFFFFF !important; font-size: 13px !important; }}
@@ -196,10 +195,10 @@ if openai_api_key:
     index_santorin = get_santorin_engine()
 
 # ======================================================================
-# 6. EXÉCUTION DE L'INTERFACE GRAPHIQUE COMPLÈTE
+# 6. EXÉCUTION DE L'INTERFACE GRAPHIQUE EN DOUBLE COLONNE
 # ======================================================================
 
-# --- Rendu du Bandeau Supérieur Épuré ---
+# --- Rendu du Bandeau Supérieur ---
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="100"></div>
@@ -212,120 +211,142 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- Conteneur de Recherche Supérieur ---
-st.markdown('<div class="search-box-container">', unsafe_allow_html=True)
-col_left_void, col_search_input = st.columns([1.6, 1])
-with col_search_input:
-    query_web = st.text_input("🔍 Recherche Web EPS (BO, Académies...)", placeholder="Ex : Grilles BAC Gym, protocole TASA...", key="web_search_input")
-st.markdown('</div>', unsafe_allow_html=True)
+# Déploiement des deux colonnes indépendantes
+col1, col2 = st.columns(2, gap="medium")
 
-# Zone de déploiement des résultats de la recherche Web (si active)
-if query_web and tavily_api_key:
-    with st.spinner("Recherche sur les portails académiques..."):
-        extraits_textes = ""
-        try:
-            payload = {
-                "api_key": tavily_api_key,
-                "query": f"{query_web} EPS",
-                "search_depth": "advanced",
-                "include_domains": ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr", "eps.enseigne.ac-lyon.fr", "eps.ac-creteil.fr"]
-            }
-            res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
-            if res.status_code == 200:
-                data_web = res.json()
-                for item in data_web.get("results", []):
-                    extraits_textes += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
-        except: pass
-
-        if extraits_textes:
-            consigne_ia = f"""
-            Tu es l'assistant expert des textes officiels et protocoles EPS pour l'Éducation Nationale.
-            En te basant STRICTEMENT sur ces données de recherche extraites des sites académiques officiels :
-            
-            {extraits_textes}
-            
-            Réponds de manière claire, rigoureuse et exhaustive à la question suivante : '{query_web}'.
-            Ajoute obligatoirement à la fin de ta réponse la liste des liens URL sources trouvés.
-            """
-        else:
-            consigne_ia = f"Tu es l'assistant expert des textes officiels EPS. Réponds précisément à la question suivante : '{query_web}'."
-
-        response_web = Settings.llm.complete(consigne_ia)
-        st.markdown(f"""<div class="general-card"><strong>🌐 MOTEUR DE RECHERCHE EPS - RÉSULTAT :</strong><br><br>{response_web.text}</div>""", unsafe_allow_html=True)
-
-
-# --- Espace Principal : Tchat Pleine Largeur ---
-st.markdown('<div class="column-title">🤖 Assistant Métier EPS (iPackEPS & Santorin)</div>', unsafe_allow_html=True)
-st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-
-if st.button("🧹 Nettoyer le chat", key="clear_ipack"):
-    st.session_state.messages_ipack = []
-    st.rerun()
+# --- 🤖 COLONNE 1 : ASSISTANT IPACKEPS & EXAMENS ---
+with col1:
+    st.markdown('<div class="column-title">🤖 Assistant Ipackeps & Examens</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-context_choice = st.radio(
-    "Sur quel module travaillez-vous ?", 
-    ["🛠️ iPackEPS (Configuration, Classes, SSS)", "📊 Examens & Santorin (Notes, Absences, Dispenses)"]
-)
-
-# Affichage du fil de discussion
-for m in st.session_state.messages_ipack:
-    with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
+    if st.button("🧹 Nettoyer le chat", key="clear_ipack"):
+        st.session_state.messages_ipack = []
+        st.rerun()
         
-if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
-    st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
-    
-    # MODULE A : EXAMENS & SANTORIN (FICHIERS INTERNES LOCAL)
-    if "examens" in context_choice.lower():
-        with st.spinner("Analyse de vos fichiers de notation..."):
-            system_prompt = (
-                "Tu es l'assistant expert EXAMENS & SANTORIN pour les professeurs d'EPS.\n"
-                "Tu traites STRICTEMENT de la réglementation des examens (DNB, BAC, CAP) et de la remontée des notes.\n\n"
-                "⚠️ CONSIGNE ABSOLUE SUR L'INTENTION DE SANTÉ :\n"
-                "Si l'utilisateur pose une question relative à un certificat médical, une dispense ou une inaptitude, "
-                "tu dois l'analyser SOUS L'ANGLE DE L'EXAMEN (Le Certificatif).\n"
-                "Format de réponse obligatoire : Présente TOUJOURS tes résultats sous la forme d'un tableau Markdown comparatif."
-            )
-            chat_engine = index_santorin.as_chat_engine(
-                chat_mode="context", 
-                memory=ChatMemoryBuffer.from_defaults(token_limit=4000), 
-                system_prompt=system_prompt
-            )
-            response_locale = chat_engine.chat(prompt_ipack)
-            formatted_answer = f'<div class="santorin-card"><strong>📊 SYNTHÈSE CERTIFICATION :</strong><br><br>{response_locale.response}</div>'
+    context_choice = st.radio(
+        "Sur quel module travaillez-vous ?", 
+        ["🛠️ iPackEPS (Configuration, Classes, SSS)", "📊 Examens & Santorin (Notes, Absences, Dispenses)"],
+        key="radio_context"
+    )
 
-    # MODULE B : IPACKEPS (FOUILLE EXCLUSIVE SUR LA DOCUMENTATION OUVERTE DE CRÉTEIL)
-    else:
-        with st.spinner("Fouille des manuels d'assistance iPackEPS..."):
-            extraits_ipack = ""
+    # Affichage du fil de discussion local
+    for m in st.session_state.messages_ipack:
+        with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
+            
+    if prompt_ipack := st.chat_input("Votre question (iPack, Santorin...) ?", key="input_ipack"):
+        st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
+        
+        # MODULE A : EXAMENS & SANTORIN (FICHIERS INTERNES LOCAL)
+        if "examens" in context_choice.lower():
+            with st.spinner("Analyse de vos fichiers de notation..."):
+                system_prompt = (
+                    "Tu es l'assistant expert EXAMENS & SANTORIN pour les professeurs d'EPS.\n"
+                    "Tu traites STRICTEMENT de la réglementation des examens (DNB, BAC, CAP) et de la remontée des notes.\n\n"
+                    "⚠️ CONSIGNE ABSOLUE SUR L'INTENTION DE SANTÉ :\n"
+                    "Si l'utilisateur pose une question relative à un certificat médical, une dispense ou une inaptitude, "
+                    "tu dois l'analyser SOUS L'ANGLE DE L'EXAMEN (Le Certificatif).\n"
+                    "Format de réponse obligatoire : Présente TOUJOURS tes résultats sous la forme d'un tableau Markdown comparatif."
+                )
+                chat_engine = index_santorin.as_chat_engine(
+                    chat_mode="context", 
+                    memory=ChatMemoryBuffer.from_defaults(token_limit=4000), 
+                    system_prompt=system_prompt
+                )
+                response_locale = chat_engine.chat(prompt_ipack)
+                formatted_answer = f'<div class="santorin-card"><strong>📊 SYNTHÈSE CERTIFICATION :</strong><br><br>{response_locale.response}</div>'
+
+        # MODULE B : IPACKEPS (FOUILLE EXCLUSIVE SUR LA DOCUMENTATION OUVERTE DE CRÉTEIL)
+        else:
+            with st.spinner("Fouille des manuels d'assistance iPackEPS..."):
+                extraits_ipack = ""
+                if tavily_api_key:
+                    try:
+                        payload = {
+                            "api_key": tavily_api_key,
+                            "query": f"{prompt_ipack}",
+                            "search_depth": "advanced",
+                            "include_domains": ["ipackeps.ac-creteil.fr"]
+                        }
+                        res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
+                        if res.status_code == 200:
+                            data_web = res.json()
+                            for item in data_web.get("results", []):
+                                extraits_ipack += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
+                    except: pass
+
+                consigne_ipack = f"""
+                Tu es l'assistant technique expert de l'application iPackEPS.
+                Tu réponds en te basant STRICTEMENT sur les guides d'aide officiels de l'académie de Créteil fournis ci-après :
+                
+                {extraits_ipack if extraits_ipack else 'Se référer aux procédures standards de configuration iPack.'}
+                
+                Question technique : '{prompt_ipack}'
+                
+                Rédige un protocole pas-à-pas précis (menus, boutons, onglets). Ne propose jamais d'options fictives. Ajoute le lien de la documentation consultée tout à la fin.
+                """
+                response_web = Settings.llm.complete(consigne_ipack)
+                formatted_answer = f'<div class="general-card"><strong>🛠️ PROTOCOLE OFFICIEL IPACKEPS (CRÉTEIL) :</strong><br><br>{response_web.text}</div>'
+
+        st.session_state.messages_ipack.append({"role": "assistant", "content": formatted_answer})
+        st.rerun()
+        
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- 🔍 COLONNE 2 : ASSISTANT RECHERCHES GÉNÉRALES ---
+with col2:
+    st.markdown('<div class="column-title">🔍 Assistant Recherches Générales</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
+        st.session_state.messages_aix = []
+        st.rerun()
+        
+    # Affichage du fil de discussion de recherche web
+    for m in st.session_state.messages_aix:
+        with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
+            
+    if prompt_aix := st.chat_input("Votre recherche officielle (BO, Textes...)", key="input_aix"):
+        st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
+        
+        with st.spinner("Recherche approfondie sur les sites officiels d'EPS..."):
+            extraits_textes = ""
             if tavily_api_key:
                 try:
                     payload = {
                         "api_key": tavily_api_key,
-                        "query": f"{prompt_ipack}",
+                        "query": f"{prompt_aix} EPS",
                         "search_depth": "advanced",
-                        "include_domains": ["ipackeps.ac-creteil.fr"]
+                        "include_domains": [
+                            "pedagogie.ac-aix-marseille.fr", 
+                            "eduscol.education.gouv.fr", 
+                            "eps.enseigne.ac-lyon.fr", 
+                            "eps.ac-creteil.fr"
+                        ]
                     }
                     res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
                     if res.status_code == 200:
                         data_web = res.json()
                         for item in data_web.get("results", []):
-                            extraits_ipack += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
+                            extraits_textes += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
                 except: pass
 
-            consigne_ipack = f"""
-            Tu es l'assistant technique expert de l'application iPackEPS.
-            Tu réponds en te basant STRICTEMENT sur les guides d'aide officiels de l'académie de Créteil fournis ci-après :
-            
-            {extraits_ipack if extraits_ipack else 'Se référer aux procédures standards de configuration iPack.'}
-            
-            Question technique : '{prompt_ipack}'
-            
-            Rédige un protocole pas-à-pas précis (menus, boutons, onglets). Ne propose jamais d'options fictives. Ajoute le lien de la documentation consultée tout à la fin.
-            """
-            response_web = Settings.llm.complete(consigne_ipack)
-            formatted_answer = f'<div class="general-card"><strong>🛠️ PROTOCOLE OFFICIEL IPACKEPS (CRÉTEIL) :</strong><br><br>{response_web.text}</div>'
+            if extraits_textes:
+                consigne_ia = f"""
+                Tu es l'assistant expert des textes officiels et protocoles EPS pour l'Éducation Nationale.
+                En te basant STRICTEMENT sur ces données de recherche extraites des sites académiques officiels :
+                
+                {extraits_textes}
+                
+                Réponds de manière claire, rigoureuse et exhaustive à la question suivante : '{prompt_aix}'.
+                Ajoute obligatoirement à la fin de ta réponse la liste des liens URL sources trouvés pour que l'enseignant puisse s'y référer et télécharger les documents originaux si besoin.
+                """
+            else:
+                consigne_ia = f"Tu es l'assistant expert des textes officiels EPS. Réponds de manière très précise, structurée et professionnelle à la question suivante : '{prompt_aix}'."
 
-    st.session_state.messages_ipack.append({"role": "assistant", "content": formatted_answer})
-    st.rerun()
-    
-st.markdown('</div>', unsafe_allow_html=True)
+            response_web = Settings.llm.complete(consigne_ia)
+            answer_aix = f"""<div class="general-card"><strong>🌐 SITES OFFICIELS EPS :</strong><br><br>{response_web.text}</div>"""
+                
+        st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
+        st.rerun()
+        
+    st.markdown('</div>', unsafe_allow_html=True)
