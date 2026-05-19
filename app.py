@@ -48,14 +48,13 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (15% TRANSPARENCE & CLEAN SIZE)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (OPTIONS NETTOYÉES)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
 st.markdown(f"""
     <style>
-    /* Réduction globale des marges de l'application pour réduire l'effet zoomé */
     .block-container {{ 
         padding-top: 0.5rem !important; 
         padding-bottom: 2rem !important; 
@@ -74,7 +73,7 @@ st.markdown(f"""
         justify-content: space-between; 
         align-items: center; 
         padding: 10px 20px; 
-        margin-bottom: 15px; 
+        margin-bottom: 20px; 
         border-radius: 8px; 
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3); 
     }}
@@ -107,6 +106,11 @@ st.markdown(f"""
         border-right: 1px solid rgba(255, 255, 255, 0.15);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         margin-bottom: 15px;
+    }}
+    
+    /* Style du conteneur de la barre de recherche */
+    .search-box-container {{
+        margin-bottom: 10px;
     }}
     
     /* Réponses de l'IA (Correction tailles fines à 13px) */
@@ -209,13 +213,15 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- Double Colonne pour l'alignement de la Recherche Web ---
-# On utilise ce système de grille pour glisser discrètement la zone de recherche à droite sous le bandeau
-col_void, col_search_box = st.columns([1.6, 1])
-with col_search_box:
-    query_web = st.text_input("🔍 Recherche Web EPS (BO, Académies...)", placeholder="Ex: Grilles BAC Gym, protocole TASA...", key="web_search_input")
+# --- Conteneur de Recherche Centralisé ---
+# Placement d'une ligne épurée dédiée à la recherche web globale
+st.markdown('<div class="search-box-container">', unsafe_allow_html=True)
+col_left_void, col_search_input = st.columns([1.5, 1])
+with col_search_input:
+    query_web = st.text_input("🔍 Recherche Web EPS (BO, Académies...)", placeholder="Ex : Grilles BAC Gym, protocole TASA...", key="web_search_input")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Si une recherche web est lancée, on affiche le résultat dans un pavé vert translucide au-dessus des modules
+# Zone de déploiement des résultats de la recherche Web (si active)
 if query_web and tavily_api_key:
     with st.spinner("Recherche sur les portails académiques..."):
         extraits_textes = ""
@@ -250,7 +256,7 @@ if query_web and tavily_api_key:
         st.markdown(f"""<div class="general-card"><strong>🌐 MOTEUR DE RECHERCHE EPS - RÉSULTAT :</strong><br><br>{response_web.text}</div>""", unsafe_allow_html=True)
 
 
-# --- Double Colonne pour l'Espace de Discussion Central ---
+# --- Espace de Discussion Principal en Double Colonne ---
 col1, col2 = st.columns(2, gap="medium")
 
 # COLONNE 1 : ASSISTANT MÉTIER (iPack / Santorin)
@@ -329,15 +335,13 @@ with col1:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-# COLONNE 2 : ESPACE D'AFFICHAGE COMPLÉMENTAIRE OU INFORMATIONS FIXES
+# COLONNE 2 : DEVENUE DISPONIBLE POUR LE DEROULEMENT DES RECHERCHES ET DU TCHAT FUTURE
 with col2:
-    st.markdown('<div class="column-title">ℹ️ Notice &amp; Ressources Globales</div>', unsafe_allow_html=True)
+    st.markdown('<div class="column-title">💬 Fil de Discussion Général</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("""
-        <p style="font-size: 13px; color: #FFFFFF; font-weight: bold; margin-bottom: 8px;">🌐 Mode d'emploi de la recherche :</p>
-        <p style="font-size: 12px; color: #E2E8F0; line-height: 1.4;">
-        Pour toute recherche de textes réglementaires transversaux (DNB, grilles d'évaluation, circulaires), utilisez la barre de recherche <strong>"🔍 Recherche Web EPS"</strong> située juste au-dessus en haut à droite.<br><br>
-        Le résultat se déploiera automatiquement sous forme de carte dynamique avec les liens officiels d'Aix-Marseille, Lyon, Créteil et Éduscol.
+        <p style="font-size: 13px; color: #FFFFFF; font-style: italic; text-align: center; padding-top: 20px;">
+        Cet espace accueillera vos modules complémentaires ou l'historique étendu de vos requêtes.
         </p>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
