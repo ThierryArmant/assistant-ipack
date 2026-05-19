@@ -1,10 +1,12 @@
 import streamlit as st
 import os
 import requests
+import pandas as pd
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core import Document
 
 # ======================================================================
 # 1. INITIALISATION ET COMPTEUR DE VISITES CENTRALISÉ
@@ -30,7 +32,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE
+# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS)
 # ======================================================================
 st.set_page_config(page_title="Hub IA - EPS", layout="wide", initial_sidebar_state="collapsed")
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
@@ -59,7 +61,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 3. CONFIGURATION OPENAI
+# 3. VERROUILLAGE CONFIGURATION SÉCURITÉ IA
 # ======================================================================
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
 if openai_api_key:
@@ -77,20 +79,27 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- CHARGEMENT SÉCURISÉ DES DEUX MOTEURS ---
+# --- CHARGEMENT DES DEUX MOTEURS REVISITÉ ET SÉCURISÉ ---
 @st.cache_resource
-def get_separated_engines_v3():
+def get_separated_engines_v4():
     index_santorin = VectorStoreIndex.from_documents([])
     chemin_csv = "./data/faq_evaluation_santorin.csv"
     
+    # 📊 LECTURE SÉCURISÉE DU CSV (Gestion explicite du séparateur point-virgule)
     if os.path.exists(chemin_csv):
         try:
-            # LlamaIndex utilise nativement SimpleDirectoryReader pour le texte
-            docs_s = SimpleDirectoryReader(input_files=[chemin_csv]).load_data()
-            index_santorin = VectorStoreIndex.from_documents(docs_s)
+            df = pd.read_csv(chemin_csv, sep=";", encoding="utf-8", on_bad_lines='skip')
+            documents_list = []
+            for idx, row in df.iterrows():
+                # On fabrique un bloc textuel hyper propre pour chaque ligne du tableau
+                texte_ligne = "\n".join([f"{col}: {val}" for col, val in row.items() if pd.notna(val)])
+                documents_list.append(Document(text=texte_ligne))
+            if documents_list:
+                index_santorin = VectorStoreIndex.from_documents(documents_list)
         except Exception as e:
-            st.error(f"Erreur Santorin : {str(e)}")
+            st.error(f"Erreur d'analyse du tableau CSV : {str(e)}")
         
+    # 🛠️ MOTEUR IPACKEPS : Chargement des PDF de cartes mentales
     index_ipack = VectorStoreIndex.from_documents([])
     if os.path.exists("./data"):
         ipack_files = [os.path.join("./data", f) for f in os.listdir("./data") if "ipack" in f.lower() and f.endswith(".pdf")]
@@ -99,15 +108,15 @@ def get_separated_engines_v3():
                 docs_i = SimpleDirectoryReader(input_files=ipack_files).load_data()
                 index_ipack = VectorStoreIndex.from_documents(docs_i)
             except Exception as e:
-                st.error(f"Erreur iPack : {str(e)}")
+                st.error(f"Erreur iPack PDF : {str(e)}")
     
     return index_ipack, index_santorin
 
 if openai_api_key:
-    index_ipack, index_santorin = get_separated_engines_v3()
+    index_ipack, index_santorin = get_separated_engines_v4()
 
 # ======================================================================
-# 4. EXÉCUTION DOUBLE COLONNE INDÉPENDANTE
+# 4. DOUBLE COLONNE INDÉPENDANTE
 # ======================================================================
 col1, col2 = st.columns(2, gap="large")
 
@@ -131,14 +140,16 @@ with col1:
             if "examens" in context_choice.lower():
                 system_prompt = (
                     "Tu es l'assistant spécialisé EXAMENS & SANTORIN pour les professeurs d'EPS.\n"
-                    "Tu réponds en te basant STRICTEMENT sur le document de FAQ fourni.\n"
-                    "Fais une distinction nette entre le Collège (DNB) et le Lycée (CCF) selon les colonnes du fichier."
+                    "Tu réponds en te basant STRICTEMENT sur le tableau de FAQ fourni.\n"
+                    "Regarde la ligne correspondant au problème (ex: Absence, Dispense, Inaptitude) "
+                    "et lis spécifiquement la colonne demandée (Lycée GT Bac, Lycée Pro Bac, ou Reponse Collège DNB).\n"
+                    "Ne mélange jamais les règles du Collège/DNB et du Lycée/CCF."
                 )
                 chosen_index = index_santorin
             else:
                 system_prompt = (
                     "Tu es l'assistant spécialisé IPACKEPS. Tu parles exclusivement à des professeurs d'EPS.\n"
-                    "Tu réponds en te basant sur les guides PDF iPack fournis."
+                    "Tu réponds pas-à-pas en te basant sur les guides PDF iPack fournis."
                 )
                 chosen_index = index_ipack
             
