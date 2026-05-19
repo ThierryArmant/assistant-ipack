@@ -22,7 +22,6 @@ st.set_page_config(
 # ======================================================================
 if "messages_hub" not in st.session_state:
     st.session_state.messages_hub = []
-# 🚀 CALAGE D'OFFICE SUR LE MODE GENERAL AU DEMARRAGE
 if "active_module" not in st.session_state:
     st.session_state.active_module = "general"  
 
@@ -49,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (Boutons Verts & Effet Halo)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CONTRASTE TEXTE AMÉLIORÉ)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -119,26 +118,26 @@ st.markdown(f"""
         transition: all 0.2s ease;
     }}
 
-    /* 🟢 Activation et halo vert émeraude sur le bouton actif */
+    /* 🟢 Passage au vert, texte BLANC et GRAS avec halo pour le bouton actif */
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(1) button {{
-        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'ipack' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#10B981' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'ipack' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.4)' if st.session_state.active_module == 'ipack' else 'none' };
+        background-color: { 'rgba(16, 185, 129, 0.35)' if st.session_state.active_module == 'ipack' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#FFFFFF' if st.session_state.active_module == 'ipack' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'ipack' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'ipack' else 'none' };
         font-weight: { '700' if st.session_state.active_module == 'ipack' else 'normal' };
     }}
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(2) button {{
-        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'examens' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#10B981' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'examens' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.4)' if st.session_state.active_module == 'examens' else 'none' };
+        background-color: { 'rgba(16, 185, 129, 0.35)' if st.session_state.active_module == 'examens' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#FFFFFF' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'examens' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'examens' else 'none' };
         font-weight: { '700' if st.session_state.active_module == 'examens' else 'normal' };
     }}
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(3) button {{
-        background-color: { 'rgba(16, 185, 129, 0.25)' if st.session_state.active_module == 'general' else 'rgba(30, 41, 59, 0.75)' } !important;
-        color: { '#10B981' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
-        border: 1px solid { 'rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'general' else 'rgba(255,255,255,0.1)' } !important;
-        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.4)' if st.session_state.active_module == 'general' else 'none' };
+        background-color: { 'rgba(16, 185, 129, 0.35)' if st.session_state.active_module == 'general' else 'rgba(30, 41, 59, 0.75)' } !important;
+        color: { '#FFFFFF' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
+        border: 1px solid { 'rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'general' else 'rgba(255,255,255,0.1)' } !important;
+        box-shadow: { '0px 0px 12px rgba(16, 185, 129, 0.5)' if st.session_state.active_module == 'general' else 'none' };
         font-weight: { '700' if st.session_state.active_module == 'general' else 'normal' };
     }}
     
