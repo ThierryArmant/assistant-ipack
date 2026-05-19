@@ -192,7 +192,6 @@ with col1:
         key="radio_context"
     )
 
-    # Affichage du fil de discussion local
     for m in st.session_state.messages_ipack:
         with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
             
@@ -226,18 +225,18 @@ with col1:
                             extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
                 except: pass
 
-            # Rendu des prompts systèmes consolidés
+            # 🚀 NETTOYAGE DU PROMPT SYSTÈME (ZÉRO JARGON THEORIQUE)
             if is_examen:
                 consigne_ia = f"""
-                Tu es l'assistant expert pour le module EXAMENS, EVALUATIONS ET DISPENSES en EPS.
-                Ton rôle est d'apporter des réponses institutionnelles claires concernant la gestion des examens (DNB, BAC, CAP) et des élèves inaptes ou dispensés.
+                Tu es l'assistant de terrain officiel pour le portail académique d'Aix-Marseille et Éduscol.
+                Ton rôle est d'apporter des réponses institutionnelles, concrètes et pratiques concernant l'organisation des examens, des grilles d'évaluation académiques, des calendriers de remontée des notes ou de la gestion administrative des inaptitudes/dispenses en EPS.
                 
-                Tu dois formuler ta réponse en croisant exclusivement le cadre légal d'Éduscol et les protocoles officiels de l'académie d'Aix-Marseille fournis ici :
-                {extraits_doc if extraits_doc else 'Utilise les textes officiels et protocoles d Aix-Marseille.'}
+                Tu dois formuler ta réponse en te basant EXCLUSIVEMENT sur les fiches ressources, circulaires et données réelles extraites ici :
+                {extraits_doc if extraits_doc else 'Utilise uniquement les fiches pratiques et textes d Aix-Marseille.'}
                 
                 Question de l'enseignant : '{prompt_ipack}'
                 
-                Donne une réponse rigoureuse, précise et directement applicable sur le terrain. Ne propose aucune option fictive ou obsolète. Ajoute obligatoirement à la fin de ta réponse la liste des liens URL exacts consultés (Aix-Marseille ou Éduscol) pour preuve.
+                Donne une méthode claire ou un résumé directement applicable. Ne fais aucune dissertation théorique. Ajoute obligatoirement à la fin de ta réponse la liste des liens URL exacts consultés (Aix-Marseille ou Éduscol) pour preuve.
                 """
                 titre_badge = "📊 EXAMENS & EVALUATIONS (AIX-MARSEILLE & ÉDUSCOL)"
             else:
@@ -270,7 +269,6 @@ with col2:
         st.session_state.messages_aix = []
         st.rerun()
         
-    # Rendu corrigé des messages de tchat pour la colonne web
     for m in st.session_state.messages_aix:
         with st.chat_message(m["role"]): st.markdown(m["content"], unsafe_allow_html=True)
             
