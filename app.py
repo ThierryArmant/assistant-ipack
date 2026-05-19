@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import pandas as pd
 import requests
+import urllib.parse
+import re
 from bs4 import BeautifulSoup
 from llama_index.core import VectorStoreIndex, Settings
 from llama_index.llms.openai import OpenAI
@@ -49,7 +51,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (TRANSPARENCE SAINTE-VICTOIRE)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (15% TRANSPARENCE ACCENTUÉE)
 # ======================================================================
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
@@ -78,14 +80,14 @@ st.markdown(f"""
     }}
     div[data-testid="stRadio"] label p {{ color: #FFFFFF !important; font-weight: 600 !important; font-size: 13px !important; }}
     
-    /* 🖼️ Conteneurs principaux (Transparence à 15%) */
+    /* 🖼️ Conteneurs principaux (Transparence à 15% pour voir la Sainte-Victoire) */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
         border-radius: 0px 0px 8px 8px;
         padding: 18px;
-        box-shadow: 0px 10px 30px rgba(0,0,0,0.25);
+        box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
         border-left: 1px solid rgba(255, 255, 255, 0.15);
         border-right: 1px solid rgba(255, 255, 255, 0.15);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
@@ -93,7 +95,7 @@ st.markdown(f"""
     }}
     .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{ color: #FFFFFF !important; font-weight: 700 !important; }}
     
-    /* 🏔️ Cartes des réponses IA translucides (Plus de pavés blancs opaques !) */
+    /* 🏔️ Cartes des réponses IA translucides à 20% (Disparition complète des blocs opaques) */
     .santorin-card, .general-card {{ 
         background-color: rgba(255, 255, 255, 0.20) !important; 
         backdrop-filter: blur(8px) !important;
@@ -101,21 +103,21 @@ st.markdown(f"""
         padding: 16px; 
         border-radius: 4px; 
         margin-bottom: 18px; 
-        color: #FFFFFF !important; 
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.2); 
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.25); 
     }}
     .santorin-card {{ border-left: 6px solid #DC2626 !important; }}
     .general-card {{ border-left: 6px solid #10B981 !important; }}
     
-    /* Forçage de la couleur du texte et des listes en blanc pour la lisibilité */
+    /* Forçage de lisibilité blanc sur transparent */
     .santorin-card *, .general-card * {{ color: #FFFFFF !important; }}
+    .santorin-card a, .general-card a {{ color: #38BDF8 !important; text-decoration: underline !important; font-weight: bold; }}
     
     /* Tableaux Markdown transparents */
     .santorin-card table, .general-card table {{ background-color: rgba(30, 41, 59, 0.5) !important; color: #FFFFFF !important; border-collapse: collapse; width: 100%; margin-top: 10px; }}
     .santorin-card th, .general-card th {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #FFFFFF !important; padding: 8px !important; font-weight: bold !important; border: 1px solid rgba(255,255,255,0.2) !important; }}
     .santorin-card td, .general-card td {{ padding: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #FFFFFF !important; }}
     
-    /* Disparition complète des fonds de chat natifs de Streamlit */
+    /* Zone de dialogue utilisateur */
     div[data-testid="stChatMessage"] {{ background-color: transparent !important; border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
         background-color: rgba(255, 255, 255, 0.15) !important; 
@@ -137,6 +139,7 @@ if openai_api_key:
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
     Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
 
+# bandeau titre
 st.markdown(f"""
     <div class="hub-header">
         <div style="width: 150px; text-align: left;"><img src="{github_url}{img_gauche}" width="110"></div>
@@ -149,7 +152,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 5. MOTEURS D'INDEXATION AVEC SCRAPER SITES EMBARQUÉ
+# 5. MOTEURS D'INDEXATION DES DOCUMENTS LOCAUX (IPACK & SANTORIN)
 # ======================================================================
 @st.cache_resource
 def get_separated_engines_final():
@@ -157,7 +160,6 @@ def get_separated_engines_final():
     documents_list = []
     base_dir = "./data"
     
-    # 📊 MODULE LOCAL : EXAMENS & SANTORIN
     if os.path.exists(base_dir):
         for fichier in os.listdir(base_dir):
             nom_f = fichier.lower()
@@ -184,7 +186,6 @@ def get_separated_engines_final():
         if documents_list:
             index_santorin = VectorStoreIndex.from_documents(documents_list)
         
-    # 🛠️ MODULE LOCAL : IPACKEPS
     index_ipack = VectorStoreIndex.from_documents([])
     if os.path.exists(base_dir):
         fichiers_ipack = []
@@ -199,45 +200,17 @@ def get_separated_engines_final():
             except:
                 pass
                 
-    # 🌐 MODULE RECHERCHE : SCRAPER SANS MODULES EXTERNES FAUTIFS
-    index_sites_officiels = VectorStoreIndex.from_documents([])
-    liens_web = [
-        "https://www.pedagogie.ac-aix-marseille.fr/jcms/c_78026/it/accueil",
-        "https://eduscol.education.gouv.fr/",
-        "https://eps.enseigne.ac-lyon.fr/spip/",
-        "https://eps.ac-creteil.fr/"
-    ]
-    
-    docs_web = []
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    
-    for url in liens_web:
-        try:
-            res = requests.get(url, headers=headers, timeout=10)
-            if res.status_code == 200:
-                soup = BeautifulSoup(res.text, "html.parser")
-                # On nettoie le code HTML inutile (scripts, styles)
-                for s in soup(["script", "style"]):
-                    s.extract()
-                texte_nettoye = soup.get_text(separator=" ")
-                docs_web.append(Document(text=texte_nettoye, metadata={"source": url}))
-        except:
-            pass
-            
-    if docs_web:
-        index_sites_officiels = VectorStoreIndex.from_documents(docs_web)
-    
-    return index_ipack, index_santorin, index_sites_officiels
+    return index_ipack, index_santorin
 
 if openai_api_key:
-    index_ipack, index_santorin, index_sites_officiels = get_separated_engines_final()
+    index_ipack, index_santorin = get_separated_engines_final()
 
 # ======================================================================
 # 6. EXÉCUTION DOUBLE COLONNE INDÉPENDANTE
 # ======================================================================
 col1, col2 = st.columns(2, gap="large")
 
-# --- COLONNE 1 : ASSISTANT MÉTIER ---
+# --- COLONNE 1 : ASSISTANT MÉTIER (IPACK / EXAMENS) ---
 with col1:
     st.markdown('<div class="column-title">🤖 Assistant Métier EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -296,7 +269,7 @@ with col1:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- COLONNE 2 : ASSISTANT RECHERCHES SITES CONNECTÉS ---
+# --- COLONNE 2 : ASSISTANT RECHERCHES SITES ACADÉMIQUES PROFONDES ---
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -311,20 +284,71 @@ with col2:
     if prompt_aix := st.chat_input("Votre recherche officielle...", key="input_aix"):
         st.session_state.messages_aix.append({"role": "user", "content": f"**Vous** : {prompt_aix}"})
         
-        with st.spinner("Recherche en direct sur les portails EPS..."):
-            system_prompt_web = (
-                "Tu es l'assistant expert des textes réglementaires de l'Éducation Nationale pour l'EPS.\n"
-                "Tu réponds en te basant STRICTEMENT sur le contenu extrait en temps réel des sites officiels fournis "
-                "(Éduscol, Académie d'Aix-Marseille, Académie de Lyon, Académie de Créteil).\n"
-                "Cite au maximum le site d'origine dans ta réponse pour rassurer l'enseignant."
-            )
-            chat_engine_web = index_sites_officiels.as_chat_engine(
-                chat_mode="context",
-                memory=ChatMemoryBuffer.from_defaults(token_limit=4000),
-                system_prompt=system_prompt_web
-            )
-            response_web = chat_engine_web.chat(prompt_aix)
-            answer_aix = f"""<div class="general-card"><strong>🌐 SOURCE SITES OFFICIELS EPS :</strong><br><br>{response_web.response}</div>"""
+        with st.spinner("Recherche et lecture approfondie des directives académiques..."):
+            # Requête ciblée restreinte aux 4 portails académiques officiels
+            terme_recherche = f"{prompt_aix} (site:pedagogie.ac-aix-marseille.fr OR site:eduscol.education.gouv.fr OR site:eps.enseigne.ac-lyon.fr OR site:eps.ac-creteil.fr)"
+            url_moteur = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(terme_recherche)}"
+            
+            contenu_profond = ""
+            liens_trouves = []
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+            
+            try:
+                res_moteur = requests.get(url_moteur, headers=headers, timeout=6)
+                if res_moteur.status_code == 200:
+                    soup_moteur = BeautifulSoup(res_moteur.text, "html.parser")
+                    # On extrait les 3 premiers vrais liens profonds des résultats
+                    blocs_liens = soup_moteur.find_all("a", class_="result__url")[:3]
+                    for b in blocs_liens:
+                        href = b.get("href")
+                        if href and "duckduckgo" not in href:
+                            # Extraction de la vraie URL propre
+                            vraie_url = urllib.parse.parse_qs(urllib.parse.urlparse(href).query).get('uddg', [None])[0]
+                            if vraie_url:
+                                liens_trouves.append(vraie_url)
+                            else:
+                                liens_trouves.append(href)
+            except:
+                pass
+
+            # 🚀 LE CORRECTIF : On va lire le CONTENU RÉEL de ces liens profonds en direct
+            if liens_trouves:
+                for url in liens_trouves:
+                    try:
+                        res_page = requests.get(url, headers=headers, timeout=5)
+                        if res_page.status_code == 200:
+                            soup_page = BeautifulSoup(res_page.text, "html.parser")
+                            # Nettoyage des balises inutiles pour isoler le texte de la circulaire
+                            for tag in soup_page(["script", "style", "nav", "footer", "header"]):
+                                tag.extract()
+                            
+                            # On ne prend que les paragraphes significatifs pour ne pas surcharger l'IA
+                            paragraphes = [p.get_text().strip() for p in soup_page.find_all(["p", "li", "td"]) if len(p.get_text().strip()) > 40]
+                            texte_page = " ".join(paragraphes[:15]) # Analyse des 15 premiers blocs de texte profonds
+                            contenu_profond += f"\n--- CONTENU DE LA PAGE ({url}) ---\n{texte_page}\n"
+                    except:
+                        pass
+
+            # Formulation de l'instruction finale pour le modèle de langage
+            if contenu_profond.strip():
+                consigne_analyse = f"""
+                Tu es l'assistant expert des textes officiels et protocoles EPS de l'Éducation Nationale.
+                Tu dois répondre de façon claire, structurée et exhaustive à la demande de l'enseignant.
+                
+                Voici le texte extrait des documents profonds trouvés sur les sites officiels :
+                {contenu_profond}
+                
+                Question de l'enseignant : '{prompt_aix}'
+                
+                Rédige une synthèse immédiate du protocole ou de la directive trouvée (par exemple s'il s'agit du protocole TASA ou d'une fiche d'évaluation). 
+                À la fin de ta réponse, ajoute explicitement les liens internet consultés sous cette forme Markdown pour permettre au collègue de télécharger les PDF d'origine :
+                - [Lien vers la ressource officielle](adresse_url)
+                """
+            else:
+                consigne_analyse = f"Tu es l'assistant expert des textes officiels EPS. Réponds au mieux de tes connaissances sur : '{prompt_aix}' car les serveurs académiques profonds n'ont pas renvoyé de texte lisible."
+
+            response_web = Settings.llm.complete(consigne_analyse)
+            answer_aix = f"""<div class="general-card"><strong>🌐 DOSSIER RÉGLEMENTAIRE ET LIENS :</strong><br><br>{response_web.text}</div>"""
                 
         st.session_state.messages_aix.append({"role": "assistant", "content": answer_aix})
         st.rerun()
