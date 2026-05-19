@@ -48,7 +48,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CORRIGÉ & SÉCURISÉ)
+# 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (BOUTON NETTOYER AJUSTÉ)
 # ======================================================================
 img_gauche = "image_7.png"
 img_centre_droit = "image_6.png" 
@@ -136,19 +136,20 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
     
-    /* BOUTON NETTOYER (Forcé en rouge grâce au marqueur HTML, zéro conflit) */
+    /* 🚀 BOUTON NETTOYER : Fond rouge ultra-transparent (5%) et texte blanc pur */
     div.element-container:has(.nettoyer-wrapper) + div.element-container button {{
-        background-color: rgba(220, 38, 38, 0.25) !important;
-        color: #EF4444 !important;
-        border: 1px solid rgba(220, 38, 38, 0.4) !important;
+        background-color: rgba(220, 38, 38, 0.05) !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(220, 38, 38, 0.2) !important;
         border-radius: 8px !important;
         padding: 7px 10px !important;
         width: 100% !important;
         box-shadow: none !important;
-        font-weight: 400 !important;
+        font-weight: 500 !important;
     }}
     div.element-container:has(.nettoyer-wrapper) + div.element-container button:hover {{
-        background-color: rgba(220, 38, 38, 0.4) !important;
+        background-color: rgba(220, 38, 38, 0.25) !important;
+        color: #FFFFFF !important;
     }}
     
     /* Cartes de réponse de l'IA */
@@ -204,16 +205,15 @@ st.markdown(f"""
             <div class="visitor-badge">👁️ {nb_visites:05d} visites</div>
         </div>
         <div style="display: flex; justify-content: flex-end; align-items: center; width: 25%; gap: 15px;">
-            <img src="{github_url}{img_centre_droit}" width="70">
+            <img src="{github_url}{img_eps}" width="70">
             <img src="{github_url}{img_droite}" width="60">
         </div>
     </div>
 """, unsafe_allow_html=True)
 
 # ======================================================================
-# 6. BOUTONS DE CONTEXTE (UTILISATION NATIVE DE PRIMARY/SECONDARY)
+# 6. BOUTONS DE CONTEXTE
 # ======================================================================
-# L'attribut type="primary" gère automatiquement l'illumination du bouton actif !
 col_b1, col_b2, col_b3 = st.columns(3, gap="small")
 
 with col_b1:
@@ -256,7 +256,6 @@ st.markdown(f"""
 col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
 
 with col_action_clear:
-    # Ce marqueur invisible permet au CSS de repérer spécifiquement ce bouton
     st.markdown('<div class="nettoyer-wrapper"></div>', unsafe_allow_html=True)
     if st.button("🧹 Nettoyer", key="clear_all"):
         st.session_state.messages_hub = []
