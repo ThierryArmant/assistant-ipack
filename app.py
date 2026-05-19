@@ -50,7 +50,8 @@ nb_visites = incrementer_et_recuperer_compteur()
 # ======================================================================
 # 3. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (INTERFACE ÉPURÉE)
 # ======================================================================
-img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
+img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"
+img_eps = "image_6.png" # 🚀 AJOUT DU LOGO ROND EPS
 github_url = f"https://raw.githubusercontent.com/{st.secrets.get('GITHUB_USERNAME')}/{st.secrets.get('GITHUB_REPO')}/main/"
 
 st.markdown(f"""
@@ -87,13 +88,13 @@ st.markdown(f"""
         backdrop-filter: blur(15px) !important;
         -webkit-backdrop-filter: blur(15px) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        padding: 14px 18px 18px 18px !important; /* Ajustement padding haut */
+        padding: 14px 18px 18px 18px !important; 
         border-radius: 12px !important;
         margin-bottom: 18px !important;
         box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
     }}
 
-    /* 🚀 Barre Bleue Centrale Enrichie (Deux lignes de texte intégrées) */
+    /* Barre Bleue Centrale Enrichie */
     .column-title {{ 
         color: #FFFFFF; 
         text-align: center; 
@@ -139,197 +140,4 @@ st.markdown(f"""
         box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'ipack' else 'none' };
         font-weight: 700 !important;
     }}
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(2) button {{
-        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'examens' else 'rgba(15, 23, 42, 0.9)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'examens' else '#94A3B8' } !important;
-        border: 1px solid { '#10B981' if st.session_state.active_module == 'examens' else 'transparent' } !important;
-        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'examens' else 'none' };
-        font-weight: 700 !important;
-    }}
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) div:nth-of-type(3) button {{
-        background-color: { 'rgba(16, 185, 129, 0.85)' if st.session_state.active_module == 'general' else 'rgba(15, 23, 42, 0.9)' } !important;
-        color: { '#FFFFFF' if st.session_state.active_module == 'general' else '#94A3B8' } !important;
-        border: 1px solid { '#10B981' if st.session_state.active_module == 'general' else 'transparent' } !important;
-        box-shadow: { '0px 0px 15px rgba(16, 185, 129, 0.6)' if st.session_state.active_module == 'general' else 'none' };
-        font-weight: 700 !important;
-    }}
-    
-    /* Bouton Nettoyer */
-    div.clear-btn-align .stButton>button {{
-        background-color: rgba(220, 38, 38, 0.25) !important;
-        color: #EF4444 !important;
-        border: 1px solid rgba(220, 38, 38, 0.4) !important;
-        border-radius: 8px !important;
-        padding: 7px 10px !important;
-        width: 100% !important;
-    }}
-    
-    /* Cartes de réponse de l'IA */
-    .santorin-card, .general-card {{ 
-        background-color: rgba(15, 23, 42, 0.8) !important; 
-        backdrop-filter: blur(10px) !important;
-        padding: 18px; 
-        border-radius: 8px; 
-        margin-bottom: 16px; 
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
-    }}
-    .santorin-card {{ border-left: 6px solid #38BDF8 !important; }} 
-    .general-card {{ border-left: 6px solid #10B981 !important; }} 
-    
-    .santorin-card *, .general-card * {{ 
-        color: #FFFFFF !important; 
-        font-size: 15px !important; 
-        line-height: 1.6 !important; 
-    }}
-    
-    /* Bulle Utilisateur */
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ 
-        background-color: rgba(255, 255, 255, 0.15) !important; 
-        backdrop-filter: blur(6px) !important;
-        border-radius: 14px 14px 0px 14px !important; 
-        margin-left: 15% !important; 
-    }}
-    div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
-    </style>
-""", unsafe_allow_html=True)
-
-# ======================================================================
-# 4. CONFIGURATION DE L'INTELLIGENCE ARTIFICIELLE
-# ======================================================================
-openai_api_key = st.secrets.get("OPENAI_API_KEY")
-tavily_api_key = st.secrets.get("TAVILY_API_KEY")
-
-if openai_api_key:
-    Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.0, api_key=openai_api_key)
-    Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=openai_api_key)
-
-# ======================================================================
-# 5. BANDEAU SUPERIEUR
-# ======================================================================
-st.markdown(f"""
-    <div class="hub-header">
-        <div style="text-align: left;"><img src="{github_url}{img_gauche}" width="95"></div>
-        <div class="hub-title" style="text-align: center;">
-            <h1>Hub IA - EPS</h1>
-            <p>Espace Ressources &amp; Assistance Numérique</p>
-            <div class="visitor-badge">👁️ {nb_visites:05d} visites</div>
-        </div>
-        <div style="text-align: right;"><img src="{github_url}{img_droite}" width="60"></div>
-    </div>
-""", unsafe_allow_html=True)
-
-# ======================================================================
-# 6. ENCADRÉ DES BOUTONS DE CONTEXTE (SANS TITRE SUPPLÉMENTAIRE)
-# ======================================================================
-st.markdown('<div class="context-container">', unsafe_allow_html=True)
-
-col_b1, col_b2, col_b3 = st.columns(3, gap="small")
-
-with col_b1:
-    if st.button("🛠️ iPackEPS", use_container_width=True, key="btn_ip"):
-        st.session_state.active_module = "ipack"
-        st.session_state.messages_hub = []
-        st.rerun()
-with col_b2:
-    if st.button("📊 Examens & Santorin", use_container_width=True, key="btn_ex"):
-        st.session_state.active_module = "examens"
-        st.session_state.messages_hub = []
-        st.rerun()
-with col_b3:
-    if st.button("🔍 Recherches Générales", use_container_width=True, key="btn_ge"):
-        st.session_state.active_module = "general"
-        st.session_state.messages_hub = []
-        st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ======================================================================
-# 7. BARRE DE TITRE CENTRALE (AVEC INSTRUCTION INTÉGRÉE)
-# ======================================================================
-label_titres = {
-    "ipack": "🛠️ Mode Actif : Assistance Technique iPackEPS",
-    "examens": "📊 Mode Actif : Réglementation Examens & Dispenses",
-    "general": "🔍 Mode Actif : Recherche Transversale Globale"
-}
-
-# Injection de la double ligne : consigne claire + état du module actif
-st.markdown(f"""
-    <div class="column-title">
-        <span class="instruction">⚙️ Choisissez le contexte de votre question ci-dessus</span>
-        <span class="mode-actuel">{label_titres[st.session_state.active_module]}</span>
-    </div>
-""", unsafe_allow_html=True)
-
-# Ligne d'action (Nettoyer + Saisie)
-col_action_clear, col_action_input = st.columns([1, 4.5], gap="small")
-
-with col_action_clear:
-    st.markdown('<div class="clear-btn-align">', unsafe_allow_html=True)
-    if st.button("🧹 Nettoyer", key="clear_all"):
-        st.session_state.messages_hub = []
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col_action_input:
-    prompt = st.chat_input("Posez votre question institutionnelle ou technique ici...", key="chat_main")
-
-# Flux de messages
-st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
-for m in st.session_state.messages_hub:
-    with st.chat_message(m["role"]): 
-        st.markdown(m["content"], unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Traitement IA
-if prompt:
-    st.session_state.messages_hub.append({"role": "user", "content": f"**Vous** : {prompt}"})
-    
-    if st.session_state.active_module == "ipack":
-        domaines_recherche = ["ipackeps.ac-creteil.fr"]
-        texte_spinner = "Fouille de la base technique..."
-        color_card = "general-card"
-    elif st.session_state.active_module == "examens":
-        domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr"]
-        texte_spinner = "Analyse réglementaire..."
-        color_card = "santorin-card"
-    else:
-        domaines_recherche = ["pedagogie.ac-aix-marseille.fr", "eduscol.education.gouv.fr", "eps.enseigne.ac-lyon.fr", "eps.ac-creteil.fr"]
-        texte_spinner = "Recherche multi-académies..."
-        color_card = "general-card"
-
-    with st.spinner(texte_spinner):
-        extraits_doc = ""
-        if tavily_api_key:
-            try:
-                payload = {
-                    "api_key": tavily_api_key,
-                    "query": f"{prompt} EPS",
-                    "search_depth": "advanced",
-                    "include_domains": domaines_recherche
-                }
-                res = requests.post("https://api.tavily.com/search", json=payload, timeout=10)
-                if res.status_code == 2000: # Note: Corrigé silencieusement en 200 en production si nécessaire, laissé conforme à la structure globale
-                    data_web = res.json()
-                    for item in data_web.get("results", []):
-                        extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
-                elif res.status_code == 200:
-                    data_web = res.json()
-                    for item in data_web.get("results", []):
-                        extraits_doc += f"Source: {item['title']} ({item['url']})\nContenu: {item['content']}\n\n"
-            except: pass
-
-        if st.session_state.active_module == "ipack":
-            consigne_ia = f"Tu es l'assistant technique iPackEPS. Crée un tuto précis basé sur : {extraits_doc}. Ajoute l'URL. Pas de menus imaginaires."
-            badge_title = "🛠️ PROTOCOLE TECHNIQUE"
-        elif st.session_state.active_module == "examens":
-            consigne_ia = f"Tu es l'assistant officiel. Réponds sur les textes ou dispenses à partir de : {extraits_doc}. Pas de clics logiciels. Ajoute les liens URL exacts."
-            badge_title = "📊 REGLEMENTATION & EXAMENS"
-        else:
-            consigne_ia = f"Tu es l'assistant de recherche globale EPS. Synthétise clairement : {extraits_doc}. Donne la liste des URL."
-            badge_title = "🔍 RÉSULTATS DE RECHERCHE"
-
-        response_web = Settings.llm.complete(consigne_ia)
-        formatted_answer = f'<div class="{color_card}"><strong>{badge_title} :</strong><br><br>{response_web.text}</div>'
-
-    st.session_state.messages_hub.append({"role": "assistant", "content": formatted_answer})
-    st.rerun()
+    div[data-testid="stHorizontalBlock"]:nth-of-type(1)
