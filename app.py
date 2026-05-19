@@ -5,6 +5,8 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
+
+# IMPORTATION SÉCURISÉE DES LECTEURS (Pour éviter la NameError)
 from llama_index.readers.file import PandasCSVReader
 
 # ======================================================================
@@ -53,7 +55,7 @@ st.markdown(f"""
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 0px; height: 35px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
     
-    /* Cartes indépendantes Effet Verre Dépoli (Laisse voir l'arrière-plan à 65%) */
+    /* Cartes indépendantes Effet Verre Dépoli (Transparence à 65%) */
     .glass-card {{
         background-color: rgba(255, 255, 255, 0.65) !important;
         backdrop-filter: blur(12px) !important;
@@ -67,7 +69,6 @@ st.markdown(f"""
         margin-bottom: 20px;
     }}
     
-    /* Renforcement de la couleur des textes sur le fond dépoli */
     .glass-card p, .glass-card label, .glass-card span, .glass-card div[data-baseweb="select"] {{
         color: #0F172A !important;
         font-weight: 600 !important;
@@ -108,6 +109,7 @@ st.markdown(f"""
 def get_separated_engines():
     file_extractor = {".csv": PandasCSVReader(concat_rows=False)}
     
+    # On scanne les documents présents
     all_docs = SimpleDirectoryReader(input_dir="./data", file_extractor=file_extractor, required_exts=[".csv", ".txt"]).load_data()
     
     # Isolation Strict de Santorin & Examens (Mots clés : 'santorin' ou 'evaluation')
