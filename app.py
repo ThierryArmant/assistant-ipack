@@ -32,7 +32,7 @@ def incrementer_et_recuperer_compteur():
 nb_visites = incrementer_et_recuperer_compteur()
 
 # ======================================================================
-# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS)
+# 2. INTERFACE GRAPHIQUE ET FEUILLES DE STYLE (CSS AVANCÉ)
 # ======================================================================
 st.set_page_config(page_title="Hub IA - EPS", layout="wide", initial_sidebar_state="collapsed")
 img_gauche, img_droite, img_fond = "image_7.png", "image_5.png", "image_8.png"    
@@ -43,19 +43,97 @@ st.markdown(f"""
     .block-container {{ padding-top: 0.5rem !important; padding-bottom: 5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; max-width: 100% !important; }}
     .stApp {{ background-image: url('{github_url}{img_fond}') !important; background-size: cover !important; background-attachment: fixed !important; }}
     header[data-testid="stHeader"] {{ display: none !important; }}
+    
+    /* En-tête principal */
     .hub-header {{ background-color: #1E293B; display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }}
     .hub-title h1 {{ color: white !important; margin: 0; font-size: 22px; font-weight: bold; }}
     .hub-title p {{ color: #94A3B8 !important; margin: 0; font-size: 11px; text-transform: uppercase; }}
     .visitor-badge {{ background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; font-family: monospace; margin-top: 8px; display: inline-block; }}
+    
+    /* Titres des colonnes */
     .column-title {{ color: #FFFFFF; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 0px; height: 35px; background-color: #1E293B; border-radius: 8px 8px 0px 0px; padding: 6px 0; }}
     .stButton>button {{ background-color: rgba(30, 41, 59, 0.8) !important; color: #94A3B8 !important; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 20px !important; font-size: 11px !important; }}
-    .glass-card {{ background-color: rgba(255, 255, 255, 0.65) !important; backdrop-filter: blur(12px) !important; border-radius: 0px 0px 8px 8px; padding: 18px; box-shadow: 0px 8px 25px rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.3); margin-bottom: 20px; }}
-    .glass-card p, .glass-card label, .glass-card span, .glass-card div[data-baseweb="select"] {{ color: #0F172A !important; font-weight: 600 !important; }}
-    .santorin-card {{ background-color: #FFFFFF !important; border-left: 6px solid #DC2626 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
-    .general-card {{ background-color: #FFFFFF !important; border-left: 6px solid #10B981 !important; padding: 16px; border-radius: 4px; margin-bottom: 18px; color: #1E293B !important; box-shadow: 0px 2px 8px rgba(0,0,0,0.1); }}
+    
+    /* 🎛️ Bloc choix iPack / Santorin Prononcé */
+    div[data-testid="stRadio"] {{
+        background-color: #1E293B !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: inset 0px 2px 4px rgba(0,0,0,0.3) !important;
+        margin-bottom: 15px !important;
+    }}
+    /* Forcer le texte des labels du radio bouton en blanc pour le contraste */
+    div[data-testid="stRadio"] label p {{
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+    }}
+    
+    /* 🖼️ Fenêtres Effet Verre Dépoli Plus Transparentes (40% d'opacité au lieu de 65%) */
+    .glass-card {{
+        background-color: rgba(255, 255, 255, 0.40) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-radius: 0px 0px 8px 8px;
+        padding: 18px;
+        box-shadow: 0px 10px 30px rgba(0,0,0,0.25);
+        border-left: 1px solid rgba(255, 255, 255, 0.25);
+        border-right: 1px solid rgba(255, 255, 255, 0.25);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+        margin-bottom: 20px;
+    }}
+    
+    /* Éléments de contrôle hors bulles de texte */
+    .glass-card > p, .glass-card label:not(div[data-testid="stRadio"] label) {{
+        color: #0F172A !important;
+        font-weight: 700 !important;
+    }}
+    
+    /* 🛡️ Préservation totale de la lisibilité des réponses de l'IA (Opaque à 100%) */
+    .santorin-card {{ 
+        background-color: #FFFFFF !important; 
+        border-left: 6px solid #DC2626 !important; 
+        padding: 16px; 
+        border-radius: 4px; 
+        margin-bottom: 18px; 
+        color: #1E293B !important; 
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15); 
+    }}
+    .general-card {{ 
+        background-color: #FFFFFF !important; 
+        border-left: 6px solid #10B981 !important; 
+        padding: 16px; 
+        border-radius: 4px; 
+        margin-bottom: 18px; 
+        color: #1E293B !important; 
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15); 
+    }}
+    
+    /* Tableau Markdown dans les réponses */
+    .santorin-card table, .general-card table {{
+        background-color: #FFFFFF !important;
+        color: #1E293B !important;
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 10px;
+    }}
+    .santorin-card th, .general-card th {{
+        background-color: #F1F5F9 !important;
+        color: #0F172A !important;
+        padding: 8px !important;
+        font-weight: bold !important;
+        border: 1px solid #CBD5E1 !important;
+    }}
+    .santorin-card td, .general-card td {{
+        padding: 8px !important;
+        border: 1px solid #E2E8F0 !important;
+    }}
+    
+    /* Bulles de discussion utilisateurs */
     div[data-testid="stChatMessage"] {{ border: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: #FFFFFF !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; box-shadow: 0px 2px 6px rgba(0,0,0,0.08); }}
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {{ background-color: #F8FAFC !important; color: #1F2937 !important; border-radius: 16px 16px 16px 0px !important; margin-right: 10% !important; box-shadow: 0px 2px 6px rgba(0,0,0,0.05); }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {{ background-color: #FFFFFF !important; border-radius: 16px 16px 0px 16px !important; margin-left: 10% !important; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }}
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) ** {{ color: #0F172A !important; }}
     div[data-testid="stChatMessageAvatarUser"], div[data-testid="stChatMessageAvatarAssistant"] {{ display: none !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -79,7 +157,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- CHARGEMENT SÉCURISÉ ET SCAN GLOBAL DE TOUTES LES FEUILLES ---
+# --- CHARGEMENT DES COMPOSANTS ET MULTI-FEUILLES ---
 @st.cache_resource
 def get_separated_engines_final():
     index_santorin = VectorStoreIndex.from_documents([])
@@ -91,10 +169,7 @@ def get_separated_engines_final():
             nom_minuscule = fichier.lower()
             chemin_complet = os.path.join(dossier_data, fichier)
             
-            # Détection automatique de tout document d'examen ou de FAQ Santorin
             if "santorin" in nom_minuscule or "examen" in nom_minuscule:
-                
-                # Option A : Fichiers Excel (Gère nativement le multi-onglets)
                 if fichier.endswith(('.xlsx', '.xls')):
                     try:
                         xl = pd.ExcelFile(chemin_complet)
@@ -106,7 +181,6 @@ def get_separated_engines_final():
                     except Exception as e:
                         st.error(f"Erreur d'ouverture Excel ({fichier}) : {str(e)}")
                         
-                # Option B : Fichiers CSV robustes (Séparateur point-virgule)
                 elif fichier.endswith('.csv'):
                     try:
                         df = pd.read_csv(chemin_complet, sep=";", encoding="utf-8", on_bad_lines='skip')
@@ -119,7 +193,6 @@ def get_separated_engines_final():
         if documents_list:
             index_santorin = VectorStoreIndex.from_documents(documents_list)
         
-    # MOTEUR IPACKEPS : Chargement des PDF de cartes mentales
     index_ipack = VectorStoreIndex.from_documents([])
     if os.path.exists(dossier_data):
         ipack_files = [os.path.join(dossier_data, f) for f in os.listdir(dossier_data) if "ipack" in f.lower() and f.endswith(".pdf")]
@@ -163,7 +236,7 @@ with col1:
                     "Tu réponds en te basant sur l'ensemble des données fournies dans les fichiers et feuilles de calcul.\n"
                     "Tu DOIS impérativement croiser toutes les informations disponibles.\n"
                     "Lorsqu'on te pose une question sur une thématique réglementaire (ex: Absence, Dispense, Inaptitude, Épreuve différée), "
-                    "présente TOUJOURS une synthèse comparative complète sous forme de tableau Markdown clair contenant "
+                    "présente TOUJOURS une synthèse comparative complète sous forme d'un tableau Markdown clair contenant "
                     "le protocole pour CHAQUE contexte identifié dans le document (Reponse Collège DNB, Lycée GT Bac, Lycée Pro Bac, Lycée Pro CAP, etc.).\n"
                     "Ne te limite jamais à un seul niveau, donne immédiatement la vue d'ensemble pour permettre la comparaison."
                 )
