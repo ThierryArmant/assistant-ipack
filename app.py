@@ -6,6 +6,9 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.memory import ChatMemoryBuffer
 
+# Import du lecteur spécialisé pour les fichiers Excel/CSV
+from llama_index.readers.file import PandasCSVReader
+
 # ======================================================================
 # 1. INITIALISATION ET COMPTEUR DE VISITES CENTRALISÉ
 # ======================================================================
@@ -75,20 +78,17 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
+# --- CONFIGURATION DE L'INDEXATION SÉCURISÉE DU CSV ---
 @st.cache_resource
 def get_ipack_engine():
-    docs = SimpleDirectoryReader(input_dir="./data", encoding="utf-8").load_data()
+    # On force la lecture propre des lignes et des colonnes du tableau Excel/CSV
+    file_extractor = {".csv": PandasCSVReader(concat_rows=False)}
+    docs = SimpleDirectoryReader(input_dir="./data", file_extractor=file_extractor).load_data()
     index = VectorStoreIndex.from_documents(docs)
-    prompt = (
-        "Tu es l'IA experte du module 'iPackEPS, Santorin & Examens'. Tu parles exclusivement à des professeurs d'EPS.\n\n"
-        "CONSIGNE DE RIGUEUR : Appuie-toi uniquement sur les données factuelles fournies dans le contexte local. "
-        "Si la question concerne les élèves absents ou inaptes, cherche la réponse exacte dans ton document local sans inventer de règles de CCF si elles n'y sont pas inscrites. "
-        "Si la réponse n'est pas dans le contexte, dis-le clairement."
-    )
-    return index.as_chat_engine(chat_mode="condense_plus_context", memory=ChatMemoryBuffer.from_defaults(token_limit=3500), system_prompt=prompt)
+    return index
 
 if openai_api_key:
-    engine_ipack = get_ipack_engine()
+    base_index = get_ipack_engine()
 
 # ======================================================================
 # 4. EXÉCUTION DOUBLE COLONNE
@@ -118,15 +118,36 @@ with col1:
         st.session_state.messages_ipack.append({"role": "user", "content": f"**Vous** : {prompt_ipack}"})
         
         with st.spinner("Analyse factuelle..."):
-            # Envoi direct à LlamaIndex sans blocage artificiel
-            response_locale = engine_ipack.chat(f"CONTEXTE : {context_choice}. QUESTION : {prompt_ipack}")
+            
+            # Ajustement des consignes pour forcer l'IA à regarder la BONNE colonne du CSV selon le choix
+            if "examens" in context_choice.lower():
+                system_prompt = (
+                    "Tu es l'assistant spécialisé EXAMENS & SANTORIN. Tu réponds à des profs d'EPS en te basant sur le fichier de données.\n"
+                    "CONSIGNE ULTRA-STRICTE : Tu dois extraire les réponses en priorité depuis la colonne du tableau correspondant au contexte de l'examen.\n"
+                    "Regarde les colonnes 'reponse Lycée GT Bac', 'reponse Lycée Pro Bac' ou 'Reponse Collège DNB' pour formuler ta réponse réglementaire.\n"
+                    "Ne confonds pas les règles du Lycée (CCF) et du Collège (DNB)."
+                )
+            else:
+                system_prompt = (
+                    "Tu es l'assistant spécialisé IPACKEPS. Tu réponds à des profs d'EPS en te basant sur le fichier de données.\n"
+                    "CONSIGNE ULTRA-STRICTE : Concentre-toi sur les lignes concernant la configuration, les classes, les structures et les sections sportives (SSS).\n"
+                    "Donne un pas-à-pas clair basé uniquement sur les lignes correspondantes du tableau."
+                )
+            
+            chat_engine = base_index.as_chat_engine(
+                chat_mode="condense_plus_context", 
+                memory=ChatMemoryBuffer.from_defaults(token_limit=3500), 
+                system_prompt=system_prompt
+            )
+            
+            response_locale = chat_engine.chat(prompt_ipack)
             answer = response_locale.response
 
         st.session_state.messages_ipack.append({"role": "assistant", "content": f"**Assistant** : {answer}"})
         st.rerun()
 
 # ----------------------------------------------------------------------
-# COLONNE DROITE : MOTEUR DE RECHERCHE FACTUEL
+# COLONNE DROITE : MOTEUR DE RECHERCHE FACTUEL SUR LES PORTAILS DE CONFIANCE
 # ----------------------------------------------------------------------
 with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS (Portails Officiels)</div>', unsafe_allow_html=True)
