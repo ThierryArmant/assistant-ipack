@@ -266,7 +266,7 @@ with col2:
     st.markdown('<div class="column-title">🔍 Assistant Recherches Site EPS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-    if st.button("🧹 Nouveau chat (Site)", key="clear_aix"):
+    if st.button("🧹 Nettoyer le chat", key="clear_aix"):
         st.session_state.messages_aix = []
         st.rerun()
         
