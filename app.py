@@ -3,30 +3,33 @@ import requests
 from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 
-# 1. CONFIGURATION
-st.set_page_config(page_title="Hub IA - iPackEPS", layout="wide")
+# 1. CONFIGURATION DE LA PAGE
+st.set_page_config(page_title="Expert iPackEPS", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. DESIGN
+# 2. STYLE ET DESIGN (CSS)
 st.markdown("""
     <style>
-    .hub-header { background-color: #1E293B; padding: 20px; border-radius: 12px; color: white; text-align: center; margin-bottom: 20px; }
+    .hub-header { background-color: #1E293B; padding: 25px; border-radius: 15px; color: white; text-align: center; margin-bottom: 25px; }
+    .stChatMessage { border-radius: 10px; margin-bottom: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="hub-header"><h1>Expert Support iPackEPS</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="hub-header"><h1>Assistant Support iPackEPS</h1></div>', unsafe_allow_html=True)
 
-if "messages_hub" not in st.session_state: st.session_state.messages_hub = []
+# Initialisation de l'historique
+if "messages_hub" not in st.session_state:
+    st.session_state.messages_hub = []
 
-# 3. MOTEUR DE RECHERCHE & ROUTAGE
-prompt = st.chat_input("Quelle procédure cherchez-vous ? (ex: certificat médical, CAHPN, SSS...)")
+# 3. INTERFACE DE SAISIE
+prompt = st.chat_input("Ex: Comment déposer un certificat médical ?")
 
 if prompt:
     st.session_state.messages_hub.append({"role": "user", "content": prompt})
     
-    with st.spinner("Analyse du module concerné et extraction..."):
+    with st.spinner("Analyse chirurgicale des tutoriels en cours..."):
         try:
-            # Recherche ciblée sur le domaine
-            query_technique = f"{prompt} site:ipackeps.ac-creteil.fr/spip.php?rubrique2 procédure tutoriel"
+            # REQUÊTE TAVILY : On force l'extraction du contenu brut (raw) pour voir les liens
+            query_technique = f"site:ipackeps.ac-creteil.fr {prompt} tutoriel guide procédure clics"
             
             res = requests.post("https://api.tavily.com/search", json={
                 "api_key": st.secrets["TAVILY_API_KEY"],
@@ -36,42 +39,47 @@ if prompt:
                 "include_raw_content": True 
             })
             
-            raw_data = "\n".join([r.get('raw_content', r.get('content', '')) for r in res.json().get("results", [])])
+            # Récupération du contenu brut des pages
+            results = res.json().get("results", [])
+            raw_data = "\n".join([r.get('raw_content', r.get('content', '')) for r in results])
             
-            # SYSTEM EXPERT "ROUTEUR D'EXPERT"
+            # SYSTEM EXPERT : "AGENT EXTRACTEUR DE LIENS & ÉTAPES"
             system_expert = """
-            Tu es l'expert support technique d'iPackEPS.
-            MISSION : Identifier le module de la question parmi la liste ci-dessous et extraire la procédure pas-à-pas.
-
-            MATRICE DE ROUTAGE :
-            1. Accès : Connexion ARENA, Fiche Professeur.
-            2. Gestion annuelle : Archivage, Fiche Établissement, Équipes.
-            3. Projets & Dossiers : Projets EPS/SSS, APSAs, Emplois du temps.
-            4. Gestion Élèves : Import Pronote, Groupes, Inaptitudes, Visualisation.
-            5. Dossier Certificatif : Protocoles, Référentiels, CAHPN, Certificats Médicaux.
-            6. Dossier Natation : ASNS, Enquête Natation.
-            7. Sections Sportives (SSS) : Ouverture, Projet, Bilan.
-            8. Documents & Outils : Impression, Publipostage, Bibliothèque, Export.
-            9. Cyclades/Santorin : Transfert données, Saisie notes, Lots correction, Verrouillage.
-
-            RÈGLES DE NAVIGATION :
-            1. IDENTIFICATION : Associe la question de l'utilisateur à l'un des 9 modules ci-dessus.
-            2. EXTRACTION : Cherche dans les données fournies le lien ou le titre correspondant à la procédure demandée.
-            3. PAS-À-PAS : Donne le chemin complet : "Tableau de bord => Dossier X => Module Y".
-            4. ACTIONNABLE : Décris les étapes (clics, menus, boutons) sans blabla administratif.
-            5. FORMAT : Markdown pur, numéroté, concis.
+            Tu es l'expert technique d'iPackEPS. 
+            TON OBJECTIF : Donner uniquement les étapes de manipulation logicielle.
+            
+            RÈGLES D'EXÉCUTION STRICTES :
+            1. PAS D'INTRODUCTION : Interdiction de dire "Voici le tutoriel" ou "Bonjour". Commence directement par l'action.
+            2. PAS DE RÉSUMÉ : Ne fais pas de sommaire de la page. Si l'utilisateur demande le dépôt de certificats, ignore la fiche établissement ou le TASA.
+            3. DÉTECTION DE LIEN : Si tu vois un lien ou un titre nommé "Dépôt des Certificats Médicaux", c'est ta cible prioritaire.
+            4. FORMATAGE "CLIC-BOUTON" :
+               - Étape 1 : [Chemin dans le menu]
+               - Étape 2 : [Clic sur le bouton ou l'onglet précis]
+               - Étape 3 : [Validation finale]
+            5. LIEN SOURCE : Si la procédure complète est dans un sous-article, cite le titre du lien et son URL.
+            6. PAS DE BLABLA : Supprime toute mention du Bac, de l'UNSS ou des circulaires administratives.
             """
             
-            Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0, max_tokens=1500, api_key=st.secrets["OPENAI_API_KEY"])
+            # Configuration du LLM
+            Settings.llm = OpenAI(
+                model="gpt-4o-mini", 
+                temperature=0, 
+                max_tokens=1500, 
+                api_key=st.secrets["OPENAI_API_KEY"]
+            )
             
-            response = Settings.llm.complete(system_expert + "\n\nContenu technique extrait : " + raw_data + "\n\nQuestion utilisateur : " + prompt)
+            # Génération de la réponse
+            full_prompt = f"{system_expert}\n\nCONTENU BRUT DU SITE :\n{raw_data}\n\nQUESTION UTILISATEUR :\n{prompt}"
+            response = Settings.llm.complete(full_prompt)
             
             st.session_state.messages_hub.append({"role": "assistant", "content": response.text})
+            
         except Exception as e:
-            st.session_state.messages_hub.append({"role": "assistant", "content": f"Erreur technique : {str(e)}"})
+            st.error(f"Une erreur technique est survenue : {str(e)}")
+            
     st.rerun()
 
-# 4. AFFICHAGE
+# 4. AFFICHAGE DES MESSAGES
 for m in st.session_state.messages_hub:
-    with st.chat_message(m["role"]): 
+    with st.chat_message(m["role"]):
         st.markdown(m["content"])
