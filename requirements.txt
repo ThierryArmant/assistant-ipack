@@ -1,7 +1,7 @@
 streamlit
+requests
 llama-index
 llama-index-llms-openai
 llama-index-embeddings-openai
 googlesearch-python
 beautifulsoup4
-requests
